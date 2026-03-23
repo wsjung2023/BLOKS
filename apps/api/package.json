@@ -1,4 +1,3 @@
-// apps/api — Express REST API server for BLOKS platform
 {
   "name": "api",
   "version": "0.1.0",
@@ -29,3 +28,4 @@
     "vitest": "^2.0.0"
   }
 }
+

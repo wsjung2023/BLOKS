@@ -1,4 +1,3 @@
-// Turborepo pipeline configuration for BLOKS monorepo build, dev, lint, test tasks
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
@@ -24,3 +23,4 @@
     }
   }
 }
+

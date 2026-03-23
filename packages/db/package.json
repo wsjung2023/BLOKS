@@ -1,4 +1,3 @@
-// @bloks/db — Prisma ORM package; owns schema, migrations, and DB client
 {
   "name": "@bloks/db",
   "version": "0.1.0",
@@ -30,3 +29,4 @@
     "typescript": "^5.8.0"
   }
 }
+

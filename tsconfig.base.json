@@ -1,4 +1,3 @@
-// Base TypeScript strict config shared across all BLOKS apps and packages
 {
   "compilerOptions": {
     "target": "ES2022",
@@ -26,3 +25,4 @@
   },
   "exclude": ["node_modules", "dist", ".next"]
 }
+

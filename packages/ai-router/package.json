@@ -1,4 +1,3 @@
-// packages/ai-router — model routing layer for BLOKS AI character actions
 {
   "name": "@bloks/ai-router",
   "version": "0.1.0",
@@ -27,3 +26,4 @@
     "vitest": "^2.0.0"
   }
 }
+
