@@ -1,0 +1,59 @@
+/* BLOKS global styles — cozy tactical theme base */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: #f5f0e8;
+  --color-panel: #ede8dc;
+  --color-border: #d4c9b0;
+  --color-text: #3d3529;
+  --color-muted: #8a7e6a;
+  --color-accent: #c8a96e;
+  --color-brand: #5c4a32;
+  --color-toxic-red: #ff1744;
+  --color-toxic-orange: #ff6d00;
+
+  --nav-top-h: 3rem;
+  --nav-left-w: 13rem;
+  --panel-right-w: 20rem;
+  --ticker-h: 2rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-panel);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+/* Toxic alert pulse animation */
+@keyframes toxic-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.toxic-pulse {
+  animation: toxic-pulse 1s ease-in-out infinite;
+}

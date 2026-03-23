@@ -1,0 +1,166 @@
+// BLOKS org-hierarchy models — Company, Division, Department, Rank, Role, Character, RuntimeState, ModelProfile (doc 04)
+
+model Company {
+  id          String    @id @default(cuid())
+  name        String
+  code        String    @unique
+  worldTone   String    @default("CozyTactical")
+  activeFlag  Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  divisions   Division[]
+  characters  Character[]
+  projects    Project[]
+
+  @@map("companies")
+}
+
+model Division {
+  id              String    @id @default(cuid())
+  companyId       String
+  name            String
+  divisionType    RoleFamilyType
+  headCharacterId String?
+  sortOrder       Int       @default(0)
+  activeFlag      Boolean   @default(true)
+
+  company     Company      @relation(fields: [companyId], references: [id])
+  departments Department[]
+  characters  Character[]
+
+  @@map("divisions")
+}
+
+model Department {
+  id              String    @id @default(cuid())
+  divisionId      String
+  name            String
+  code            String
+  leadCharacterId String?
+  activeFlag      Boolean   @default(true)
+
+  division   Division    @relation(fields: [divisionId], references: [id])
+  roles      Role[]
+  characters Character[]
+  tasks      Task[]
+
+  @@unique([divisionId, code])
+  @@map("departments")
+}
+
+// 12-stage rank master — seeded at startup (doc 11 P0 fix #2)
+model Rank {
+  id                   String @id @default(cuid())
+  name                 String
+  level                Int    @unique
+  approvalCeiling      String @default("L0")
+  defaultAuthorityScore Int   @default(0)
+
+  characters Character[]
+
+  @@map("ranks")
+}
+
+model Role {
+  id                  String         @id @default(cuid())
+  departmentId        String?
+  name                String
+  family              RoleFamilyType
+  responsibilitySummary String?
+  isLeadRole          Boolean        @default(false)
+
+  department      Department?      @relation(fields: [departmentId], references: [id])
+  characters      Character[]
+  promptTemplates PromptTemplate[]
+
+  @@map("roles")
+}
+
+model Character {
+  id                  String        @id @default(cuid())
+  companyId           String
+  name                String
+  codeName            String
+  divisionId          String?
+  departmentId        String?
+  rankId              String?
+  roleId              String?
+  characterType       CharacterType
+  systemRoleTags      Json          @default("[]")
+  approvalLevelLimit  ApprovalLevel @default(L0)
+  budgetLimitTier     String        @default("B0")
+  personaSummary      String?
+  coreDrive           String?
+  moralFilter         String?
+  defaultModelProfileId String?
+  trustBase           Float         @default(50)
+  influenceBase       Float         @default(50)
+  loyaltyBase         Float         @default(100)
+  activeMode          ActiveMode    @default(OnCall)
+  avatarUri           String?
+  activeFlag          Boolean       @default(true)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  company        Company                @relation(fields: [companyId], references: [id])
+  division       Division?              @relation(fields: [divisionId], references: [id])
+  department     Department?            @relation(fields: [departmentId], references: [id])
+  rank           Rank?                  @relation(fields: [rankId], references: [id])
+  role           Role?                  @relation(fields: [roleId], references: [id])
+  modelProfile   ModelProfile?          @relation(fields: [defaultModelProfileId], references: [id])
+  runtimeState   CharacterRuntimeState?
+  memoryLinks    CharacterMemoryLink[]
+  relationshipsFrom Relationship[]     @relation("RelFrom")
+  relationshipsTo   Relationship[]     @relation("RelTo")
+  ownedProjects  Project[]             @relation("ProjectOwner")
+  requestedProjects Project[]          @relation("ProjectRequester")
+  assignedTasks  Task[]               @relation("TaskAssignee")
+  reviewedTasks  Task[]               @relation("TaskReviewer")
+  approvals      Approval[]
+  eventLogs      EventLog[]
+  promptTemplates PromptTemplate[]
+  delegationsFrom Delegation[]        @relation("DelegatorChar")
+  delegationsTo   Delegation[]        @relation("DelegateeChar")
+
+  @@unique([companyId, codeName])
+  @@map("characters")
+}
+
+model CharacterRuntimeState {
+  characterId      String                 @id
+  activityStatus   CharacterActivityStatus @default(Idle)
+  locationZone     String?
+  workloadScore    Float                  @default(0)
+  fatigueScore     Float                  @default(0)
+  focusScore       Float                  @default(100)
+  stressScore      Float                  @default(0)
+  burnoutTriggered Boolean                @default(false)
+  reliabilityLive  Float                  @default(100)
+  lastActiveAt     DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  character Character @relation(fields: [characterId], references: [id])
+
+  @@map("character_runtime_states")
+}
+
+model ModelProfile {
+  id               String  @id @default(cuid())
+  profileName      String
+  providerName     String  @default("openai")
+  primaryModel     String
+  secondaryModel   String?
+  reasoningDepth   String  @default("mid")
+  creativityScore  Float   @default(50)
+  reliabilityScore Float   @default(70)
+  codingScore      Float   @default(50)
+  analysisScore    Float   @default(50)
+  maxBudgetPerTask Float   @default(0.5)
+  toolAccessLevel  String  @default("limited")
+  activeFlag       Boolean @default(true)
+
+  characters Character[]
+
+  @@map("model_profiles")
+}

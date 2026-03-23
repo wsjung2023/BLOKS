@@ -1,0 +1,28 @@
+// Base TypeScript strict config shared across all BLOKS apps and packages
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "declarationMap": true,
+    "paths": {
+      "@bloks/shared": ["./packages/shared/src/index.ts"],
+      "@bloks/shared/*": ["./packages/shared/src/*"],
+      "@bloks/db": ["./packages/db/src/index.ts"],
+      "@bloks/db/*": ["./packages/db/src/*"],
+      "@bloks/ai-router": ["./packages/ai-router/src/index.ts"],
+      "@bloks/ai-router/*": ["./packages/ai-router/src/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist", ".next"]
+}

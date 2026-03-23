@@ -1,0 +1,17 @@
+// apps/web TypeScript config — extends base, adds Next.js and DOM libs
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "plugins": [{ "name": "next" }],
+    "jsx": "preserve",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@bloks/shared": ["../../packages/shared/src/index.ts"],
+      "@bloks/shared/*": ["../../packages/shared/src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}

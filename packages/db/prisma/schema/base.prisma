@@ -1,0 +1,10 @@
+// BLOKS Prisma generator and datasource — requires pgvector/pgvector:pg16 Docker image
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["prismaSchemaFolder"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}

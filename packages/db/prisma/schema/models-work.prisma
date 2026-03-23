@@ -1,0 +1,142 @@
+// BLOKS work-hierarchy models — Project, Task, TaskDependency, Approval, Artifact (doc 04)
+
+model Project {
+  id                     String       @id @default(cuid())
+  companyId              String
+  title                  String
+  projectType            RoleFamilyType
+  businessDomain         String?
+  state                  ProjectState @default(Intake)
+  priority               Priority     @default(P2)
+  approvalState          ApprovalState @default(NotRequired)
+  riskState              RiskState    @default(Stable)
+  requesterCharacterId   String?
+  ownerCharacterId       String?
+  sponsorCharacterId     String?
+  summary                String?
+  objective              String?
+  virtualBudgetAllocated Float        @default(0)
+  virtualBudgetConsumed  Float        @default(0)
+  apiCostAccumulated     Float        @default(0)
+  dueAt                  DateTime?
+  startedAt              DateTime?
+  completedAt            DateTime?
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+  version                Int          @default(1)
+
+  company   Company    @relation(fields: [companyId], references: [id])
+  owner     Character? @relation("ProjectOwner", fields: [ownerCharacterId], references: [id])
+  requester Character? @relation("ProjectRequester", fields: [requesterCharacterId], references: [id])
+  tasks     Task[]
+  artifacts Artifact[]
+  approvals Approval[]
+  risks     RiskRegister[]
+  events    EventLog[]
+
+  @@index([state, priority])
+  @@map("projects")
+}
+
+model Task {
+  id                   String    @id @default(cuid())
+  projectId            String
+  parentTaskId         String?
+  title                String
+  taskType             String    @default("general")
+  state                TaskState @default(Created)
+  priority             Priority  @default(P2)
+  assigneeCharacterId  String?
+  reviewerCharacterId  String?
+  ownerDepartmentId    String?
+  description          String?
+  inputArtifactId      String?
+  outputArtifactId     String?
+  virtualCostConsumed  Float     @default(0)
+  apiTokenConsumed     Int       @default(0)
+  startedAt            DateTime?
+  dueAt                DateTime?
+  completedAt          DateTime?
+  reworkCount          Int       @default(0)
+  blockReasonCode      String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  version              Int       @default(1)
+
+  project         Project        @relation(fields: [projectId], references: [id])
+  parent          Task?          @relation("TaskChildren", fields: [parentTaskId], references: [id])
+  children        Task[]         @relation("TaskChildren")
+  assignee        Character?     @relation("TaskAssignee", fields: [assigneeCharacterId], references: [id])
+  reviewer        Character?     @relation("TaskReviewer", fields: [reviewerCharacterId], references: [id])
+  department      Department?    @relation(fields: [ownerDepartmentId], references: [id])
+  predecessorDeps TaskDependency[] @relation("PredecessorTask")
+  successorDeps   TaskDependency[] @relation("SuccessorTask")
+  approvals       Approval[]
+  artifacts       Artifact[]
+  risks           RiskRegister[]
+  events          EventLog[]
+
+  @@index([projectId, state])
+  @@index([assigneeCharacterId, state])
+  @@map("tasks")
+}
+
+model TaskDependency {
+  id              String  @id @default(cuid())
+  predecessorId   String
+  successorId     String
+  dependencyType  String  @default("FS")
+  activeFlag      Boolean @default(true)
+
+  predecessor Task @relation("PredecessorTask", fields: [predecessorId], references: [id])
+  successor   Task @relation("SuccessorTask", fields: [successorId], references: [id])
+
+  @@unique([predecessorId, successorId])
+  @@map("task_dependencies")
+}
+
+// Polymorphic approval — targets Project, Task, or Artifact via entityType + entityId (doc 04 section 3.12)
+model Approval {
+  id                      String        @id @default(cuid())
+  entityType              EntityType
+  entityId                String
+  level                   ApprovalLevel @default(L1)
+  state                   ApprovalState @default(WaitingL1)
+  approverCharacterId     String?
+  requestedByCharacterId  String?
+  requestedAt             DateTime      @default(now())
+  respondedAt             DateTime?
+  reasonCode              String?
+  comment                 String?
+  sequenceNo              Int           @default(1)
+
+  approver    Character? @relation(fields: [approverCharacterId], references: [id])
+  project     Project?   @relation(fields: [entityId], references: [id], map: "fk_approval_project")
+  task        Task?      @relation(fields: [entityId], references: [id], map: "fk_approval_task")
+
+  @@index([entityType, entityId, state])
+  @@map("approvals")
+}
+
+model Artifact {
+  id                  String         @id @default(cuid())
+  projectId           String
+  taskId              String?
+  artifactType        ArtifactType
+  title               String
+  storageUri          String?
+  contentMarkdown     String?
+  contentFormat       String         @default("md")
+  versionNo           Int            @default(1)
+  status              ArtifactStatus @default(Draft)
+  authorCharacterId   String?
+  reviewerCharacterId String?
+  sourceJobId         String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  project  Project  @relation(fields: [projectId], references: [id])
+  task     Task?    @relation(fields: [taskId], references: [id])
+
+  @@map("artifacts")
+}

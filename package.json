@@ -1,0 +1,26 @@
+// Root Turborepo monorepo package for BLOKS — orchestrates all apps and packages
+{
+  "name": "bloks-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "format": "turbo format",
+    "db:generate": "pnpm --filter @bloks/db exec prisma generate",
+    "db:migrate": "pnpm --filter @bloks/db exec prisma migrate dev",
+    "db:push": "pnpm --filter @bloks/db exec prisma db push",
+    "db:seed": "pnpm --filter @bloks/db exec tsx prisma/seed.ts",
+    "db:studio": "pnpm --filter @bloks/db exec prisma studio"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0",
+    "typescript": "^5.8.0",
+    "tsx": "^4.19.0",
+    "prettier": "^3.4.0",
+    "@types/node": "^22.0.0"
+  }
+}

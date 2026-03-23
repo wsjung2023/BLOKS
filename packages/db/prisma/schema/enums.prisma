@@ -1,0 +1,202 @@
+// BLOKS workflow and domain enums — single source of truth for all state machines (doc 03, 04, 11)
+
+enum ProjectState {
+  Idea
+  Intake
+  Qualified
+  ApprovedForPlanning
+  InPlanning
+  InExecution
+  OnHold
+  Review
+  Approved
+  Released
+  Archived
+  Cancelled
+}
+
+enum TaskState {
+  Draft
+  Created
+  Assigned
+  Accepted
+  InProgress
+  PendingReview
+  Rejected
+  Rework
+  Approved
+  Done
+  Blocked
+  Cancelled
+}
+
+enum ApprovalState {
+  NotRequired
+  WaitingL1
+  WaitingL2
+  WaitingL3
+  WaitingFounder
+  Approved
+  Rejected
+  ReturnedForRevision
+  Expired
+}
+
+// L0=auto, L1=Manager, L2=GM, L3=Director/C-Level, Founder — doc 11 P0 fix #2
+enum ApprovalLevel {
+  L0
+  L1
+  L2
+  L3
+  Founder
+}
+
+enum CharacterActivityStatus {
+  Idle
+  Moving
+  Focused
+  Collaborating
+  InMeeting
+  Reviewing
+  Escalating
+  Overloaded
+  Resting
+  Offline
+}
+
+enum Priority {
+  P0
+  P1
+  P2
+  P3
+  P4
+}
+
+enum RiskState {
+  Stable
+  Watch
+  Warning
+  Critical
+  Incident
+  Resolved
+}
+
+enum ActiveMode {
+  ActiveCore
+  OnCall
+  Specialist
+  Dormant
+}
+
+enum CharacterType {
+  FounderAvatar
+  DigitalTwin
+  Executive
+  Staff
+  Specialist
+}
+
+// "management" added per doc 11 P0 fix #3
+enum RoleFamilyType {
+  executive
+  management
+  strategy
+  marketing
+  research
+  engineering
+  operations
+}
+
+enum ArtifactStatus {
+  Draft
+  Submitted
+  Approved
+  Archived
+}
+
+enum ArtifactType {
+  PRD
+  ResearchReport
+  MarketingCopy
+  InvestmentMemo
+  CodeSpec
+  QAReport
+  MeetingNote
+}
+
+enum MemoryScope {
+  company
+  team
+  character
+  project
+}
+
+enum MemoryType {
+  preference
+  lesson
+  warning
+  relationship
+  strategy
+}
+
+enum DecayPolicy {
+  long
+  medium
+  short
+}
+
+enum TemplateType {
+  system_persona
+  task_instruction
+  review_guideline
+}
+
+enum EntityType {
+  project
+  task
+  approval
+  artifact
+  character
+}
+
+enum AuditActionType {
+  create
+  update
+  delete
+  override
+}
+
+enum ActorType {
+  system
+  founder
+  character
+}
+
+enum KpiPeriodType {
+  daily
+  weekly
+  monthly
+}
+
+enum KpiScopeType {
+  company
+  division
+  department
+  character
+  project
+}
+
+enum RiskType {
+  schedule
+  budget
+  quality
+  people
+  security
+}
+
+enum RoomState {
+  available
+  reserved
+  occupied
+  blocked
+}
