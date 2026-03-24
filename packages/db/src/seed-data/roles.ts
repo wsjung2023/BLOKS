@@ -1,0 +1,98 @@
+// Seed data — one role per character position across all departments
+import { DEPT } from './orgs.js';
+
+export const ROLE = {
+  founder:       'role_founder',
+  digital_twin:  'role_digital_twin',
+  ceo:           'role_ceo',
+  coo:           'role_coo',
+  cfo:           'role_cfo',
+  cto:           'role_cto',
+  cmo:           'role_cmo',
+  // Strategy
+  strategy_head: 'role_strategy_head',
+  sr_strategist: 'role_sr_strategist',
+  ux_planner:    'role_ux_planner',
+  biz_strategist:'role_biz_strategist',
+  pmo_lead:      'role_pmo_lead',
+  ux_analyst:    'role_ux_analyst',
+  spec_writer:   'role_spec_writer',
+  // Marketing
+  mktg_head:     'role_mktg_head',
+  brand_mgr:     'role_brand_mgr',
+  creative_dir:  'role_creative_dir',
+  copywriter:    'role_copywriter',
+  growth_mgr:    'role_growth_mgr',
+  partnerships:  'role_partnerships',
+  mktg_analyst:  'role_mktg_analyst',
+  // Research
+  research_head: 'role_research_head',
+  market_analyst:'role_market_analyst',
+  comp_intel:    'role_comp_intel',
+  forecaster:    'role_forecaster',
+  invest_dir:    'role_invest_dir',
+  risk_analyst:  'role_risk_analyst',
+  fin_modeler:   'role_fin_modeler',
+  // Engineering
+  tech_director: 'role_tech_director',
+  backend_arch:  'role_backend_arch',
+  ux_designer:   'role_ux_designer',
+  frontend_eng:  'role_frontend_eng',
+  backend_eng:   'role_backend_eng',
+  ai_engineer:   'role_ai_engineer',
+  automation_eng:'role_automation_eng',
+  qa_lead:       'role_qa_lead',
+  // Operations
+  ops_director:  'role_ops_director',
+  erp_mgr:       'role_erp_mgr',
+  knowledge_mgr: 'role_knowledge_mgr',
+  security_mgr:  'role_security_mgr',
+} as const;
+
+export const ROLES = [
+  { id: ROLE.founder,        department_id: DEPT.exec,     name: '창업자 아바타',         family: 'Executive',    responsibility_summary: '최종 결재권자, 수동 개입 운영자',        is_lead_role: true  },
+  { id: ROLE.digital_twin,   department_id: DEPT.exec,     name: '디지털 트윈',           family: 'Executive',    responsibility_summary: '창업자 사고 모델 반사 및 초안 피드백',  is_lead_role: false },
+  { id: ROLE.ceo,            department_id: DEPT.exec,     name: 'CEO',                   family: 'Executive',    responsibility_summary: '전사 전략 총괄 및 최종 의사결정',        is_lead_role: true  },
+  { id: ROLE.coo,            department_id: DEPT.exec,     name: 'COO',                   family: 'Executive',    responsibility_summary: '운영 효율화 및 업무 흐름 병목 관리',    is_lead_role: true  },
+  { id: ROLE.cfo,            department_id: DEPT.exec,     name: 'CFO',                   family: 'Executive',    responsibility_summary: '예산 판단 및 손익 안정 총괄',           is_lead_role: true  },
+  { id: ROLE.cto,            department_id: DEPT.exec,     name: 'CTO',                   family: 'Executive',    responsibility_summary: '기술 구조 수호 및 시스템 설계 총괄',    is_lead_role: true  },
+  { id: ROLE.cmo,            department_id: DEPT.exec,     name: 'CMO',                   family: 'Executive',    responsibility_summary: '브랜드 내러티브 및 영향력 확대 총괄',  is_lead_role: true  },
+  // Strategy & Planning
+  { id: ROLE.strategy_head,  department_id: DEPT.strategy, name: '전략기획 본부장',       family: 'Strategy',     responsibility_summary: '사업 구조 설계 및 전략 방향성 결정',    is_lead_role: true  },
+  { id: ROLE.sr_strategist,  department_id: DEPT.strategy, name: '수석 전략기획',         family: 'Strategy',     responsibility_summary: 'PRD 및 서비스 구조 수립',               is_lead_role: false },
+  { id: ROLE.ux_planner,     department_id: DEPT.strategy, name: 'UX 기획 차장',          family: 'Strategy',     responsibility_summary: '화면 흐름 설계 및 사용자 만족도 관리',  is_lead_role: false },
+  { id: ROLE.biz_strategist, department_id: DEPT.strategy, name: '비즈니스 전략 부장',    family: 'Strategy',     responsibility_summary: '수익 모델 설계 및 안정 성장 기획',      is_lead_role: false },
+  { id: ROLE.pmo_lead,       department_id: DEPT.pmo,      name: 'PMO 리드',              family: 'Strategy',     responsibility_summary: '태스크 분해 및 일정 관리 총괄',          is_lead_role: true  },
+  { id: ROLE.ux_analyst,     department_id: DEPT.strategy, name: 'UX 분석 차장',          family: 'Strategy',     responsibility_summary: '유저 저니 매핑 및 흐름 최적화',          is_lead_role: false },
+  { id: ROLE.spec_writer,    department_id: DEPT.strategy, name: '스펙 기록 과장',        family: 'Strategy',     responsibility_summary: '요구사항 정리 및 명세 정확도 확보',      is_lead_role: false },
+  // Marketing & Growth
+  { id: ROLE.mktg_head,      department_id: DEPT.brand,    name: '마케팅 본부장',         family: 'Marketing',    responsibility_summary: '팀 조율, 대외 활동 및 시장 확장 주도',  is_lead_role: true  },
+  { id: ROLE.brand_mgr,      department_id: DEPT.brand,    name: '브랜드 부장',           family: 'Marketing',    responsibility_summary: '세계관 설계 및 강한 브랜드 구축',        is_lead_role: false },
+  { id: ROLE.creative_dir,   department_id: DEPT.brand,    name: '크리에이티브 차장',     family: 'Marketing',    responsibility_summary: '콘텐츠 콘셉트 발굴 및 화제성 확보',      is_lead_role: false },
+  { id: ROLE.copywriter,     department_id: DEPT.brand,    name: '카피라이터 과장',       family: 'Marketing',    responsibility_summary: '카피 및 공감형 언어 제작',               is_lead_role: false },
+  { id: ROLE.growth_mgr,     department_id: DEPT.growth,   name: '그로스 차장',           family: 'Marketing',    responsibility_summary: 'CTR/CVR 개선 및 전환 최적화',            is_lead_role: false },
+  { id: ROLE.partnerships,   department_id: DEPT.growth,   name: '파트너십 대리',         family: 'Marketing',    responsibility_summary: '협상 및 파트너십 네트워크 구축',          is_lead_role: false },
+  { id: ROLE.mktg_analyst,   department_id: DEPT.growth,   name: '마케팅 애널리스트',     family: 'Marketing',    responsibility_summary: '성과 지표 리포트 및 광고 손익 분석',      is_lead_role: false },
+  // Research & Investment
+  { id: ROLE.research_head,  department_id: DEPT.research, name: '리서치 본부장',         family: 'Research',     responsibility_summary: '리서치 총괄 및 정확한 판단 근거 제시',   is_lead_role: true  },
+  { id: ROLE.market_analyst, department_id: DEPT.research, name: '시장 분석 부장',        family: 'Research',     responsibility_summary: '집요한 시장 리서치 및 데이터 수집',       is_lead_role: false },
+  { id: ROLE.comp_intel,     department_id: DEPT.research, name: '경쟁사 분석 차장',      family: 'Research',     responsibility_summary: '벤치마킹 및 경쟁사 모니터링',             is_lead_role: false },
+  { id: ROLE.forecaster,     department_id: DEPT.research, name: '트렌드 예측 과장',      family: 'Research',     responsibility_summary: '기회 선점 및 트렌드 예측',                is_lead_role: false },
+  { id: ROLE.invest_dir,     department_id: DEPT.invest,   name: '투자 전략 이사',        family: 'Research',     responsibility_summary: '투자 논리 수립 및 기회 포착',             is_lead_role: true  },
+  { id: ROLE.risk_analyst,   department_id: DEPT.invest,   name: '리스크 분석 차장',      family: 'Research',     responsibility_summary: '위험 탐지 및 손실 방지',                  is_lead_role: false },
+  { id: ROLE.fin_modeler,    department_id: DEPT.invest,   name: '재무 모델링 대리',      family: 'Research',     responsibility_summary: '수익 모델링 및 정밀 계산',                is_lead_role: false },
+  // Engineering & Product
+  { id: ROLE.tech_director,  department_id: DEPT.eng,      name: '기술 실장',             family: 'Engineering',  responsibility_summary: '클린 아키텍처 수호 및 기술 원칙 총괄',   is_lead_role: true  },
+  { id: ROLE.backend_arch,   department_id: DEPT.eng,      name: '백엔드 아키텍트',       family: 'Engineering',  responsibility_summary: '백엔드 모델링 및 재사용 구조 설계',       is_lead_role: false },
+  { id: ROLE.ux_designer,    department_id: DEPT.product,  name: 'UX 디자이너 차장',      family: 'Design',       responsibility_summary: 'UIUX 총괄 및 사용자 경험 심미화',         is_lead_role: false },
+  { id: ROLE.frontend_eng,   department_id: DEPT.eng,      name: '프론트엔드 과장',       family: 'Engineering',  responsibility_summary: '인터랙션 구현 및 화면 완성도 확보',       is_lead_role: false },
+  { id: ROLE.backend_eng,    department_id: DEPT.eng,      name: '백엔드 과장',           family: 'Engineering',  responsibility_summary: 'API 및 DB 안정성 확보',                   is_lead_role: false },
+  { id: ROLE.ai_engineer,    department_id: DEPT.eng,      name: 'AI 엔지니어 차장',      family: 'Engineering',  responsibility_summary: '신규 LLM 연결 및 AI 모델 강화',           is_lead_role: false },
+  { id: ROLE.automation_eng, department_id: DEPT.eng,      name: '자동화 대리',           family: 'Engineering',  responsibility_summary: '반복 업무 자동화 스크립트 구축',          is_lead_role: false },
+  { id: ROLE.qa_lead,        department_id: DEPT.qa,       name: 'QA 리드 차장',          family: 'Engineering',  responsibility_summary: '품질 절대 수호 및 결함 탐지',             is_lead_role: true  },
+  // Platform Operations
+  { id: ROLE.ops_director,   department_id: DEPT.platform, name: '운영 실장',             family: 'Operations',   responsibility_summary: '운영 안정화 및 시스템 질서 유지',         is_lead_role: true  },
+  { id: ROLE.erp_mgr,        department_id: DEPT.platform, name: 'ERP 차장',              family: 'Operations',   responsibility_summary: 'ERP 결재 규칙 및 흐름 통제',              is_lead_role: false },
+  { id: ROLE.knowledge_mgr,  department_id: DEPT.platform, name: '지식관리 대리',         family: 'Operations',   responsibility_summary: '사내 지식 검색 및 자산 축적',             is_lead_role: false },
+  { id: ROLE.security_mgr,   department_id: DEPT.security, name: '보안 과장',             family: 'Security',     responsibility_summary: '데이터 보안 권한 및 사고 예방',           is_lead_role: false },
+];

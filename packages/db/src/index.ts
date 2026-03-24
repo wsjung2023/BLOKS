@@ -1,4 +1,4 @@
-// @bloks/db — exports singleton Prisma client for use across API and worker apps
+// @bloks/db — exports Prisma client (legacy) and Supabase client for DB access
 import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
@@ -18,3 +18,4 @@ if (process.env["NODE_ENV"] !== "production") {
 
 export { PrismaClient };
 export * from "@prisma/client";
+export { getSupabase } from "./supabase.js";
