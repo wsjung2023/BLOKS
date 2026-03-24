@@ -218,8 +218,8 @@ async function initPixi(
     lbl.x = x - lbl.width / 2; lbl.y = sy + 4;
     stage.addChild(lbl);
 
-    if (burnout) stage.addChild(buildEffect(PIXI, burnoutTex, x, sy - 60, 40, 32, "??, 0xff1744));
-    if (fat > 70) stage.addChild(buildEffect(PIXI, zzzTex, x + 16, sy - 40, 32, 28, "?뮘", 0x4a90e2));
+    if (burnout) stage.addChild(buildEffect(PIXI, burnoutTex, x, sy - 60, 40, 32, "fire", 0xff1744));
+    if (fat > 70) stage.addChild(buildEffect(PIXI, zzzTex, x + 16, sy - 40, 32, 28, "zzz", 0x4a90e2));
   }
 
   return app;
