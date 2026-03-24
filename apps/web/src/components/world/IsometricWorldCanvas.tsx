@@ -237,19 +237,13 @@ function CharacterDetail({ char }: { char: Character }) {
         <div style={{ color: "var(--color-muted)", fontSize: "0.72rem" }}>{char.code_name} 쨌 {char.active_mode}</div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "0.35rem 0.75rem", fontSize: "0.78rem" }}>
-        <span style={{ color: "var(--color-muted)" }}>遺??/span><span>{char.divisions?.name ?? "??}</span>
-        <span style={{ color: "var(--color-muted)" }}>吏곴툒</span><span>{char.ranks?.name ?? "??}</span>
-        <span style={{ color: "var(--color-muted)" }}>??븷</span><span>{char.roles?.name ?? "??}</span>
-      </div>
-      <hr style={{ border: "none", borderTop: "1px solid var(--color-border)", margin: 0 }} />
-      <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "0.35rem 0.75rem", fontSize: "0.78rem" }}>
-        <span style={{ color: "var(--color-muted)" }}>?쇰줈??/span><span style={{ color: fc }}>{rt.fatigue_score}%</span>
-        <span style={{ color: "var(--color-muted)" }}>?뚰겕濡쒕뱶</span><span>{rt.workload_score}%</span>
-        <span style={{ color: "var(--color-muted)" }}>?곹깭</span><span>{rt.runtime_status}</span>
-        <span style={{ color: "var(--color-muted)" }}>?쒖뒪????/span><span>{rt.current_task_count}</span>
-        <span style={{ color: "var(--color-muted)" }}>踰덉븘??/span>
+        <span style={{ color: "var(--color-muted)" }}>Fatigue</span><span style={{ color: fc }}>{rt.fatigue_score}%</span>
+        <span style={{ color: "var(--color-muted)" }}>Workload</span><span style={{ color: fc }}>{rt.workload_score}%</span>
+        <span style={{ color: "var(--color-muted)" }}>Status</span><span>{rt.runtime_status}</span>
+        <span style={{ color: "var(--color-muted)" }}>Tasks</span><span>{rt.current_task_count}</span>
+        <span style={{ color: "var(--color-muted)" }}>Burnout</span>
         <span style={{ color: rt.burnout_triggered ? "var(--color-toxic-red)" : "inherit" }}>
-          {rt.burnout_triggered ? "??諛쒕룞?? : "?뺤긽"}
+          {rt.burnout_triggered ? "BURNOUT" : "Normal"}
         </span>
       </div>
     </div>
