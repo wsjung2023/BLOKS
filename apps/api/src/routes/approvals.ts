@@ -1,88 +1,47 @@
-// Approvals routes — GET /approvals, POST /approvals/:id/approve, POST /approvals/:id/reject
+// Approvals routes — GET/approve/reject for /api/v1/approvals with Supabase
 import { Router } from "express";
 import { z } from "zod";
+import { getSupabase } from "@bloks/db";
 import { ApprovalState, APPROVAL_TRANSITIONS } from "@bloks/shared";
+import { writeEventLog } from "./tasks-helpers.js";
 
 export const approvalsRouter = Router();
 
-// ── Placeholder store ─────────────────────────────────────────────────────────
+// ── Pending states ────────────────────────────────────────────────────────────
 
-const PLACEHOLDER_APPROVALS = [
-  {
-    id: "appr_001",
-    taskId: "task_003",
-    projectId: "proj_001",
-    title: "UI 컴포넌트 구현 검토 요청",
-    state: ApprovalState.WaitingL2,
-    approvalLevel: "L2",
-    requesterId: "char_002",
-    approverId: null as string | null,
-    reasonCode: null as string | null,
-    comment: null as string | null,
-    createdAt: new Date("2026-03-20T09:00:00Z").toISOString(),
-    updatedAt: new Date("2026-03-20T09:00:00Z").toISOString(),
-  },
-  {
-    id: "appr_002",
-    taskId: "task_004",
-    projectId: "proj_002",
-    title: "경쟁사 분석 리포트 최종 승인",
-    state: ApprovalState.WaitingFounder,
-    approvalLevel: "Founder",
-    requesterId: "char_003",
-    approverId: null as string | null,
-    reasonCode: null as string | null,
-    comment: null as string | null,
-    createdAt: new Date("2026-03-22T11:00:00Z").toISOString(),
-    updatedAt: new Date("2026-03-22T11:00:00Z").toISOString(),
-  },
-  {
-    id: "appr_003",
-    taskId: "task_001",
-    projectId: "proj_001",
-    title: "PRD 초안 승인",
-    state: ApprovalState.Approved,
-    approvalLevel: "L2",
-    requesterId: "char_001",
-    approverId: "founder-dev" as string | null,
-    reasonCode: "APPROVED_AS_IS" as string | null,
-    comment: "잘 작성되었습니다." as string | null,
-    createdAt: new Date("2026-03-10T08:00:00Z").toISOString(),
-    updatedAt: new Date("2026-03-10T10:00:00Z").toISOString(),
-  },
-];
-
-// ── Pending states helper ─────────────────────────────────────────────────────
-
-const PENDING_STATES: ApprovalState[] = [
+const PENDING_STATES = new Set<ApprovalState>([
   ApprovalState.WaitingL1,
   ApprovalState.WaitingL2,
   ApprovalState.WaitingL3,
   ApprovalState.WaitingFounder,
-];
+]);
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
 const listQuerySchema = z.object({
   state: z.nativeEnum(ApprovalState).optional(),
+  level: z.string().optional(),
+  assigneeCharacterId: z.string().optional(),
   projectId: z.string().optional(),
-  limit: z.coerce.number().int().min(1).max(100).default(50),
-  offset: z.coerce.number().int().min(0).default(0),
+  entityType: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });
 
 const approveSchema = z.object({
-  reasonCode: z.string().min(1),
   comment: z.string().max(2000).optional(),
+  approvedByCharacterId: z.string().optional(),
 });
 
 const rejectSchema = z.object({
   reasonCode: z.string().min(1),
   comment: z.string().min(1).max(2000),
+  rejectedByCharacterId: z.string().optional(),
 });
 
 // ── GET /approvals ────────────────────────────────────────────────────────────
 
-approvalsRouter.get("/", (req, res) => {
+approvalsRouter.get("/", async (req, res) => {
   const parsed = listQuerySchema.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({
@@ -92,69 +51,134 @@ approvalsRouter.get("/", (req, res) => {
     return;
   }
 
-  const { state, projectId, limit, offset } = parsed.data;
-  let results = [...PLACEHOLDER_APPROVALS];
+  const { state, level, assigneeCharacterId, projectId, entityType, page, pageSize } = parsed.data;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
-  if (state)     results = results.filter((a) => a.state === state);
-  if (projectId) results = results.filter((a) => a.projectId === projectId);
+  try {
+    const sb = getSupabase();
+    let query = sb
+      .from("approvals")
+      .select("id, entity_type, entity_id, approval_level, state, requested_by_character_id, approver_character_id, summary, reason_code, comment, created_at, updated_at", { count: "exact" })
+      .range(from, to)
+      .order("created_at", { ascending: false });
 
-  const total = results.length;
-  const page = results.slice(offset, offset + limit);
+    if (state) query = query.eq("state", state);
+    if (level) query = query.eq("approval_level", level);
+    if (assigneeCharacterId) query = query.eq("approver_character_id", assigneeCharacterId);
+    if (projectId) query = query.eq("project_id", projectId);
+    if (entityType) query = query.eq("entity_type", entityType);
 
-  res.json({ ok: true, data: { items: page, total, limit, offset } });
+    // Default to pending only if no state filter
+    if (!state) query = query.in("state", Array.from(PENDING_STATES));
+
+    const { data, count, error } = await query;
+    if (error) {
+      console.error("[approvals] list error", error);
+      res.status(500).json({ ok: false, error: { code: "DB_ERROR", message: "DB 조회 오류가 발생했습니다." } });
+      return;
+    }
+
+    res.json({ ok: true, data: { items: data ?? [], page, pageSize, total: count ?? 0 } });
+  } catch (err) {
+    console.error("[approvals] list exception", err);
+    res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다." } });
+  }
 });
 
 // ── POST /approvals/:id/approve ───────────────────────────────────────────────
 
-approvalsRouter.post("/:id/approve", (req, res) => {
+approvalsRouter.post("/:id/approve", async (req, res) => {
   const approvalId = req.params["id"];
   const parsed = approveSchema.safeParse(req.body);
 
   if (!parsed.success) {
     res.status(422).json({
       ok: false,
-      error: { code: "VALIDATION_ERROR", message: "승인 사유 코드가 필요합니다.", details: parsed.error.flatten() },
+      error: { code: "VALIDATION_ERROR", message: "입력값이 올바르지 않습니다.", details: parsed.error.flatten() },
     });
     return;
   }
 
-  const approval = PLACEHOLDER_APPROVALS.find((a) => a.id === approvalId);
-  if (!approval) {
-    res.status(404).json({
-      ok: false,
-      error: { code: "APPROVAL_NOT_FOUND", message: "결재 건을 찾을 수 없습니다.", details: { approvalId } },
+  try {
+    const sb = getSupabase();
+    const { data: approval, error: fetchError } = await sb
+      .from("approvals")
+      .select("id, state, entity_type, entity_id, approval_level, project_id, task_id")
+      .eq("id", approvalId)
+      .single();
+
+    if (fetchError || !approval) {
+      res.status(404).json({
+        ok: false,
+        error: { code: "APPROVAL_NOT_FOUND", message: "결재 건을 찾을 수 없습니다.", details: { approvalId } },
+      });
+      return;
+    }
+
+    if (!PENDING_STATES.has(approval.state as ApprovalState)) {
+      res.status(409).json({
+        ok: false,
+        error: { code: "APPROVAL_ALREADY_RESOLVED", message: "이미 처리된 결재 건입니다.", details: { state: approval.state } },
+      });
+      return;
+    }
+
+    // Determine next approval state — escalate or finalize
+    const currentState = approval.state as ApprovalState;
+    const allowedNext = APPROVAL_TRANSITIONS[currentState] ?? [];
+    const nextState = allowedNext.includes(ApprovalState.Approved)
+      ? ApprovalState.Approved
+      : (allowedNext.find((s) => s.startsWith("Waiting")) ?? ApprovalState.Approved);
+
+    const actor = parsed.data.approvedByCharacterId ?? req.auth?.sub ?? "system";
+    const now = new Date().toISOString();
+
+    const { data: updated, error: updateError } = await sb
+      .from("approvals")
+      .update({
+        state: nextState,
+        approver_character_id: actor,
+        comment: parsed.data.comment ?? null,
+        updated_at: now,
+      })
+      .eq("id", approvalId)
+      .select()
+      .single();
+
+    if (updateError || !updated) {
+      res.status(500).json({ ok: false, error: { code: "DB_ERROR", message: "결재 업데이트에 실패했습니다." } });
+      return;
+    }
+
+    // If fully approved, update the target task or project state
+    if (nextState === ApprovalState.Approved) {
+      if (approval.entity_type === "task" && approval.task_id) {
+        await sb.from("tasks").update({ state: "Approved", updated_at: now }).eq("id", approval.task_id);
+      } else if (approval.entity_type === "project" && approval.project_id) {
+        await sb.from("projects").update({ approval_state: "Approved", updated_at: now }).eq("id", approval.project_id);
+      }
+    }
+
+    await writeEventLog(sb, {
+      entityType: "approval", entityId: approvalId, eventType: "approval.approved",
+      previousState: currentState, nextState,
+      changedBy: actor,
+      comment: parsed.data.comment ?? null,
+      relatedProjectId: approval.project_id ?? null,
+      relatedTaskId: approval.task_id ?? null,
     });
-    return;
+
+    res.json({ ok: true, data: updated });
+  } catch (err) {
+    console.error("[approvals] approve exception", err);
+    res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다." } });
   }
-
-  if (!PENDING_STATES.includes(approval.state as ApprovalState)) {
-    res.status(409).json({
-      ok: false,
-      error: { code: "APPROVAL_ALREADY_RESOLVED", message: "이미 처리된 결재 건입니다.", details: { state: approval.state } },
-    });
-    return;
-  }
-
-  const allowed = APPROVAL_TRANSITIONS[approval.state as ApprovalState];
-  if (!allowed.includes(ApprovalState.Approved)) {
-    // escalate to next level instead
-    const nextState = allowed.find((s) => s.startsWith("Waiting")) ?? ApprovalState.Approved;
-    approval.state = nextState;
-  } else {
-    approval.state = ApprovalState.Approved;
-  }
-
-  approval.approverId = req.auth?.sub ?? "unknown";
-  approval.reasonCode = parsed.data.reasonCode;
-  approval.comment = parsed.data.comment ?? null;
-  approval.updatedAt = new Date().toISOString();
-
-  res.json({ ok: true, data: approval });
 });
 
 // ── POST /approvals/:id/reject ────────────────────────────────────────────────
 
-approvalsRouter.post("/:id/reject", (req, res) => {
+approvalsRouter.post("/:id/reject", async (req, res) => {
   const approvalId = req.params["id"];
   const parsed = rejectSchema.safeParse(req.body);
 
@@ -166,28 +190,64 @@ approvalsRouter.post("/:id/reject", (req, res) => {
     return;
   }
 
-  const approval = PLACEHOLDER_APPROVALS.find((a) => a.id === approvalId);
-  if (!approval) {
-    res.status(404).json({
-      ok: false,
-      error: { code: "APPROVAL_NOT_FOUND", message: "결재 건을 찾을 수 없습니다.", details: { approvalId } },
+  try {
+    const sb = getSupabase();
+    const { data: approval, error: fetchError } = await sb
+      .from("approvals")
+      .select("id, state, entity_type, entity_id, project_id, task_id")
+      .eq("id", approvalId)
+      .single();
+
+    if (fetchError || !approval) {
+      res.status(404).json({
+        ok: false,
+        error: { code: "APPROVAL_NOT_FOUND", message: "결재 건을 찾을 수 없습니다.", details: { approvalId } },
+      });
+      return;
+    }
+
+    if (!PENDING_STATES.has(approval.state as ApprovalState)) {
+      res.status(409).json({
+        ok: false,
+        error: { code: "APPROVAL_ALREADY_RESOLVED", message: "이미 처리된 결재 건입니다.", details: { state: approval.state } },
+      });
+      return;
+    }
+
+    const actor = parsed.data.rejectedByCharacterId ?? req.auth?.sub ?? "system";
+    const now = new Date().toISOString();
+
+    const { data: updated, error: updateError } = await sb
+      .from("approvals")
+      .update({
+        state: ApprovalState.Rejected,
+        approver_character_id: actor,
+        reason_code: parsed.data.reasonCode,
+        comment: parsed.data.comment,
+        updated_at: now,
+      })
+      .eq("id", approvalId)
+      .select()
+      .single();
+
+    if (updateError || !updated) {
+      res.status(500).json({ ok: false, error: { code: "DB_ERROR", message: "반려 업데이트에 실패했습니다." } });
+      return;
+    }
+
+    await writeEventLog(sb, {
+      entityType: "approval", entityId: approvalId, eventType: "approval.rejected",
+      previousState: approval.state, nextState: ApprovalState.Rejected,
+      changedBy: actor,
+      reasonCode: parsed.data.reasonCode,
+      comment: parsed.data.comment,
+      relatedProjectId: approval.project_id ?? null,
+      relatedTaskId: approval.task_id ?? null,
     });
-    return;
+
+    res.json({ ok: true, data: updated });
+  } catch (err) {
+    console.error("[approvals] reject exception", err);
+    res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다." } });
   }
-
-  if (!PENDING_STATES.includes(approval.state as ApprovalState)) {
-    res.status(409).json({
-      ok: false,
-      error: { code: "APPROVAL_ALREADY_RESOLVED", message: "이미 처리된 결재 건입니다.", details: { state: approval.state } },
-    });
-    return;
-  }
-
-  approval.state = ApprovalState.Rejected;
-  approval.approverId = req.auth?.sub ?? "unknown";
-  approval.reasonCode = parsed.data.reasonCode;
-  approval.comment = parsed.data.comment;
-  approval.updatedAt = new Date().toISOString();
-
-  res.json({ ok: true, data: approval });
 });

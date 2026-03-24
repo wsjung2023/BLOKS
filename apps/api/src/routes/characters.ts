@@ -1,81 +1,35 @@
-// Characters routes — GET /characters, GET /characters/:id
+// Characters routes — GET/PATCH/POST for /api/v1/characters with Supabase
 import { Router } from "express";
 import { z } from "zod";
+import { getSupabase } from "@bloks/db";
 
 export const charactersRouter = Router();
 
-// ── Placeholder data (replaced by DB queries in next phase) ──────────────────
-
-const PLACEHOLDER_CHARACTERS = [
-  {
-    id: "char_001",
-    name: "김리더",
-    rank: "Director",
-    department: "engineering",
-    status: "Active",
-    currentTaskCount: 3,
-    fatigueScore: 45,
-    primaryModel: "gpt-4o",
-    burnoutTriggered: false,
-  },
-  {
-    id: "char_002",
-    name: "박개발",
-    rank: "Senior",
-    department: "engineering",
-    status: "Overloaded",
-    currentTaskCount: 7,
-    fatigueScore: 85,
-    primaryModel: "gpt-4o",
-    burnoutTriggered: false,
-  },
-  {
-    id: "char_003",
-    name: "최기획",
-    rank: "Manager",
-    department: "marketing",
-    status: "Active",
-    currentTaskCount: 4,
-    fatigueScore: 50,
-    primaryModel: "gpt-4o",
-    burnoutTriggered: false,
-  },
-  {
-    id: "char_004",
-    name: "이재무",
-    rank: "Senior",
-    department: "finance",
-    status: "Active",
-    currentTaskCount: 2,
-    fatigueScore: 30,
-    primaryModel: "gpt-4o",
-    burnoutTriggered: false,
-  },
-  {
-    id: "char_005",
-    name: "정관리",
-    rank: "VP",
-    department: "management",
-    status: "Active",
-    currentTaskCount: 5,
-    fatigueScore: 55,
-    primaryModel: "gpt-4o",
-    burnoutTriggered: false,
-  },
-];
-
-// ── Query schema ──────────────────────────────────────────────────────────────
+// ── Query schemas ──────────────────────────────────────────────────────────────
 
 const listQuerySchema = z.object({
-  department: z.string().optional(),
+  division: z.string().optional(),
   status: z.string().optional(),
-  limit: z.coerce.number().int().min(1).max(100).default(50),
-  offset: z.coerce.number().int().min(0).default(0),
+  activeMode: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });
 
-// ── GET /characters ───────────────────────────────────────────────────────────
+const runtimePatchSchema = z.object({
+  workloadScore: z.number().min(0).max(100).optional(),
+  fatigueScore: z.number().min(0).max(100).optional(),
+  burnoutTriggered: z.boolean().optional(),
+});
 
-charactersRouter.get("/", (req, res) => {
+const assignTaskSchema = z.object({
+  taskId: z.string().min(1),
+  assignedByCharacterId: z.string().optional(),
+  reason: z.string().max(500).optional(),
+});
+
+// ── GET /characters ────────────────────────────────────────────────────────────
+
+charactersRouter.get("/", async (req, res) => {
   const parsed = listQuerySchema.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({
@@ -85,43 +39,240 @@ charactersRouter.get("/", (req, res) => {
     return;
   }
 
-  const { department, status, limit, offset } = parsed.data;
-  let results = [...PLACEHOLDER_CHARACTERS];
+  const { division, status, activeMode, page, pageSize } = parsed.data;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
-  if (department) results = results.filter((c) => c.department === department);
-  if (status) results = results.filter((c) => c.status === status);
+  try {
+    const sb = getSupabase();
 
-  const total = results.length;
-  const page = results.slice(offset, offset + limit);
+    let query = sb
+      .from("characters")
+      .select(
+        `id, name, code_name, active_mode, active_flag,
+         trust_base, influence_base,
+         divisions!division_id(id, name, code),
+         departments!department_id(id, name, code),
+         ranks!rank_id(id, name, code),
+         roles!role_id(id, name, code),
+         character_runtime_states(runtime_status, workload_score, fatigue_score, burnout_triggered, current_task_count)`,
+        { count: "exact" }
+      )
+      .range(from, to);
 
-  res.json({
-    ok: true,
-    data: { items: page, total, limit, offset },
-  });
+    if (division) query = query.eq("divisions.code", division);
+    if (activeMode) query = query.eq("active_mode", activeMode);
+    if (status) {
+      // runtime_status lives in character_runtime_states join
+      query = query.eq("character_runtime_states.runtime_status", status);
+    }
+
+    const { data, count, error } = await query;
+
+    if (error) {
+      console.error("[characters] list error", error);
+      res.status(500).json({ ok: false, error: { code: "DB_ERROR", message: "DB 조회 오류가 발생했습니다." } });
+      return;
+    }
+
+    res.json({
+      ok: true,
+      data: {
+        items: data ?? [],
+        page,
+        pageSize,
+        total: count ?? 0,
+      },
+    });
+  } catch (err) {
+    console.error("[characters] list exception", err);
+    res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다." } });
+  }
 });
 
-// ── GET /characters/:id ───────────────────────────────────────────────────────
+// ── GET /characters/:id ────────────────────────────────────────────────────────
 
-const idParamSchema = z.object({ id: z.string().min(1) });
+charactersRouter.get("/:id", async (req, res) => {
+  const id = req.params["id"];
+  if (!id) {
+    res.status(400).json({ ok: false, error: { code: "INVALID_PARAM", message: "ID가 필요합니다." } });
+    return;
+  }
 
-charactersRouter.get("/:id", (req, res) => {
-  const parsed = idParamSchema.safeParse(req.params);
+  try {
+    const sb = getSupabase();
+
+    const { data, error } = await sb
+      .from("characters")
+      .select(
+        `id, name, code_name, character_type, approval_level_limit,
+         persona_summary, core_drive, moral_filter, active_mode, active_flag,
+         trust_base, influence_base, loyalty_base,
+         divisions!division_id(id, name, code),
+         departments!department_id(id, name, code),
+         ranks!rank_id(id, name, code),
+         roles!role_id(id, name, code),
+         model_profiles!default_model_profile_id(id, model_id, provider_name, display_name),
+         character_runtime_states(runtime_status, workload_score, fatigue_score, burnout_triggered, current_task_count, updated_at)`
+      )
+      .eq("id", id)
+      .single();
+
+    if (error || !data) {
+      res.status(404).json({
+        ok: false,
+        error: { code: "CHARACTER_NOT_FOUND", message: "캐릭터를 찾을 수 없습니다.", details: { id } },
+      });
+      return;
+    }
+
+    res.json({ ok: true, data });
+  } catch (err) {
+    console.error("[characters] detail exception", err);
+    res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다." } });
+  }
+});
+
+// ── PATCH /characters/:id/runtime ─────────────────────────────────────────────
+
+charactersRouter.patch("/:id/runtime", async (req, res) => {
+  const id = req.params["id"];
+  const parsed = runtimePatchSchema.safeParse(req.body);
+
   if (!parsed.success) {
-    res.status(400).json({
+    res.status(422).json({
       ok: false,
-      error: { code: "INVALID_PARAM", message: "잘못된 ID 형식입니다." },
+      error: { code: "VALIDATION_ERROR", message: "입력값이 올바르지 않습니다.", details: parsed.error.flatten() },
     });
     return;
   }
 
-  const character = PLACEHOLDER_CHARACTERS.find((c) => c.id === parsed.data.id);
-  if (!character) {
-    res.status(404).json({
+  const updates: Record<string, unknown> = {};
+  if (parsed.data.workloadScore !== undefined) updates["workload_score"] = parsed.data.workloadScore;
+  if (parsed.data.fatigueScore !== undefined) updates["fatigue_score"] = parsed.data.fatigueScore;
+  if (parsed.data.burnoutTriggered !== undefined) updates["burnout_triggered"] = parsed.data.burnoutTriggered;
+  updates["updated_at"] = new Date().toISOString();
+
+  if (Object.keys(updates).length === 1) {
+    res.status(422).json({ ok: false, error: { code: "VALIDATION_ERROR", message: "변경할 필드가 없습니다." } });
+    return;
+  }
+
+  try {
+    const sb = getSupabase();
+
+    const { data, error } = await sb
+      .from("character_runtime_states")
+      .update(updates)
+      .eq("character_id", id)
+      .select()
+      .single();
+
+    if (error || !data) {
+      res.status(404).json({
+        ok: false,
+        error: { code: "CHARACTER_NOT_FOUND", message: "캐릭터 런타임 상태를 찾을 수 없습니다.", details: { id } },
+      });
+      return;
+    }
+
+    res.json({ ok: true, data });
+  } catch (err) {
+    console.error("[characters] runtime patch exception", err);
+    res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다." } });
+  }
+});
+
+// ── POST /characters/:id/assign-task ──────────────────────────────────────────
+
+charactersRouter.post("/:id/assign-task", async (req, res) => {
+  const characterId = req.params["id"];
+  const parsed = assignTaskSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    res.status(422).json({
       ok: false,
-      error: { code: "CHARACTER_NOT_FOUND", message: "캐릭터를 찾을 수 없습니다.", details: { id: parsed.data.id } },
+      error: { code: "VALIDATION_ERROR", message: "taskId가 필요합니다.", details: parsed.error.flatten() },
     });
     return;
   }
 
-  res.json({ ok: true, data: character });
+  const { taskId, assignedByCharacterId, reason } = parsed.data;
+
+  try {
+    const sb = getSupabase();
+
+    // Verify character exists
+    const { data: character, error: charError } = await sb
+      .from("characters")
+      .select("id, active_mode, character_runtime_states(workload_score, burnout_triggered)")
+      .eq("id", characterId)
+      .single();
+
+    if (charError || !character) {
+      res.status(404).json({
+        ok: false,
+        error: { code: "CHARACTER_NOT_FOUND", message: "캐릭터를 찾을 수 없습니다.", details: { characterId } },
+      });
+      return;
+    }
+
+    // Verify task exists and fetch current state
+    const { data: task, error: taskError } = await sb
+      .from("tasks")
+      .select("id, state, assignee_character_id")
+      .eq("id", taskId)
+      .single();
+
+    if (taskError || !task) {
+      res.status(404).json({
+        ok: false,
+        error: { code: "TASK_NOT_FOUND", message: "태스크를 찾을 수 없습니다.", details: { taskId } },
+      });
+      return;
+    }
+
+    // Update task assignee and state
+    const now = new Date().toISOString();
+    const { data: updatedTask, error: updateError } = await sb
+      .from("tasks")
+      .update({ assignee_character_id: characterId, state: "Assigned", updated_at: now })
+      .eq("id", taskId)
+      .select()
+      .single();
+
+    if (updateError || !updatedTask) {
+      res.status(500).json({ ok: false, error: { code: "DB_ERROR", message: "태스크 업데이트에 실패했습니다." } });
+      return;
+    }
+
+    // Update character workload_score
+    const runtimeRows = Array.isArray((character as Record<string, unknown>)["character_runtime_states"])
+      ? ((character as Record<string, unknown>)["character_runtime_states"] as Array<{workload_score: number}>)
+      : [(character as Record<string, unknown>)["character_runtime_states"] as {workload_score: number}];
+    const currentWorkload = runtimeRows[0]?.workload_score ?? 0;
+    await sb
+      .from("character_runtime_states")
+      .update({ workload_score: Math.min(100, currentWorkload + 10), updated_at: now })
+      .eq("character_id", characterId);
+
+    // Log event
+    await sb.from("event_logs").insert({
+      entity_type: "task",
+      entity_id: taskId,
+      event_type: "task.assigned",
+      previous_state: task.state,
+      next_state: "Assigned",
+      changed_by: assignedByCharacterId ?? req.auth?.sub ?? "system",
+      changed_at: now,
+      reason_code: "ASSIGNED",
+      comment: reason ?? null,
+      related_task_id: taskId,
+    });
+
+    res.json({ ok: true, data: updatedTask });
+  } catch (err) {
+    console.error("[characters] assign-task exception", err);
+    res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다." } });
+  }
 });

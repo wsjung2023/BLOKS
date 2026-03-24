@@ -1,25 +1,18 @@
-// @bloks/ai-router — model selection, provider routing, cost guardrails (doc 11 P0 fix #8: OpenAI primary)
+// @bloks/ai-router — routeAI function with character model lookup and provider routing
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { OpenAiProvider } from "./providers/openai.js";
 import { AnthropicProvider } from "./providers/anthropic.js";
 
 // ── Core types ────────────────────────────────────────────────────────────────
 
 export interface AiRequest {
-  /** Task type — used for model selection heuristics */
   taskType?: string;
-  /** System/role prompt */
   systemPrompt?: string;
-  /** User-facing prompt */
   userPrompt: string;
-  /** Preferred model ID (overrides routing policy) */
   model?: string;
-  /** Max output tokens */
   maxTokens?: number;
-  /** Sampling temperature */
   temperature?: number;
-  /** Expected response format */
   responseFormat?: "text" | "json";
-  /** Character ID for per-character model config */
   characterId?: string;
 }
 
@@ -39,21 +32,68 @@ export interface AiProvider {
   execute<T = unknown>(request: AiRequest): Promise<AiExecutionResult<T>>;
 }
 
-// ── Character model config (per-character overrides) ─────────────────────────
+// ── routeAI public interface ──────────────────────────────────────────────────
 
-export interface CharacterModelConfig {
+export interface RouteAIOptions {
   characterId: string;
-  /** Primary model ID — default "gpt-4o-mini" per doc 11 P0 fix #8 */
-  primaryModel: string;
-  /** Fallback model ID */
-  fallbackModel?: string;
-  /** Provider preference — currently always "openai" per MVP policy */
-  providerPreference?: "openai" | "anthropic";
+  taskType: string;
+  prompt: string;
+  context?: Record<string, unknown>;
+  systemPrompt?: string;
+  maxTokens?: number;
+  responseFormat?: "text" | "json";
 }
 
-// ── Model selection policy ────────────────────────────────────────────────────
+export interface RouteAIResult {
+  output: string;
+  modelUsed: string;
+  tokensUsed: number;
+  costUsd: number;
+}
+
+// ── Supabase singleton (lazy) ─────────────────────────────────────────────────
+
+let _sb: SupabaseClient | null = null;
+
+function getSupabase(): SupabaseClient {
+  if (_sb) return _sb;
+  const url = process.env["SUPABASE_URL"];
+  const key = process.env["SUPABASE_SERVICE_ROLE_KEY"];
+  if (!url || !key) throw new Error("[ai-router] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+  _sb = createClient(url, key, { auth: { persistSession: false } });
+  return _sb;
+}
+
+// ── Character model profile lookup ───────────────────────────────────────────
+
+interface ModelProfile {
+  model_id: string;
+  provider_name: string;
+  display_name?: string;
+}
+
+async function fetchCharacterModelProfile(characterId: string): Promise<ModelProfile | null> {
+  try {
+    const sb = getSupabase();
+    const { data } = await sb
+      .from("characters")
+      .select("model_profiles!default_model_profile_id(model_id, provider_name, display_name)")
+      .eq("id", characterId)
+      .single();
+
+    if (!data) return null;
+    const profiles = (data as Record<string, unknown>)["model_profiles"];
+    if (!profiles) return null;
+    return Array.isArray(profiles) ? (profiles[0] as ModelProfile) : (profiles as ModelProfile);
+  } catch {
+    return null;
+  }
+}
+
+// ── Task type → default model mapping (doc 11: OpenAI primary in MVP) ────────
 
 const TASK_MODEL_MAP: Record<string, string> = {
+  planningDocument:  "gpt-4o",
   prd_draft:         "gpt-4o",
   research_summary:  "gpt-4o",
   marketing_copy:    "gpt-4o-mini",
@@ -62,101 +102,138 @@ const TASK_MODEL_MAP: Record<string, string> = {
   default:           "gpt-4o-mini",
 };
 
-function selectModel(request: AiRequest, config?: CharacterModelConfig): string {
-  // Explicit override takes highest priority
-  if (request.model) return request.model;
-  // Per-character config
-  if (config?.primaryModel) return config.primaryModel;
-  // Task-type heuristic
-  return TASK_MODEL_MAP[request.taskType ?? "default"] ?? TASK_MODEL_MAP["default"]!;
+function selectModel(taskType: string, profile: ModelProfile | null): string {
+  // Per doc 11 P0 fix #8: OpenAI primary; character profile sets model but not provider
+  if (profile?.model_id) return profile.model_id;
+  return TASK_MODEL_MAP[taskType] ?? TASK_MODEL_MAP["default"]!;
 }
 
-// ── Budget guardrail ──────────────────────────────────────────────────────────
+// ── Provider resolution (doc 11: OpenAI primary, Anthropic optional) ─────────
 
-const MAX_COST_PER_TASK_USD = parseFloat(
-  process.env["AI_MAX_COST_PER_TASK_USD"] ?? "0.5"
-);
+let _openai: OpenAiProvider | null = null;
+let _anthropic: AnthropicProvider | null = null;
+
+function getOpenAi(): OpenAiProvider {
+  _openai ??= new OpenAiProvider();
+  return _openai;
+}
+
+function getAnthropic(): AnthropicProvider | null {
+  if (_anthropic) return _anthropic;
+  if (!process.env["ANTHROPIC_API_KEY"]) return null;
+  try {
+    _anthropic = new AnthropicProvider();
+    return _anthropic;
+  } catch {
+    return null;
+  }
+}
+
+function resolveProvider(providerName: string | undefined): AiProvider {
+  if (providerName === "anthropic") {
+    return getAnthropic() ?? getOpenAi();
+  }
+  return getOpenAi();
+}
+
+// ── Budget guard ──────────────────────────────────────────────────────────────
+
+const MAX_COST_USD = parseFloat(process.env["AI_MAX_COST_PER_TASK_USD"] ?? "0.5");
 
 function estimatedInputCost(model: string, promptLength: number): number {
-  // Rough estimate: 4 chars per token, $2.50/1M input tokens for gpt-4o
   const inputTokens = Math.ceil(promptLength / 4);
   const ratePerM = model.includes("mini") ? 0.15 : 2.50;
   return (inputTokens / 1_000_000) * ratePerM;
 }
 
-// ── AiRouter ──────────────────────────────────────────────────────────────────
+// ── routeAI — main export ─────────────────────────────────────────────────────
+
+export async function routeAI(options: RouteAIOptions): Promise<RouteAIResult> {
+  const { characterId, taskType, prompt, context, systemPrompt, maxTokens, responseFormat } = options;
+
+  // Fetch character model profile from Supabase
+  const profile = await fetchCharacterModelProfile(characterId);
+  const model = selectModel(taskType, profile);
+  const provider = resolveProvider(profile?.provider_name);
+
+  // Build contextual system prompt
+  const resolvedSystem = systemPrompt
+    ?? (context ? `Context: ${JSON.stringify(context)}` : undefined);
+
+  const fullPromptLength = (resolvedSystem ?? "").length + prompt.length;
+
+  // Pre-flight budget check
+  if (estimatedInputCost(model, fullPromptLength) > MAX_COST_USD) {
+    throw new Error(`AI_BUDGET_EXCEEDED: estimated cost exceeds ${MAX_COST_USD} USD`);
+  }
+
+  const request: AiRequest = {
+    userPrompt: prompt,
+    systemPrompt: resolvedSystem,
+    taskType,
+    model,
+    maxTokens,
+    responseFormat: responseFormat ?? "text",
+    characterId,
+  };
+
+  let result = await provider.execute<string>(request);
+
+  // Fallback on provider error
+  if (!result.ok && result.errorCode !== "BUDGET_EXCEEDED" && result.errorCode !== "RATE_LIMITED") {
+    const fallbackModel = "gpt-4o-mini";
+    if (fallbackModel !== model) {
+      console.warn(`[ai-router] ${model} failed (${result.errorCode}), falling back to ${fallbackModel}`);
+      result = await getOpenAi().execute<string>({ ...request, model: fallbackModel });
+    }
+  }
+
+  if (!result.ok) {
+    throw new Error(`AI_MODEL_FAILURE: ${result.errorCode ?? "unknown"}`);
+  }
+
+  const outputText = typeof result.output === "string"
+    ? result.output
+    : JSON.stringify(result.output);
+
+  // Approximate token count from raw text length
+  const tokensUsed = Math.ceil((outputText.length + fullPromptLength) / 4);
+
+  return {
+    output: outputText,
+    modelUsed: result.model,
+    tokensUsed,
+    costUsd: result.costUsdEstimate,
+  };
+}
+
+// ── Legacy class API (backwards compat) ──────────────────────────────────────
+
+export interface CharacterModelConfig {
+  characterId: string;
+  primaryModel: string;
+  fallbackModel?: string;
+  providerPreference?: "openai" | "anthropic";
+}
 
 export class AiRouter {
-  private openai: OpenAiProvider;
-  private anthropic: AnthropicProvider | null = null;
+  async execute<T = unknown>(request: AiRequest, characterConfig?: CharacterModelConfig): Promise<AiExecutionResult<T>> {
+    const model = request.model ?? characterConfig?.primaryModel ?? TASK_MODEL_MAP["default"]!;
+    const provider = resolveProvider(characterConfig?.providerPreference);
+    const result = await provider.execute<T>({ ...request, model });
 
-  constructor() {
-    this.openai = new OpenAiProvider();
-    // Anthropic provider initialized lazily (API key optional in MVP)
-    if (process.env["ANTHROPIC_API_KEY"]) {
-      try {
-        this.anthropic = new AnthropicProvider();
-      } catch {
-        // Non-fatal — Anthropic is non-primary in MVP
-      }
-    }
-  }
-
-  async execute<T = unknown>(
-    request: AiRequest,
-    characterConfig?: CharacterModelConfig
-  ): Promise<AiExecutionResult<T>> {
-    const model = selectModel(request, characterConfig);
-    const fullPrompt = (request.systemPrompt ?? "") + request.userPrompt;
-
-    // Budget pre-check
-    const estimatedCost = estimatedInputCost(model, fullPrompt.length);
-    if (estimatedCost > MAX_COST_PER_TASK_USD) {
-      return {
-        ok: false,
-        model,
-        provider: "none",
-        costUsdEstimate: 0,
-        confidence: 0,
-        output: null,
-        errorCode: "BUDGET_EXCEEDED",
-      };
-    }
-
-    // Per doc 11 P0 fix #8: OpenAI is primary provider in MVP
-    const provider = this.resolveProvider(characterConfig);
-    const enrichedRequest: AiRequest = { ...request, model };
-
-    const result = await provider.execute<T>(enrichedRequest);
-
-    // Fallback on retryable errors
     if (!result.ok && result.errorCode !== "BUDGET_EXCEEDED" && result.errorCode !== "RATE_LIMITED") {
-      const fallbackModel = characterConfig?.fallbackModel ?? "gpt-4o-mini";
-      if (fallbackModel !== model) {
-        console.warn(`[AiRouter] Primary model ${model} failed (${result.errorCode}), falling back to ${fallbackModel}`);
-        return this.openai.execute<T>({ ...enrichedRequest, model: fallbackModel });
+      const fallback = characterConfig?.fallbackModel ?? "gpt-4o-mini";
+      if (fallback !== model) {
+        return getOpenAi().execute<T>({ ...request, model: fallback });
       }
     }
-
     return result;
-  }
-
-  private resolveProvider(config?: CharacterModelConfig): AiProvider {
-    // MVP policy: always use OpenAI unless Anthropic explicitly configured and available
-    if (config?.providerPreference === "anthropic" && this.anthropic) {
-      return this.anthropic;
-    }
-    return this.openai;
   }
 }
 
-// ── Singleton export ──────────────────────────────────────────────────────────
-
-let _router: AiRouter | null = null;
-
 export function getAiRouter(): AiRouter {
-  _router ??= new AiRouter();
-  return _router;
+  return new AiRouter();
 }
 
 export { OpenAiProvider, AnthropicProvider };
