@@ -1,11 +1,11 @@
-// Characters routes — GET/PATCH/POST for /api/v1/characters with Supabase
+﻿// Characters routes ??GET/PATCH/POST for /api/v1/characters with Supabase
 import { Router } from "express";
 import { z } from "zod";
 import { getSupabase } from "@bloks/db";
 
 export const charactersRouter = Router();
 
-// ── Query schemas ──────────────────────────────────────────────────────────────
+// ?? Query schemas ??????????????????????????????????????????????????????????????
 
 const listQuerySchema = z.object({
   division: z.string().optional(),
@@ -27,14 +27,14 @@ const assignTaskSchema = z.object({
   reason: z.string().max(500).optional(),
 });
 
-// ── GET /characters ────────────────────────────────────────────────────────────
+// ?? GET /characters ????????????????????????????????????????????????????????????
 
 charactersRouter.get("/", async (req, res) => {
   const parsed = listQuerySchema.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({
       ok: false,
-      error: { code: "INVALID_QUERY", message: "잘못된 쿼리 파라미터입니다.", details: parsed.error.flatten() },
+      error: { code: "INVALID_QUERY", message: "?섎せ??荑쇰━ ?뚮씪誘명꽣?낅땲??", details: parsed.error.flatten() },
     });
     return;
   }
@@ -48,14 +48,7 @@ charactersRouter.get("/", async (req, res) => {
 
     let query = sb
       .from("characters")
-      .select(
-        `id, name, code_name, active_mode, active_flag,
-         trust_base, influence_base,
-         divisions!division_id(id, name, code),
-         departments!department_id(id, name, code),
-         ranks!rank_id(id, name, code),
-         roles!role_id(id, name, code),
-         character_runtime_states(runtime_status, workload_score, fatigue_score, burnout_triggered, current_task_count)`,
+      .select(`id, name, code_name, active_mode, active_flag, trust_base, influence_base, persona_summary, division_id, department_id, rank_id, role_id, character_runtime_states(activity_status, workload_score, fatigue_score, burnout_triggered)`,
         { count: "exact" }
       )
       .range(from, to);
@@ -71,7 +64,7 @@ charactersRouter.get("/", async (req, res) => {
 
     if (error) {
       console.error("[characters] list error", error);
-      res.status(500).json({ ok: false, error: { code: "DB_ERROR", message: "DB 조회 오류가 발생했습니다." } });
+      res.status(500).json({ ok: false, error: { code: "DB_ERROR", message: "DB 議고쉶 ?ㅻ쪟媛 諛쒖깮?덉뒿?덈떎." } });
       return;
     }
 
@@ -86,16 +79,16 @@ charactersRouter.get("/", async (req, res) => {
     });
   } catch (err) {
     console.error("[characters] list exception", err);
-    res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다." } });
+    res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "?쒕쾭 ?ㅻ쪟媛 諛쒖깮?덉뒿?덈떎." } });
   }
 });
 
-// ── GET /characters/:id ────────────────────────────────────────────────────────
+// ?? GET /characters/:id ????????????????????????????????????????????????????????
 
 charactersRouter.get("/:id", async (req, res) => {
   const id = req.params["id"];
   if (!id) {
-    res.status(400).json({ ok: false, error: { code: "INVALID_PARAM", message: "ID가 필요합니다." } });
+    res.status(400).json({ ok: false, error: { code: "INVALID_PARAM", message: "ID媛 ?꾩슂?⑸땲??" } });
     return;
   }
 
@@ -104,16 +97,7 @@ charactersRouter.get("/:id", async (req, res) => {
 
     const { data, error } = await sb
       .from("characters")
-      .select(
-        `id, name, code_name, character_type, approval_level_limit,
-         persona_summary, core_drive, moral_filter, active_mode, active_flag,
-         trust_base, influence_base, loyalty_base,
-         divisions!division_id(id, name, code),
-         departments!department_id(id, name, code),
-         ranks!rank_id(id, name, code),
-         roles!role_id(id, name, code),
-         model_profiles!default_model_profile_id(id, model_id, provider_name, display_name),
-         character_runtime_states(runtime_status, workload_score, fatigue_score, burnout_triggered, current_task_count, updated_at)`
+      .select(`id, name, code_name, active_mode, active_flag, trust_base, influence_base, persona_summary, division_id, department_id, rank_id, role_id, character_runtime_states(activity_status, workload_score, fatigue_score, burnout_triggered)`
       )
       .eq("id", id)
       .single();
@@ -121,7 +105,7 @@ charactersRouter.get("/:id", async (req, res) => {
     if (error || !data) {
       res.status(404).json({
         ok: false,
-        error: { code: "CHARACTER_NOT_FOUND", message: "캐릭터를 찾을 수 없습니다.", details: { id } },
+        error: { code: "CHARACTER_NOT_FOUND", message: "罹먮┃?곕? 李얠쓣 ???놁뒿?덈떎.", details: { id } },
       });
       return;
     }
@@ -129,11 +113,11 @@ charactersRouter.get("/:id", async (req, res) => {
     res.json({ ok: true, data });
   } catch (err) {
     console.error("[characters] detail exception", err);
-    res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다." } });
+    res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "?쒕쾭 ?ㅻ쪟媛 諛쒖깮?덉뒿?덈떎." } });
   }
 });
 
-// ── PATCH /characters/:id/runtime ─────────────────────────────────────────────
+// ?? PATCH /characters/:id/runtime ?????????????????????????????????????????????
 
 charactersRouter.patch("/:id/runtime", async (req, res) => {
   const id = req.params["id"];
@@ -142,7 +126,7 @@ charactersRouter.patch("/:id/runtime", async (req, res) => {
   if (!parsed.success) {
     res.status(422).json({
       ok: false,
-      error: { code: "VALIDATION_ERROR", message: "입력값이 올바르지 않습니다.", details: parsed.error.flatten() },
+      error: { code: "VALIDATION_ERROR", message: "?낅젰媛믪씠 ?щ컮瑜댁? ?딆뒿?덈떎.", details: parsed.error.flatten() },
     });
     return;
   }
@@ -154,7 +138,7 @@ charactersRouter.patch("/:id/runtime", async (req, res) => {
   updates["updated_at"] = new Date().toISOString();
 
   if (Object.keys(updates).length === 1) {
-    res.status(422).json({ ok: false, error: { code: "VALIDATION_ERROR", message: "변경할 필드가 없습니다." } });
+    res.status(422).json({ ok: false, error: { code: "VALIDATION_ERROR", message: "蹂寃쏀븷 ?꾨뱶媛 ?놁뒿?덈떎." } });
     return;
   }
 
@@ -171,7 +155,7 @@ charactersRouter.patch("/:id/runtime", async (req, res) => {
     if (error || !data) {
       res.status(404).json({
         ok: false,
-        error: { code: "CHARACTER_NOT_FOUND", message: "캐릭터 런타임 상태를 찾을 수 없습니다.", details: { id } },
+        error: { code: "CHARACTER_NOT_FOUND", message: "罹먮┃???고????곹깭瑜?李얠쓣 ???놁뒿?덈떎.", details: { id } },
       });
       return;
     }
@@ -179,11 +163,11 @@ charactersRouter.patch("/:id/runtime", async (req, res) => {
     res.json({ ok: true, data });
   } catch (err) {
     console.error("[characters] runtime patch exception", err);
-    res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다." } });
+    res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "?쒕쾭 ?ㅻ쪟媛 諛쒖깮?덉뒿?덈떎." } });
   }
 });
 
-// ── POST /characters/:id/assign-task ──────────────────────────────────────────
+// ?? POST /characters/:id/assign-task ??????????????????????????????????????????
 
 charactersRouter.post("/:id/assign-task", async (req, res) => {
   const characterId = req.params["id"];
@@ -192,7 +176,7 @@ charactersRouter.post("/:id/assign-task", async (req, res) => {
   if (!parsed.success) {
     res.status(422).json({
       ok: false,
-      error: { code: "VALIDATION_ERROR", message: "taskId가 필요합니다.", details: parsed.error.flatten() },
+      error: { code: "VALIDATION_ERROR", message: "taskId媛 ?꾩슂?⑸땲??", details: parsed.error.flatten() },
     });
     return;
   }
@@ -212,7 +196,7 @@ charactersRouter.post("/:id/assign-task", async (req, res) => {
     if (charError || !character) {
       res.status(404).json({
         ok: false,
-        error: { code: "CHARACTER_NOT_FOUND", message: "캐릭터를 찾을 수 없습니다.", details: { characterId } },
+        error: { code: "CHARACTER_NOT_FOUND", message: "罹먮┃?곕? 李얠쓣 ???놁뒿?덈떎.", details: { characterId } },
       });
       return;
     }
@@ -227,7 +211,7 @@ charactersRouter.post("/:id/assign-task", async (req, res) => {
     if (taskError || !task) {
       res.status(404).json({
         ok: false,
-        error: { code: "TASK_NOT_FOUND", message: "태스크를 찾을 수 없습니다.", details: { taskId } },
+        error: { code: "TASK_NOT_FOUND", message: "?쒖뒪?щ? 李얠쓣 ???놁뒿?덈떎.", details: { taskId } },
       });
       return;
     }
@@ -242,7 +226,7 @@ charactersRouter.post("/:id/assign-task", async (req, res) => {
       .single();
 
     if (updateError || !updatedTask) {
-      res.status(500).json({ ok: false, error: { code: "DB_ERROR", message: "태스크 업데이트에 실패했습니다." } });
+      res.status(500).json({ ok: false, error: { code: "DB_ERROR", message: "?쒖뒪???낅뜲?댄듃???ㅽ뙣?덉뒿?덈떎." } });
       return;
     }
 
@@ -273,6 +257,8 @@ charactersRouter.post("/:id/assign-task", async (req, res) => {
     res.json({ ok: true, data: updatedTask });
   } catch (err) {
     console.error("[characters] assign-task exception", err);
-    res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다." } });
+    res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "?쒕쾭 ?ㅻ쪟媛 諛쒖깮?덉뒿?덈떎." } });
   }
 });
+
+
