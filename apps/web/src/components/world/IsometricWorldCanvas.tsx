@@ -147,7 +147,7 @@ async function initPixi(
     stage.addChild(txt);
   }
 
-  // Desks ??drawn before ring/sprites for correct z-order
+  // Desks -- drawn before ring/sprites for correct z-order
   for (const [id, pos] of posMap.entries()) {
     const char = characters.find((c) => c.id === id);
     if (!char) continue;
@@ -173,7 +173,7 @@ async function initPixi(
     }
   }
 
-  // Selected ring ??above desks, below character sprites
+  // Selected ring -- above desks, below character sprites
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let ring: any = null;
   if (ringTex) {
@@ -238,7 +238,7 @@ function CharacterDetail({ char }: { char: Character }) {
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "0.35rem 0.75rem", fontSize: "0.78rem" }}>
         <span style={{ color: "var(--color-muted)" }}>Fatigue</span><span style={{ color: fc }}>{rt.fatigue_score}%</span>
-        <span style={{ color: "var(--color-muted)" }}>Workload</span><span style={{ color: fc }}>{rt.workload_score}%</span>
+        <span style={{ color: "var(--color-muted)" }}>Rank</span><span>{char.ranks?.name ?? "N/A"}</span>
         <span style={{ color: "var(--color-muted)" }}>Status</span><span>{rt.runtime_status}</span>
         <span style={{ color: "var(--color-muted)" }}>Tasks</span><span>{rt.current_task_count}</span>
         <span style={{ color: "var(--color-muted)" }}>Burnout</span>
