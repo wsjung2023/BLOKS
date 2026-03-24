@@ -117,3 +117,5 @@ export const MODEL_PROFILES = [
     active_flag: true,
   },
 ];
+
+export { MODEL_PROFILES as MODEL_PROFILES_DATA };
