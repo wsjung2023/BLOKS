@@ -1,4 +1,4 @@
-﻿// IsometricWorldCanvas ??PixiJS 2.5D company world with real character data
+// IsometricWorldCanvas — PixiJS 2.5D company world with real character data
 "use client";
 import React, { useEffect, useRef, useState, useCallback, useContext, useMemo } from "react";
 import { ContextPanelContext } from "../layout/AppShell-nav";
@@ -12,7 +12,7 @@ import {
 const API_BASE = process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:3001/api/v1";
 const AUTH_HEADERS = { Authorization: "Bearer dev-bypass" };
 
-// ?? Types ?????????????????????????????????????????????????????????????????????
+// ── Types ──────────────────────────────────────────────────────────────────────
 
 interface RuntimeState {
   runtime_status: string;
@@ -35,7 +35,7 @@ interface Character {
 
 interface ContextMenu { x: number; y: number; character: Character }
 
-// ?? Helpers ???????????????????????????????????????????????????????????????????
+// ── Helpers ─────────────────────────────────────────────────────────────────────
 
 function getRuntime(char: Character): RuntimeState {
   const rs = char.character_runtime_states;
@@ -67,7 +67,7 @@ function assignPositions(chars: Character[]) {
   return result;
 }
 
-// ?? PixiJS renderer ???????????????????????????????????????????????????????????
+// ── PixiJS renderer ─────────────────────────────────────────────────────────────
 
 async function initPixi(
   container: HTMLDivElement,
@@ -225,7 +225,7 @@ async function initPixi(
   return app;
 }
 
-// ?? Character detail panel ????????????????????????????????????????????????????
+// ── Character detail panel ──────────────────────────────────────────────────────
 
 function CharacterDetail({ char }: { char: Character }) {
   const rt = getRuntime(char);
@@ -234,7 +234,7 @@ function CharacterDetail({ char }: { char: Character }) {
     <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
       <div>
         <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>{char.name}</div>
-        <div style={{ color: "var(--color-muted)", fontSize: "0.72rem" }}>{char.code_name} 쨌 {char.active_mode}</div>
+      <div style={{ color: "var(--color-muted)", fontSize: "0.72rem" }}>{char.code_name} &middot; {char.active_mode}</div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "0.35rem 0.75rem", fontSize: "0.78rem" }}>
         <span style={{ color: "var(--color-muted)" }}>Fatigue</span><span style={{ color: fc }}>{rt.fatigue_score}%</span>
@@ -250,7 +250,7 @@ function CharacterDetail({ char }: { char: Character }) {
   );
 }
 
-// ?? React component ???????????????????????????????????????????????????????????
+// React component
 
 export default function IsometricWorldCanvas() {
   const { openPanel } = useContext(ContextPanelContext);
@@ -313,19 +313,19 @@ export default function IsometricWorldCanvas() {
   }, [contextMenu]);
 
   const MENU_ACTIONS = [
-    { label: "?뵇 ?곸꽭 蹂닿린", action: (c: Character) => { handleCharClick(c); setContextMenu(null); } },
-    { label: "?뮠 硫대떞 ?몄텧", action: () => setContextMenu(null) },
-    { label: "?샂 媛뺤젣 ?댁떇", action: () => setContextMenu(null) },
+  { label: "View Profile", action: (c) => { handleCharClick(c); setContextMenu(null); } },
+  { label: "Send Message", action: () => setContextMenu(null) },
+  { label: "Assign Task", action: () => setContextMenu(null) },
   ];
 
   return (
     <div ref={containerRef} onContextMenu={(e) => e.preventDefault()}
       style={{ width: "100%", height: "100%", overflow: "hidden", background: "var(--color-bg)", position: "relative" }}
-      aria-label="?꾩씠?뚮찓?몃┃ ?뚯궗 ?붾뱶"
+  aria-label="Context menu"
     >
       {characters.length === 0 && (
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-muted)", fontSize: "0.875rem" }}>
-          ?붾뱶 濡쒕뵫 以?..
+    Loading...
         </div>
       )}
       {contextMenu && (
