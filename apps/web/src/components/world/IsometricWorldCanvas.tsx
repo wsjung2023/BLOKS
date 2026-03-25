@@ -195,7 +195,7 @@ async function initPixi(
 
     if (charTex) {
       const sp = new PIXI.Sprite(charTex);
-      sp.anchor.set(0.5, 1.0); sp.width = 72; sp.height = 56; sp.x = x; sp.y = sy;
+      sp.anchor.set(0.5, 1.0); sp.width = 44; sp.height = 56; sp.x = x; sp.y = sy;
       sp.eventMode = "static"; sp.cursor = "pointer";
       sp.on("pointerup", onPick); sp.on("rightclick", onRight);
       stage.addChild(sp);
