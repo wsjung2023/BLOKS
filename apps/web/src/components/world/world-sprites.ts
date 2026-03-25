@@ -33,18 +33,29 @@ export const ZONE_MAP: string[][] = Array.from({ length: GRID_ROWS }, (_, row) =
 );
 
 export const ZONE_LABELS = [
-  { col: 1, row: 4, label: "🛠 엔지니어링" },
-  { col: 5, row: 1, label: "📣 마케팅" },
-  { col: 5, row: 7, label: "🎨 디자인" },
-  { col: 8, row: 4, label: "💰 재무" },
-  { col: 10, row: 4, label: "🏛 경영" },
+  { col: 1, row: 4, label: "Engineering" },
+  { col: 5, row: 1, label: "Marketing" },
+  { col: 5, row: 7, label: "Design" },
+  { col: 8, row: 4, label: "Research" },
+  { col: 10, row: 4, label: "Engineering" },
 ];
 
 export const DIVISION_TO_ZONE: Record<string, string> = {
+  // DB code_names (from Supabase divisions table)
+  "div_engineering": "engineering",
+  "div_strategy": "management",
+  "div_marketing": "marketing",
+  "div_research": "finance",
+  "div_ops": "management",
+  "div_exec": "management",
+  // fallbacks (short form)
   engineering: "engineering", product: "engineering",
-  marketing: "marketing", design: "design", finance: "finance",
+  marketing: "marketing", design: "marketing",
+  research: "finance", investment: "finance",
+  strategy: "management", finance: "finance",
   management: "management", executive: "management",
   hr: "management", operations: "management",
+  ops: "management",
 };
 
 export const DIVISION_COLORS: Record<string, number> = {
