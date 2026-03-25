@@ -55,7 +55,7 @@ function getZoneTiles(zone: string) {
 function assignPositions(chars: Character[]) {
   const byZone: Record<string, Character[]> = {};
   for (const c of chars) {
-    const zone = DIVISION_TO_ZONE[(c.divisions?.code ?? "").toLowerCase()] ?? "management";
+    const zone = DIVISION_TO_ZONE[(c.division_id ?? "").toLowerCase()] ?? "management";
     (byZone[zone] ??= []).push(c);
   }
   const result = new Map<string, { col: number; row: number }>();
@@ -201,7 +201,7 @@ async function initPixi(
       stage.addChild(sp);
     } else {
       // Fallback: colored circle with initials
-      const col = DIVISION_COLORS[(char.divisions?.code ?? "management").toLowerCase()] ?? 0x8a8a8a;
+      const col = DIVISION_COLORS[(char.division_id ?? "management").toLowerCase()] ?? 0x8a8a8a;
       const alpha = Math.max(0.35, 1 - fat / 160);
       const av = new PIXI.Graphics();
       av.circle(0, 0, 9).fill({ color: col, alpha }).stroke({ color: 0xffffff, width: 1.5, alpha: 0.9 });
@@ -271,7 +271,7 @@ export default function IsometricWorldCanvas() {
     const totals = new Map<string, number>();
     const counts = new Map<string, number>();
     for (const c of characters) {
-      const zone = DIVISION_TO_ZONE[(c.divisions?.code ?? "").toLowerCase()] ?? "management";
+      const zone = DIVISION_TO_ZONE[(c.division_id ?? "").toLowerCase()] ?? "management";
       const wl = getRuntime(c).workload_score;
       totals.set(zone, (totals.get(zone) ?? 0) + wl);
       counts.set(zone, (counts.get(zone) ?? 0) + 1);

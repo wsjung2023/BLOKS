@@ -41,20 +41,20 @@ export const ZONE_LABELS = [
 ];
 
 export const DIVISION_TO_ZONE: Record<string, string> = {
-  // DB code_names (from Supabase divisions table)
-  "div_engineering": "engineering",
+  // Exact DB division_id values from Supabase
+  "div_exec": "management",
   "div_strategy": "management",
   "div_marketing": "marketing",
   "div_research": "finance",
+  "div_engineering": "engineering",
   "div_ops": "management",
-  "div_exec": "management",
-  // fallbacks (short form)
-  engineering: "engineering", product: "engineering",
-  marketing: "marketing", design: "marketing",
-  research: "finance", investment: "finance",
-  strategy: "management", finance: "finance",
-  management: "management", executive: "management",
-  hr: "management", operations: "management",
+  // short fallbacks
+  engineering: "engineering",
+  marketing: "marketing",
+  research: "finance",
+  strategy: "management",
+  management: "management",
+  exec: "management",
   ops: "management",
 };
 
