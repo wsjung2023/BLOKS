@@ -1,9 +1,11 @@
-// Board page ? Kanban view of tasks by state (Backlog/Todo/InProgress/InReview/Done)
+// Board page ‚Äî Kanban view of tasks by state
 'use client';
+
 import { useEffect, useState } from 'react';
+import { getApiBase } from '../../lib/apiBase';
 
 const COLUMNS = ['Backlog', 'Todo', 'InProgress', 'InReview', 'Done'] as const;
-type TaskState = typeof COLUMNS[number];
+type TaskState = (typeof COLUMNS)[number];
 
 interface Task {
   id: string;
@@ -21,11 +23,11 @@ const PRIORITY_COLOR: Record<string, string> = {
 };
 
 const COL_LABEL: Record<string, string> = {
-  Backlog: 'πÈ∑Œ±◊',
-  Todo: '«“ ¿œ',
-  InProgress: '¡¯«‡ ¡ﬂ',
-  InReview: '∞À≈‰ ¡ﬂ',
-  Done: 'øœ∑·',
+  Backlog: 'Î∞±Î°úÍ∑∏',
+  Todo: 'Ìï† Ïùº',
+  InProgress: 'ÏßÑÌñâ Ï§ë',
+  InReview: 'Í≤ÄÌÜ† Ï§ë',
+  Done: 'ÏôÑÎ£å',
 };
 
 export default function BoardPage() {
@@ -33,8 +35,7 @@ export default function BoardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
-    fetch(`${apiUrl}/api/v1/tasks`)
+    fetch(`${getApiBase()}/tasks`)
       .then((r) => r.json())
       .then((data) => setTasks(Array.isArray(data) ? data : []))
       .catch(() => setTasks([]))
@@ -46,7 +47,7 @@ export default function BoardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full text-gray-400">
-        ∑Œµ˘ ¡ﬂ...
+        Î°úÎî© Ï§ë...
       </div>
     );
   }
@@ -56,9 +57,7 @@ export default function BoardPage() {
       {COLUMNS.map((col) => (
         <div key={col} className="flex flex-col min-w-[200px] w-52 flex-shrink-0">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold text-gray-300">
-              {COL_LABEL[col]}
-            </span>
+            <span className="text-sm font-semibold text-gray-300">{COL_LABEL[col]}</span>
             <span className="text-xs bg-gray-700 text-gray-400 rounded-full px-2 py-0.5">
               {byState(col).length}
             </span>
@@ -70,9 +69,7 @@ export default function BoardPage() {
                 className="bg-gray-800 rounded-lg p-3 border border-gray-700 hover:border-gray-500 cursor-pointer transition-colors"
               >
                 <div className="flex items-start justify-between gap-1 mb-1">
-                  <span className="text-sm text-gray-200 leading-snug">
-                    {task.title}
-                  </span>
+                  <span className="text-sm text-gray-200 leading-snug">{task.title}</span>
                   <span
                     className={`w-2 h-2 rounded-full flex-shrink-0 mt-1 ${PRIORITY_COLOR[task.priority] ?? 'bg-gray-400'}`}
                   />
@@ -88,7 +85,7 @@ export default function BoardPage() {
             ))}
             {byState(col).length === 0 && (
               <div className="text-xs text-gray-600 text-center py-4 border border-dashed border-gray-700 rounded-lg">
-                æ¯¿Ω
+                ÎπÑÏñ¥ ÏûàÏùå
               </div>
             )}
           </div>

@@ -7,6 +7,7 @@ import {
   ContextPanelContext,
 } from "./AppShell-nav";
 import { BottomLiveTicker } from "./AppShell-ticker";
+import { getApiBase } from "../../lib/apiBase";
 
 export type { NavItem } from "./AppShell-nav";
 export { ContextPanelContext } from "./AppShell-nav";
@@ -22,7 +23,7 @@ interface AppShellProps {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const API_BASE = process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:3001/api/v1";
+const API_BASE = getApiBase();
 const AUTH_HEADERS = { Authorization: "Bearer dev-bypass" };
 
 const PENDING_APPROVAL_STATES = new Set([
