@@ -1,8 +1,9 @@
 // AppShell-ticker — BottomLiveTicker polls /tasks + /approvals every 5 s
 "use client";
 import { useEffect, useState } from "react";
+import { getApiBase } from "../../lib/apiBase";
 
-const API_BASE = process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:3001/api/v1";
+const API_BASE = getApiBase();
 const AUTH_HEADERS = { Authorization: "Bearer dev-bypass" };
 
 // ── Types ─────────────────────────────────────────────────────────────────────

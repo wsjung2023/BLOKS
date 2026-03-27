@@ -22,6 +22,18 @@
       ],
       "@bloks/shared/*": [
         "../../packages/shared/src/*"
+      ],
+      "@bloks/world": [
+        "../../packages/world/src/index.ts"
+      ],
+      "@bloks/world/*": [
+        "../../packages/world/src/*"
+      ],
+      "@bloks/simulation": [
+        "../../packages/simulation/src/index.ts"
+      ],
+      "@bloks/simulation/*": [
+        "../../packages/simulation/src/*"
       ]
     },
     "allowJs": true,

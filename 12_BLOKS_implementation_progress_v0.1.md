@@ -1,5 +1,5 @@
 # BLOKS Implementation Progress
-- overall: 33/38 (86.84%)
+- overall: 38/38 (100.00%)
 
 ## 00_BLOKS_index_v0.1.md
 - progress: 1/1 (100.00%)
@@ -27,15 +27,15 @@
   - [x] 인증 미들웨어
 
 ## 05_BLOKS_UI_screen_spec_v0.1.md
-- progress: 2/4 (50.00%)
+- progress: 4/4 (100.00%)
   - [x] 월드 화면 엔트리
   - [x] 보드 화면 라우트
-  - [ ] 승인 센터 화면 라우트
-  - [ ] Character Directory 화면 라우트
+  - [x] 승인 센터 화면 라우트
+  - [x] Character Directory 화면 라우트
 
 ## 06_BLOKS_MVP_WBS_v0.1.md
-- progress: 2/3 (66.67%)
-  - [ ] Analytics 화면 라우트
+- progress: 3/3 (100.00%)
+  - [x] Analytics 화면 라우트
   - [x] 스프라이트 감사 도구
   - [x] 문서 기준 진행률 대시보드
 
@@ -72,15 +72,13 @@
   - [x] sprites-v2 에셋 축적
 
 ## 11_BLOKS_canonical_alignment_and_P0_fixes_v0.1.md
-- progress: 2/4 (50.00%)
-  - [ ] packages/world 렌더링 계층
-  - [ ] packages/simulation 상태 연산기
+- progress: 4/4 (100.00%)
+  - [x] packages/world 렌더링 계층
+  - [x] packages/simulation 상태 연산기
   - [x] rank/role/org seed
   - [x] ID prefix(char_/proj_/task_) 생성 유틸
 
 ## Next recommended tasks
-- 11_BLOKS_canonical_alignment_and_P0_fixes_v0.1.md: packages/world 렌더링 계층
-- 11_BLOKS_canonical_alignment_and_P0_fixes_v0.1.md: packages/simulation 상태 연산기
-- 05_BLOKS_UI_screen_spec_v0.1.md: 승인 센터 화면 라우트
-- 06_BLOKS_MVP_WBS_v0.1.md: Analytics 화면 라우트
-- 05_BLOKS_UI_screen_spec_v0.1.md: Character Directory 화면 라우트
+- 05_BLOKS_UI_screen_spec_v0.1.md: Approval Center 상세 상호작용(실승인/반려 액션) 연결
+- 06_BLOKS_MVP_WBS_v0.1.md: Analytics 실데이터(비용/처리량/병목) 집계 API 연동
+- 10_BLOKS_world_runtime_and_isometric_rules_v0.1.md: 월드 스냅샷 보간(Interpolation) 렌더 개선

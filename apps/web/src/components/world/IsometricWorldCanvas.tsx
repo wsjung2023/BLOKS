@@ -2,6 +2,7 @@
 "use client";
 import React, { useEffect, useRef, useState, useCallback, useContext, useMemo } from "react";
 import { ContextPanelContext } from "../layout/AppShell-nav";
+import { getApiBase } from "../../lib/apiBase";
 import {
   GRID_COLS, GRID_ROWS, TILE_W, TILE_H, TILE_DEPTH,
   DESK_W, DESK_H, DESK_DEPTH, DESK_COLOR,
@@ -9,7 +10,7 @@ import {
   ZONE_FLOOR_URLS, codeNameToSpriteUrl, getInitials, isoToScreen, shadeColor, buildEffect,
 } from "./world-sprites";
 
-const API_BASE = process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:3001/api/v1";
+const API_BASE = getApiBase();
 const AUTH_HEADERS = { Authorization: "Bearer dev-bypass" };
 
 // ?? Types ??????????????????????????????????????????????????????????????????????
@@ -313,10 +314,10 @@ export default function IsometricWorldCanvas() {
     return () => window.removeEventListener("pointerdown", dismiss);
   }, [contextMenu]);
 
-  const MENU_ACTIONS = [
-  { label: "View Profile", action: (c) => { handleCharClick(c); setContextMenu(null); } },
-  { label: "Send Message", action: () => setContextMenu(null) },
-  { label: "Assign Task", action: () => setContextMenu(null) },
+  const MENU_ACTIONS: { label: string; action: (character: Character) => void }[] = [
+    { label: "View Profile", action: (character: Character) => { handleCharClick(character); setContextMenu(null); } },
+    { label: "Send Message", action: () => setContextMenu(null) },
+    { label: "Assign Task", action: () => setContextMenu(null) },
   ];
 
   return (
@@ -345,4 +346,3 @@ export default function IsometricWorldCanvas() {
     </div>
   );
 }
-
