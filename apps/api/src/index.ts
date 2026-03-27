@@ -6,6 +6,9 @@ import { charactersRouter } from "./routes/characters.js";
 import { tasksRouter } from "./routes/tasks.js";
 import { projectsRouter } from "./routes/projects.js";
 import { approvalsRouter } from "./routes/approvals.js";
+import { artifactsRouter } from "./routes/artifacts.js";
+import { eventsRouter } from "./routes/events.js";
+import { jobsRouter } from "./routes/jobs.js";
 import { getSupabase } from "@bloks/db";
 
 const PORT = process.env["PORT"] ?? process.env["API_PORT"] ?? "4000";
@@ -80,6 +83,9 @@ v1.use("/characters", charactersRouter);
 v1.use("/tasks", tasksRouter);
 v1.use("/projects", projectsRouter);
 v1.use("/approvals", approvalsRouter);
+v1.use("/artifacts", artifactsRouter);
+v1.use("/events", eventsRouter);
+v1.use("/jobs", jobsRouter);
 
 app.use("/api/v1", v1);
 

@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src",
+    "declarationMap": false,
     "lib": ["ES2022"],
     "paths": {
       "@bloks/shared": ["../../packages/shared/src/index.ts"],
@@ -14,4 +14,3 @@
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
-
