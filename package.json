@@ -9,6 +9,8 @@
     "lint": "turbo lint",
     "test": "turbo test",
     "format": "turbo format",
+    "sprites:audit": "node tools/sprite-audit.mjs",
+    "progress:spec": "node tools/spec-progress.mjs",
     "db:generate": "pnpm --filter @bloks/db exec prisma generate",
     "db:migrate": "pnpm --filter @bloks/db exec prisma migrate dev",
     "db:push": "pnpm --filter @bloks/db exec prisma db push",
@@ -23,4 +25,3 @@
     "@types/node": "^22.0.0"
   }
 }
-

@@ -1,0 +1,6 @@
+{
+  "total_required": 990,
+  "primary_sprite_dir": "apps/web/public/sprites-v2",
+  "progress_mode": "char_only",
+  "notes": "Track production against the v2 pipeline. progress_mode: char_only | all_files"
+}
