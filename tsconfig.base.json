@@ -20,9 +20,12 @@
       "@bloks/db": ["./packages/db/src/index.ts"],
       "@bloks/db/*": ["./packages/db/src/*"],
       "@bloks/ai-router": ["./packages/ai-router/src/index.ts"],
-      "@bloks/ai-router/*": ["./packages/ai-router/src/*"]
+      "@bloks/ai-router/*": ["./packages/ai-router/src/*"],
+      "@bloks/world": ["./packages/world/src/index.ts"],
+      "@bloks/world/*": ["./packages/world/src/*"],
+      "@bloks/simulation": ["./packages/simulation/src/index.ts"],
+      "@bloks/simulation/*": ["./packages/simulation/src/*"]
     }
   },
   "exclude": ["node_modules", "dist", ".next"]
 }
-

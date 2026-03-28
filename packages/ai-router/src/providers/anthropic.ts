@@ -1,6 +1,7 @@
 // Anthropic provider stub — wraps Anthropic SDK (reserved for post-MVP multi-provider)
 import Anthropic from "@anthropic-ai/sdk";
 import type { AiProvider, AiRequest, AiExecutionResult } from "../index.js";
+import type { MessageCreateParamsNonStreaming } from "@anthropic-ai/sdk/resources/messages/index";
 
 // ── Cost estimation (per 1M tokens, USD) ─────────────────────────────────────
 
@@ -32,7 +33,7 @@ export class AnthropicProvider implements AiProvider {
     const model = request.model ?? "claude-haiku-4-5-20251001";
 
     try {
-      const response = await this.client.messages.create({
+      const payload: MessageCreateParamsNonStreaming = {
         model,
         max_tokens: request.maxTokens ?? 2048,
         messages: [{ role: "user", content: request.userPrompt }],

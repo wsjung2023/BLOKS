@@ -7,7 +7,7 @@ import {
   ContextPanelContext,
 } from "./AppShell-nav";
 import { BottomLiveTicker } from "./AppShell-ticker";
-import { getApiBase } from "../../lib/apiBase";
+import { apiGet } from "../../lib/apiClient";
 
 export type { NavItem } from "./AppShell-nav";
 export { ContextPanelContext } from "./AppShell-nav";
@@ -22,9 +22,6 @@ interface AppShellProps {
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-
-const API_BASE = getApiBase();
-const AUTH_HEADERS = { Authorization: "Bearer dev-bypass" };
 
 const PENDING_APPROVAL_STATES = new Set([
   "WaitingL1", "WaitingL2", "WaitingL3", "WaitingFounder",
@@ -52,8 +49,7 @@ function TopGlobalNav() {
   // Pending approval count — refreshes every 30 s
   useEffect(() => {
     const load = () =>
-      fetch(`${API_BASE}/approvals?pageSize=100`, { headers: AUTH_HEADERS })
-        .then((r) => r.json())
+      apiGet<{ data?: { items?: { state?: string }[] } }>("/approvals?pageSize=100")
         .then((body: { data?: { items?: { state?: string }[] } }) => {
           const n = (body.data?.items ?? []).filter(
             (a) => PENDING_APPROVAL_STATES.has(a.state ?? "")

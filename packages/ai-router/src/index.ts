@@ -1,7 +1,6 @@
 // @bloks/ai-router — routeAI function with character model lookup and provider routing
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { OpenAiProvider } from "./providers/openai.js";
-import { AnthropicProvider } from "./providers/anthropic.js";
 
 // ── Core types ────────────────────────────────────────────────────────────────
 
@@ -108,31 +107,17 @@ function selectModel(taskType: string, profile: ModelProfile | null): string {
   return TASK_MODEL_MAP[taskType] ?? TASK_MODEL_MAP["default"]!;
 }
 
-// ── Provider resolution (doc 11: OpenAI primary, Anthropic optional) ─────────
+// ── Provider resolution (doc 11: MVP OpenAI single-provider) ──────────────────
 
 let _openai: OpenAiProvider | null = null;
-let _anthropic: AnthropicProvider | null = null;
 
 function getOpenAi(): OpenAiProvider {
   _openai ??= new OpenAiProvider();
   return _openai;
 }
 
-function getAnthropic(): AnthropicProvider | null {
-  if (_anthropic) return _anthropic;
-  if (!process.env["ANTHROPIC_API_KEY"]) return null;
-  try {
-    _anthropic = new AnthropicProvider();
-    return _anthropic;
-  } catch {
-    return null;
-  }
-}
-
-function resolveProvider(providerName: string | undefined): AiProvider {
-  if (providerName === "anthropic") {
-    return getAnthropic() ?? getOpenAi();
-  }
+function resolveProvider(_providerName: string | undefined): AiProvider {
+  // Canonical rule (doc 11): MVP must route through OpenAI only.
   return getOpenAi();
 }
 
@@ -236,4 +221,4 @@ export function getAiRouter(): AiRouter {
   return new AiRouter();
 }
 
-export { OpenAiProvider, AnthropicProvider };
+export { OpenAiProvider };
