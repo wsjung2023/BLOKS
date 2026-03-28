@@ -1,10 +1,7 @@
 // AppShell-ticker — BottomLiveTicker polls /tasks + /approvals every 5 s
 "use client";
 import { useEffect, useState } from "react";
-import { getApiBase } from "../../lib/apiBase";
-
-const API_BASE = getApiBase();
-const AUTH_HEADERS = { Authorization: "Bearer dev-bypass" };
+import { apiGet } from "../../lib/apiClient";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -60,15 +57,11 @@ function approvalToEvent(a: ApiItem): TickerEvent {
 async function loadEvents(): Promise<TickerEvent[]> {
   try {
     const [tr, ar] = await Promise.all([
-      fetch(`${API_BASE}/tasks?pageSize=8`, { headers: AUTH_HEADERS }),
-      fetch(`${API_BASE}/approvals?pageSize=4`, { headers: AUTH_HEADERS }),
+      apiGet<{ data?: { items?: ApiItem[] } }>("/tasks?pageSize=8"),
+      apiGet<{ data?: { items?: ApiItem[] } }>("/approvals?pageSize=4"),
     ]);
-    const tj = tr.ok
-      ? (await tr.json() as { data?: { items?: ApiItem[] } })
-      : null;
-    const aj = ar.ok
-      ? (await ar.json() as { data?: { items?: ApiItem[] } })
-      : null;
+    const tj = tr ?? null;
+    const aj = ar ?? null;
     const tasks = tj?.data?.items ?? [];
     const approvals = aj?.data?.items ?? [];
     return [

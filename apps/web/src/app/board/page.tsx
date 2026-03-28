@@ -2,31 +2,32 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getApiBase } from '../../lib/apiBase';
+import { apiGet } from '../../lib/apiClient';
 
-const COLUMNS = ['Backlog', 'Todo', 'InProgress', 'InReview', 'Done'] as const;
+const COLUMNS = ['Created', 'Assigned', 'InProgress', 'PendingReview', 'Done'] as const;
 type TaskState = (typeof COLUMNS)[number];
 
 interface Task {
   id: string;
   title: string;
   state: TaskState;
-  priority: 'Critical' | 'High' | 'Medium' | 'Low';
-  assignee_id?: string;
+  priority: 'P0' | 'P1' | 'P2' | 'P3' | 'P4';
+  assignee_character_id?: string;
 }
 
 const PRIORITY_COLOR: Record<string, string> = {
-  Critical: 'bg-red-500',
-  High: 'bg-orange-500',
-  Medium: 'bg-yellow-500',
-  Low: 'bg-gray-400',
+  P0: 'bg-red-500',
+  P1: 'bg-orange-500',
+  P2: 'bg-yellow-500',
+  P3: 'bg-blue-500',
+  P4: 'bg-gray-400',
 };
 
 const COL_LABEL: Record<string, string> = {
-  Backlog: '백로그',
-  Todo: '할 일',
+  Created: '생성됨',
+  Assigned: '배정됨',
   InProgress: '진행 중',
-  InReview: '검토 중',
+  PendingReview: '검토 대기',
   Done: '완료',
 };
 
@@ -35,9 +36,11 @@ export default function BoardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${getApiBase()}/tasks`)
-      .then((r) => r.json())
-      .then((data) => setTasks(Array.isArray(data) ? data : []))
+    apiGet<{ data?: { items?: Task[] } }>("/tasks")
+      .then((body: { data?: { items?: Task[] } }) => {
+        const next = body.data?.items ?? [];
+        setTasks(Array.isArray(next) ? next : []);
+      })
       .catch(() => setTasks([]))
       .finally(() => setLoading(false));
   }, []);
@@ -74,7 +77,7 @@ export default function BoardPage() {
                     className={`w-2 h-2 rounded-full flex-shrink-0 mt-1 ${PRIORITY_COLOR[task.priority] ?? 'bg-gray-400'}`}
                   />
                 </div>
-                {task.assignee_id && (
+                {task.assignee_character_id && (
                   <div className="flex items-center gap-1 mt-2">
                     <div className="w-5 h-5 rounded-full bg-indigo-600 flex items-center justify-center text-xs text-white">
                       A
