@@ -2,6 +2,7 @@
 "use client";
 import React from "react";
 import Link from "next/link";
+import type { Route } from "next";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -19,7 +20,7 @@ export const ContextPanelContext = React.createContext<ContextPanelCtx>({
 
 // ── Nav items ─────────────────────────────────────────────────────────────────
 
-const NAV_ITEMS: { key: NavItem; label: string; href: string; icon: string }[] = [
+const NAV_ITEMS: { key: NavItem; label: string; href: Route; icon: string }[] = [
   { key: "world",     label: "월드",          href: "/world",     icon: "🏢" },
   { key: "board",     label: "프로젝트 보드", href: "/board",     icon: "📋" },
   { key: "directory", label: "캐릭터 목록",   href: "/directory", icon: "👥" },

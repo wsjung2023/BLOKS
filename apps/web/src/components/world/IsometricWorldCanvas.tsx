@@ -314,10 +314,10 @@ export default function IsometricWorldCanvas() {
     return () => window.removeEventListener("pointerdown", dismiss);
   }, [contextMenu]);
 
-  const MENU_ACTIONS = [
-  { label: "View Profile", action: (c) => { handleCharClick(c); setContextMenu(null); } },
-  { label: "Send Message", action: () => setContextMenu(null) },
-  { label: "Assign Task", action: () => setContextMenu(null) },
+  const MENU_ACTIONS: { label: string; action: (character: Character) => void }[] = [
+    { label: "View Profile", action: (character: Character) => { handleCharClick(character); setContextMenu(null); } },
+    { label: "Send Message", action: () => setContextMenu(null) },
+    { label: "Assign Task", action: () => setContextMenu(null) },
   ];
 
   return (
