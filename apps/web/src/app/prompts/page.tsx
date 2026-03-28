@@ -1,15 +1,13 @@
 import AppShell from "@/components/layout/AppShell";
 
-export const metadata = {
-  title: "프롬프트 콘솔 — BLOKS",
-};
-
 export default function PromptsPage() {
   return (
     <AppShell activeNav="prompts">
-      <section className="p-6 text-gray-200">
-        <h1 className="text-xl font-semibold mb-2">프롬프트 콘솔</h1>
-        <p className="text-sm text-gray-400">에이전트 프롬프트 템플릿을 확인하고 관리할 수 있는 화면입니다.</p>
+      <section style={{ padding: "1rem" }}>
+        <h1 style={{ margin: 0, fontSize: "1.1rem" }}>Prompt Console</h1>
+        <p style={{ marginTop: "0.75rem", color: "var(--color-muted)", fontSize: "0.85rem" }}>
+          P2 단계에서 프롬프트 템플릿 편집기/버전 관리 UI를 연결할 예정입니다.
+        </p>
       </section>
     </AppShell>
   );

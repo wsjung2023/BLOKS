@@ -1,29 +1,16 @@
-export const SNAPSHOT_MIN_INTERVAL_MS = 2_000;
-export const SNAPSHOT_MAX_INTERVAL_MS = 5_000;
-
-export function normalizeSnapshotInterval(ms = 3_000): number {
-  return Math.max(SNAPSHOT_MIN_INTERVAL_MS, Math.min(SNAPSHOT_MAX_INTERVAL_MS, ms));
+export interface RuntimeSignal {
+  workloadScore: number;
+  fatigueScore: number;
+  burnoutTriggered: boolean;
 }
 
-export function createSnapshotPoller(
-  callback: () => void | Promise<void>,
-  intervalMs = 3_000
-): { start: () => void; stop: () => void } {
-  const tickMs = normalizeSnapshotInterval(intervalMs);
-  let timer: ReturnType<typeof setInterval> | null = null;
+export function deriveRuntimeSignal(workloadScore: number, fatigueScore: number): RuntimeSignal {
+  const boundedWorkload = Math.max(0, Math.min(100, workloadScore));
+  const boundedFatigue = Math.max(0, Math.min(100, fatigueScore));
 
   return {
-    start: () => {
-      if (timer) return;
-      void callback();
-      timer = setInterval(() => {
-        void callback();
-      }, tickMs);
-    },
-    stop: () => {
-      if (!timer) return;
-      clearInterval(timer);
-      timer = null;
-    },
+    workloadScore: boundedWorkload,
+    fatigueScore: boundedFatigue,
+    burnoutTriggered: boundedWorkload >= 85 || boundedFatigue >= 85,
   };
 }

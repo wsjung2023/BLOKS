@@ -77,8 +77,3 @@
   - [x] packages/simulation 상태 연산기
   - [x] rank/role/org seed
   - [x] ID prefix(char_/proj_/task_) 생성 유틸
-
-## Next recommended tasks
-- 05_BLOKS_UI_screen_spec_v0.1.md: Approval Center 상세 상호작용(실승인/반려 액션) 연결
-- 06_BLOKS_MVP_WBS_v0.1.md: Analytics 실데이터(비용/처리량/병목) 집계 API 연동
-- 10_BLOKS_world_runtime_and_isometric_rules_v0.1.md: 월드 스냅샷 보간(Interpolation) 렌더 개선

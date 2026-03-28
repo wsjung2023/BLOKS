@@ -23,15 +23,15 @@ export const ContextPanelContext = React.createContext<ContextPanelCtx>({
 const NAV_ITEMS: { key: NavItem; label: string; href: Route; icon: string }[] = [
   { key: "world",     label: "월드",          href: "/world",     icon: "🏢" },
   { key: "board",     label: "프로젝트 보드", href: "/board",     icon: "📋" },
-  { key: "directory", label: "캐릭터 목록",   href: "/directory", icon: "👥" },
-  { key: "approval",  label: "결재 센터",     href: "/approval",  icon: "✅" },
+  { key: "directory", label: "캐릭터 목록",   href: "/characters", icon: "👥" },
+  { key: "approval",  label: "결재 센터",     href: "/approvals",  icon: "✅" },
   { key: "analytics", label: "분석",          href: "/analytics", icon: "📊" },
   { key: "prompts",   label: "프롬프트 콘솔", href: "/prompts",   icon: "⚡" },
 ];
 
 // ── LeftSidebarNav ────────────────────────────────────────────────────────────
 
-export function LeftSidebarNav({ active }: { active?: NavItem }) {
+export function LeftSidebarNav({ active }: { active: NavItem | undefined }) {
   return (
     <nav
       style={{
