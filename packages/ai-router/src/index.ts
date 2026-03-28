@@ -169,12 +169,12 @@ export async function routeAI(options: RouteAIOptions): Promise<RouteAIResult> {
 
   const request: AiRequest = {
     userPrompt: prompt,
-    systemPrompt: resolvedSystem,
     taskType,
     model,
-    maxTokens,
     responseFormat: responseFormat ?? "text",
     characterId,
+    ...(resolvedSystem ? { systemPrompt: resolvedSystem } : {}),
+    ...(maxTokens !== undefined ? { maxTokens } : {}),
   };
 
   let result = await provider.execute<string>(request);
