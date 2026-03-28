@@ -38,7 +38,8 @@
     },
     "allowJs": true,
     "noEmit": true,
-    "incremental": true
+    "incremental": true,
+    "declarationMap": false
   },
   "include": [
     "next-env.d.ts",

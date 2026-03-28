@@ -38,9 +38,7 @@ export class AnthropicProvider implements AiProvider {
         max_tokens: request.maxTokens ?? 2048,
         messages: [{ role: "user", content: request.userPrompt }],
         ...(request.systemPrompt ? { system: request.systemPrompt } : {}),
-      };
-
-      const response = await this.client.messages.create(payload);
+      });
 
       const block = response.content[0];
       const rawText = block?.type === "text" ? block.text : "";
