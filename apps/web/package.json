@@ -10,6 +10,8 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@bloks/simulation": "workspace:*",
+    "@bloks/world": "workspace:*",
     "next": "^15.1.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",

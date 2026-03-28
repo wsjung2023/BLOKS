@@ -123,7 +123,7 @@ export default function AppShell({ children, activeNav }: AppShellProps) {
     <ContextPanelContext.Provider value={{ openPanel, closePanel }}>
       <div style={{ height: "100vh", overflow: "hidden" }}>
         <TopGlobalNav />
-        <LeftSidebarNav active={activeNav} />
+        <LeftSidebarNav {...(activeNav ? { active: activeNav } : {})} />
 
         <main
           style={{
