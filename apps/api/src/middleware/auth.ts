@@ -24,6 +24,7 @@ declare global {
 
 const DEV_BYPASS_TOKEN = "dev-bypass";
 const JWT_SECRET = process.env["JWT_SECRET"] ?? process.env["SESSION_SECRET"] ?? "";
+const ENABLE_DEV_BYPASS_AUTH = process.env["ENABLE_DEV_BYPASS_AUTH"] === "true";
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 
@@ -44,8 +45,8 @@ export function authenticateRequest(
 
   const token = authHeader.slice(7);
 
-  // Dev bypass — only in non-production
-  if (token === DEV_BYPASS_TOKEN && process.env["NODE_ENV"] !== "production") {
+  // Dev bypass — only in non-production and explicitly enabled
+  if (token === DEV_BYPASS_TOKEN && process.env["NODE_ENV"] !== "production" && ENABLE_DEV_BYPASS_AUTH) {
     req.auth = { sub: "founder-dev", role: "founder" };
     next();
     return;

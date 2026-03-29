@@ -75,6 +75,12 @@ importers:
       '@bloks/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@bloks/simulation':
+        specifier: workspace:*
+        version: link:../../packages/simulation
+      '@bloks/world':
+        specifier: workspace:*
+        version: link:../../packages/world
       next:
         specifier: ^15.1.0
         version: 15.5.14(react-dom@18.3.1(react@18.3.1))(react@18.3.1)

@@ -2,7 +2,7 @@
 "use client";
 import React, { useEffect, useRef, useState, useCallback, useContext, useMemo } from "react";
 import { ContextPanelContext } from "../layout/AppShell-nav";
-import { getApiBase } from "../../lib/apiBase";
+import { apiGet } from "../../lib/apiClient";
 import {
   GRID_COLS, GRID_ROWS, TILE_W, TILE_H, TILE_DEPTH,
   DESK_W, DESK_H, DESK_DEPTH, DESK_COLOR,
@@ -10,17 +10,16 @@ import {
   ZONE_FLOOR_URLS, codeNameToSpriteUrl, getInitials, isoToScreen, shadeColor, buildEffect,
 } from "./world-sprites";
 
-const API_BASE = getApiBase();
-const AUTH_HEADERS = { Authorization: "Bearer dev-bypass" };
 
 // ?? Types ??????????????????????????????????????????????????????????????????????
 
 interface RuntimeState {
-  runtime_status: string;
-  workload_score: number;
-  fatigue_score: number;
-  burnout_triggered: boolean;
-  current_task_count: number;
+  runtime_status?: string;
+  activity_status?: string;
+  workload_score?: number;
+  fatigue_score?: number;
+  burnout_triggered?: boolean;
+  current_task_count?: number;
 }
 
 interface Character {
@@ -41,9 +40,15 @@ interface ContextMenu { x: number; y: number; character: Character }
 
 function getRuntime(char: Character): RuntimeState {
   const rs = char.character_runtime_states;
-  const fb: RuntimeState = { runtime_status: "Idle", workload_score: 0, fatigue_score: 0, burnout_triggered: false, current_task_count: 0 };
+  const fb: RuntimeState = { activity_status: "Idle", workload_score: 0, fatigue_score: 0, burnout_triggered: false, current_task_count: 0 };
   if (!rs) return fb;
   return Array.isArray(rs) ? (rs[0] ?? fb) : rs;
+}
+
+
+function getRuntimeStatus(char: Character): string {
+  const rt = getRuntime(char);
+  return rt.activity_status ?? rt.runtime_status ?? "Idle";
 }
 
 function getZoneTiles(zone: string) {
@@ -168,7 +173,7 @@ async function initPixi(
       desk.fill({ color: shadeColor(DESK_COLOR, -40), alpha: 0.95 });
       stage.addChild(desk);
     }
-    if (rt.current_task_count >= 3 || rt.runtime_status === "Overloaded") {
+    if ((rt.current_task_count ?? 0) >= 3 || getRuntimeStatus(char) === "Overloaded") {
       const papers = new PIXI.Graphics();
       for (let i = 0; i < 3; i++) papers.rect(x + 5 + i * 3, y - 8 - i * 3, 7, 9).fill({ color: 0xfafafa, alpha: 0.9 }).stroke({ color: 0xcccccc, width: 0.5 });
       stage.addChild(papers);
@@ -189,7 +194,8 @@ async function initPixi(
     const char = characters.find((c) => c.id === id);
     if (!char) continue;
     const { x, y } = isoToScreen(pos.col, pos.row, ox, oy);
-    const { fatigue_score: fat, burnout_triggered: burnout } = getRuntime(char);
+    const { fatigue_score: fatigueScore = 0, burnout_triggered: burnout = false } = getRuntime(char);
+    const fat = fatigueScore;
     const sy = y - 10; // sprite feet Y
     const charTex = charTexMap.get(id);
     const onPick = () => { if (ring) { ring.x = x; ring.y = sy; ring.visible = true; } onCharClick(char); };
@@ -231,7 +237,8 @@ async function initPixi(
 
 function CharacterDetail({ char }: { char: Character }) {
   const rt = getRuntime(char);
-  const fc = rt.fatigue_score > 70 ? "var(--color-toxic-red)" : rt.fatigue_score > 40 ? "var(--color-toxic-orange)" : "inherit";
+  const fatigue = rt.fatigue_score ?? 0;
+  const fc = fatigue > 70 ? "var(--color-toxic-red)" : fatigue > 40 ? "var(--color-toxic-orange)" : "inherit";
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
       <div>
@@ -239,13 +246,13 @@ function CharacterDetail({ char }: { char: Character }) {
       <div style={{ color: "var(--color-muted)", fontSize: "0.72rem" }}>{char.code_name} &middot; {char.active_mode}</div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "0.35rem 0.75rem", fontSize: "0.78rem" }}>
-        <span style={{ color: "var(--color-muted)" }}>Fatigue</span><span style={{ color: fc }}>{rt.fatigue_score}%</span>
+        <span style={{ color: "var(--color-muted)" }}>Fatigue</span><span style={{ color: fc }}>{rt.fatigue_score ?? 0}%</span>
         <span style={{ color: "var(--color-muted)" }}>Rank</span><span>{char.ranks?.name ?? "N/A"}</span>
-        <span style={{ color: "var(--color-muted)" }}>Status</span><span>{rt.runtime_status}</span>
-        <span style={{ color: "var(--color-muted)" }}>Tasks</span><span>{rt.current_task_count}</span>
+        <span style={{ color: "var(--color-muted)" }}>Status</span><span>{getRuntimeStatus(char)}</span>
+        <span style={{ color: "var(--color-muted)" }}>Tasks</span><span>{rt.current_task_count ?? 0}</span>
         <span style={{ color: "var(--color-muted)" }}>Burnout</span>
         <span style={{ color: rt.burnout_triggered ? "var(--color-toxic-red)" : "inherit" }}>
-          {rt.burnout_triggered ? "BURNOUT" : "Normal"}
+          {(rt.burnout_triggered ?? false) ? "BURNOUT" : "Normal"}
         </span>
       </div>
     </div>
@@ -263,9 +270,8 @@ export default function IsometricWorldCanvas() {
 
   const [characters, setCharacters] = useState<Character[]>([]);
   useEffect(() => {
-    fetch(`${API_BASE}/characters?pageSize=100`, { headers: AUTH_HEADERS })
-      .then((r) => r.json())
-      .then((body: { data?: { items?: Character[] } }) => setCharacters(body.data?.items ?? []))
+    apiGet<{ data?: { items?: Character[] } }>("/characters?pageSize=100")
+      .then((body) => setCharacters(body.data?.items ?? []))
       .catch(() => {});
   }, []);
 
@@ -274,7 +280,7 @@ export default function IsometricWorldCanvas() {
     const counts = new Map<string, number>();
     for (const c of characters) {
       const zone = DIVISION_TO_ZONE[(c.division_id ?? "").toLowerCase()] ?? "management";
-      const wl = getRuntime(c).workload_score;
+      const wl = getRuntime(c).workload_score ?? 0;
       totals.set(zone, (totals.get(zone) ?? 0) + wl);
       counts.set(zone, (counts.get(zone) ?? 0) + 1);
     }

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { QUEUE_NAMES } from "@bloks/shared";
+import type { JobExecutionRecord } from "@bloks/shared";
 import { getSupabase } from "@bloks/db";
 
 export const jobsRouter = Router();
@@ -18,14 +19,23 @@ const createJobSchema = z.object({
   requestedByCharacterId: z.string().optional(),
 });
 
+type JobQueuedPayload = {
+  queueName?: string;
+  jobName?: string;
+  status?: string;
+  dedupeKey?: string | null;
+  traceId?: string | null;
+  payload?: Record<string, unknown>;
+};
+
 jobsRouter.get("/", async (_req, res) => {
   try {
     const sb = getSupabase();
     const { data, error } = await sb
       .from("event_logs")
-      .select("id, event_type, actor_id, payload, severity, created_at")
+      .select("id, entity_id, event_type, changed_by, changed_at, payload")
       .eq("event_type", "job.queued")
-      .order("created_at", { ascending: false })
+      .order("changed_at", { ascending: false })
       .limit(100);
 
     if (error) {
@@ -33,7 +43,21 @@ jobsRouter.get("/", async (_req, res) => {
       return;
     }
 
-    res.json({ ok: true, data: { items: data ?? [], total: (data ?? []).length } });
+    const items: JobExecutionRecord[] = (data ?? []).map((row) => {
+      const payload = (row.payload ?? {}) as JobQueuedPayload;
+      return {
+        id: row.entity_id ?? row.id,
+        queue_name: payload.queueName ?? "unknown",
+        job_name: payload.jobName ?? "job.queued",
+        status: (payload.status as JobExecutionRecord["status"] | undefined) ?? "queued",
+        dedupe_key: payload.dedupeKey ?? null,
+        trace_id: payload.traceId ?? null,
+        created_at: row.changed_at,
+        updated_at: row.changed_at,
+      };
+    });
+
+    res.json({ ok: true, data: { items, total: items.length } });
   } catch (err) {
     res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다.", details: { message: String(err) } } });
   }
@@ -52,34 +76,31 @@ jobsRouter.post("/", async (req, res) => {
   try {
     const sb = getSupabase();
     const now = new Date().toISOString();
-    const actorId = parsed.data.requestedByCharacterId ?? req.auth?.sub ?? null;
-    const { data: company } = await sb.from("companies").select("id").limit(1).maybeSingle();
-    const companyId = company?.id;
+    const actorId = parsed.data.requestedByCharacterId ?? req.auth?.sub ?? "system";
+    const jobId = `job_${Date.now()}`;
 
-    if (!companyId) {
-      res.status(422).json({
-        ok: false,
-        error: { code: "COMPANY_NOT_FOUND", message: "기본 회사(company) 데이터가 없습니다. seed를 먼저 실행해 주세요." },
-      });
-      return;
-    }
+    const payload: JobQueuedPayload = {
+      queueName: parsed.data.queueName,
+      jobName: "job.queued",
+      status: "queued",
+      payload: parsed.data.payload,
+      traceId: (req.headers["x-request-id"] as string | undefined) ?? null,
+      dedupeKey: null,
+    };
 
     const { data, error } = await sb
       .from("event_logs")
       .insert({
-        company_id: companyId,
+        entity_type: "job",
+        entity_id: jobId,
         event_type: "job.queued",
-        actor_id: actorId,
-        target_type: "job",
-        target_id: `job_${Date.now()}`,
-        payload: {
-          queueName: parsed.data.queueName,
-          payload: parsed.data.payload,
-          requestedByCharacterId: actorId,
-          queuedAt: now,
-        },
-        severity: "INFO",
-        created_at: now,
+        previous_state: null,
+        next_state: "queued",
+        changed_by: actorId,
+        changed_at: now,
+        reason_code: null,
+        comment: null,
+        payload,
       })
       .select()
       .single();
