@@ -2,16 +2,13 @@
 "use client";
 import React, { useEffect, useRef, useState, useCallback, useContext, useMemo } from "react";
 import { ContextPanelContext } from "../layout/AppShell-nav";
-import { getApiBase } from "../../lib/apiBase";
+import { apiGet } from "../../lib/apiClient";
 import {
   GRID_COLS, GRID_ROWS, TILE_W, TILE_H, TILE_DEPTH,
   DESK_W, DESK_H, DESK_DEPTH, DESK_COLOR,
   ZONE_COLORS, ZONE_MAP, ZONE_LABELS, DIVISION_TO_ZONE, DIVISION_COLORS,
   ZONE_FLOOR_URLS, codeNameToSpriteUrl, getInitials, isoToScreen, shadeColor, buildEffect,
 } from "./world-sprites";
-
-const API_BASE = getApiBase();
-const AUTH_HEADERS = { Authorization: "Bearer dev-bypass" };
 
 // ?? Types ??????????????????????????????????????????????????????????????????????
 
@@ -263,10 +260,9 @@ export default function IsometricWorldCanvas() {
 
   const [characters, setCharacters] = useState<Character[]>([]);
   useEffect(() => {
-    fetch(`${API_BASE}/characters?pageSize=100`, { headers: AUTH_HEADERS })
-      .then((r) => r.json())
-      .then((body: { data?: { items?: Character[] } }) => setCharacters(body.data?.items ?? []))
-      .catch(() => {});
+    apiGet<{ data?: { items?: Character[] } }>("/characters?pageSize=100")
+      .then((body) => setCharacters(body.data?.items ?? []))
+      .catch(() => setCharacters([]));
   }, []);
 
   const zoneWorkload = useMemo(() => {

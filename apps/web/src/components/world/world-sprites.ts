@@ -1,5 +1,4 @@
 // world-sprites.ts — constants, zone data, and PIXI builder utilities
-import { projectIsoToScreen, shadeRgbColor } from "@bloks/world";
 
 // ── Grid/tile constants ───────────────────────────────────────────────────────
 export const GRID_COLS = 12;
@@ -75,11 +74,17 @@ export function getInitials(name: string): string {
 }
 
 export function isoToScreen(col: number, row: number, ox: number, oy: number) {
-  return projectIsoToScreen({ col, row }, { x: ox, y: oy }, TILE_W, TILE_H);
+  return {
+    x: (col - row) * (TILE_W / 2) + ox,
+    y: (col + row) * (TILE_H / 2) + oy,
+  };
 }
 
 export function shadeColor(color: number, amt: number): number {
-  return shadeRgbColor(color, amt);
+  const r = Math.max(0, Math.min(255, ((color >> 16) & 0xff) + amt));
+  const g = Math.max(0, Math.min(255, ((color >> 8) & 0xff) + amt));
+  const b = Math.max(0, Math.min(255, (color & 0xff) + amt));
+  return (r << 16) | (g << 8) | b;
 }
 
 // PIXI effect builder — sprite from texture or emoji text fallback

@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
+import LoadStateBlock from "@/components/common/LoadStateBlock";
+import { ContextPanelContext } from "@/components/layout/AppShell-nav";
 import { apiGet } from "@/lib/apiClient";
 
 interface RuntimeState {
@@ -26,20 +28,47 @@ function getRuntime(character: Character): RuntimeState | undefined {
 }
 
 export default function CharacterDirectoryPage() {
+  const { openPanel } = useContext(ContextPanelContext);
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  function loadCharacters() {
+    setLoading(true);
+    apiGet<{ data?: { items?: Character[] } }>("/characters?pageSize=40")
+      .then((body: { data?: { items?: Character[] } }) => {
+        setCharacters(body.data?.items ?? []);
+        setError(null);
+      })
+      .catch(() => {
+        setCharacters([]);
+        setError("캐릭터 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      })
+      .finally(() => setLoading(false));
+  }
 
   useEffect(() => {
-    apiGet<{ data?: { items?: Character[] } }>("/characters?pageSize=40")
-      .then((body: { data?: { items?: Character[] } }) => setCharacters(body.data?.items ?? []))
-      .catch(() => setCharacters([]))
-      .finally(() => setLoading(false));
+    loadCharacters();
   }, []);
 
   const burnoutCount = useMemo(
     () => characters.filter((c) => getRuntime(c)?.burnout_triggered).length,
     [characters]
   );
+
+  function openCharacterPanel(character: Character) {
+    const runtime = getRuntime(character);
+    openPanel(
+      character.name,
+      <div style={{ display: "grid", gap: "0.5rem", fontSize: "0.82rem" }}>
+        <div>Code: {character.code_name}</div>
+        <div>Mode: {character.active_mode ?? "N/A"}</div>
+        <div>Workload: {runtime?.workload_score ?? 0}</div>
+        <div>Fatigue: {runtime?.fatigue_score ?? 0}</div>
+        <div>Burnout: {runtime?.burnout_triggered ? "YES" : "NO"}</div>
+      </div>
+    );
+  }
 
   return (
     <AppShell activeNav="directory">
@@ -54,7 +83,11 @@ export default function CharacterDirectoryPage() {
         </header>
 
         {loading ? (
-          <div style={{ color: "var(--color-muted)" }}>캐릭터 로딩 중...</div>
+          <LoadStateBlock message="캐릭터 로딩 중..." />
+        ) : error ? (
+          <LoadStateBlock message={error} tone="error" actionLabel="다시 시도" onAction={loadCharacters} />
+        ) : characters.length === 0 ? (
+          <LoadStateBlock message="표시할 캐릭터가 없습니다." actionLabel="새로고침" onAction={loadCharacters} />
         ) : (
           <div
             style={{
@@ -70,12 +103,23 @@ export default function CharacterDirectoryPage() {
               return (
                 <article
                   key={character.id}
+                  onClick={() => openCharacterPanel(character)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      openCharacterPanel(character);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${character.name} 상세 보기`}
                   style={{
                     border: "1px solid var(--color-border)",
                     borderRadius: 12,
                     padding: "0.8rem",
                     background: locked ? "rgba(255,255,255,0.03)" : "var(--color-panel)",
                     opacity: locked ? 0.7 : 1,
+                    cursor: "pointer",
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>

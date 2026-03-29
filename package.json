@@ -15,7 +15,13 @@
     "db:migrate": "pnpm --filter @bloks/db exec prisma migrate dev",
     "db:push": "pnpm --filter @bloks/db exec prisma db push",
     "db:seed": "pnpm --filter @bloks/db exec tsx prisma/seed.ts",
-    "db:studio": "pnpm --filter @bloks/db exec prisma studio"
+    "db:studio": "pnpm --filter @bloks/db exec prisma studio",
+    "progress:p1": "node tools/p1-progress-check.mjs",
+    "progress:task": "node tools/task-progress.mjs",
+    "progress:report": "node tools/progress-report.mjs",
+    "smoke:board": "BLOKS_BOARD_SMOKE_MODE=api node tools/e2e-board-smoke.mjs",
+    "smoke:board:fixture": "BLOKS_BOARD_SMOKE_MODE=fixture node tools/e2e-board-smoke.mjs",
+    "verify:ci": "pnpm --filter web lint && pnpm --filter web test && pnpm --filter api lint && pnpm --filter api test && pnpm smoke:board:fixture"
   },
   "devDependencies": {
     "turbo": "^2.3.0",
