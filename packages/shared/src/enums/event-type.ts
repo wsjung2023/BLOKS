@@ -4,5 +4,8 @@ export enum EventType {
   ApprovalApproved = "approval.approved",
   ApprovalRejected = "approval.rejected",
   JobQueued = "job.queued",
+  JobStarted = "job.started",
+  JobCompleted = "job.completed",
+  JobFailed = "job.failed",
   ArtifactCreated = "artifact.created",
 }

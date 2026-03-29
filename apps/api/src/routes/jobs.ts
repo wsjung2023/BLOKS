@@ -3,6 +3,7 @@ import { z } from "zod";
 import { QUEUE_NAMES } from "@bloks/shared";
 import type { JobExecutionRecord } from "@bloks/shared";
 import { getSupabase } from "@bloks/db";
+import { enqueueJob } from "../queues/registry.js";
 
 export const jobsRouter = Router();
 
@@ -87,6 +88,19 @@ jobsRouter.post("/", async (req, res) => {
       traceId: (req.headers["x-request-id"] as string | undefined) ?? null,
       dedupeKey: null,
     };
+
+    const traceId = (req.header("x-trace-id") || req.header("x-request-id") || null)?.trim() || null;
+
+    const queued = await enqueueJob({
+      queueName: parsed.data.queueName,
+      payload: {
+        input: parsed.data.payload,
+        companyId,
+        actorId,
+      },
+      requestedByCharacterId: actorId,
+      traceId,
+    });
 
     const { data, error } = await sb
       .from("event_logs")
