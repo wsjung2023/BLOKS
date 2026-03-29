@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { z } from "zod";
-import { QUEUE_NAMES } from "@bloks/shared";
+import { EventType, QUEUE_NAMES } from "@bloks/shared";
 import { getSupabase } from "@bloks/db";
+import { enqueueJob } from "../queues/registry.js";
 
 export const jobsRouter = Router();
 
@@ -24,7 +25,7 @@ jobsRouter.get("/", async (_req, res) => {
     const { data, error } = await sb
       .from("event_logs")
       .select("id, event_type, actor_id, payload, severity, created_at")
-      .eq("event_type", "job.queued")
+      .eq("event_type", EventType.JobQueued)
       .order("created_at", { ascending: false })
       .limit(100);
 
@@ -64,19 +65,34 @@ jobsRouter.post("/", async (req, res) => {
       return;
     }
 
+    const traceId = (req.header("x-trace-id") || req.header("x-request-id") || null)?.trim() || null;
+
+    const queued = await enqueueJob({
+      queueName: parsed.data.queueName,
+      payload: {
+        input: parsed.data.payload,
+        companyId,
+        actorId,
+      },
+      requestedByCharacterId: actorId,
+      traceId,
+    });
+
     const { data, error } = await sb
       .from("event_logs")
       .insert({
         company_id: companyId,
-        event_type: "job.queued",
+        event_type: EventType.JobQueued,
         actor_id: actorId,
         target_type: "job",
-        target_id: `job_${Date.now()}`,
+        target_id: queued.jobId,
         payload: {
           queueName: parsed.data.queueName,
           payload: parsed.data.payload,
           requestedByCharacterId: actorId,
           queuedAt: now,
+          traceId,
+          bullJobId: queued.bullJobId,
         },
         severity: "INFO",
         created_at: now,
