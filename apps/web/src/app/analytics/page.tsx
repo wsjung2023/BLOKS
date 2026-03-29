@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
+import LoadStateBlock from "@/components/common/LoadStateBlock";
 import { apiGet } from "@/lib/apiClient";
 
 interface RuntimeState {
@@ -34,19 +35,31 @@ function toRuntime(character: CharacterItem): RuntimeState {
 export default function AnalyticsPage() {
   const [characters, setCharacters] = useState<CharacterItem[]>([]);
   const [projects, setProjects] = useState<ProjectItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  function loadAnalytics() {
+    setLoading(true);
     Promise.all([
       apiGet<{ data?: { items?: CharacterItem[] } }>("/characters?pageSize=40")
-        .then((b: { data?: { items?: CharacterItem[] } }) => b.data?.items ?? [])
-        .catch(() => []),
+        .then((b: { data?: { items?: CharacterItem[] } }) => b.data?.items ?? []),
       apiGet<{ data?: { items?: ProjectItem[] } }>("/projects?pageSize=20")
-        .then((b: { data?: { items?: ProjectItem[] } }) => b.data?.items ?? [])
-        .catch(() => []),
+        .then((b: { data?: { items?: ProjectItem[] } }) => b.data?.items ?? []),
     ]).then(([characterItems, projectItems]) => {
       setCharacters(characterItems);
       setProjects(projectItems);
+      setError(null);
+    }).catch(() => {
+      setCharacters([]);
+      setProjects([]);
+      setError("분석 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
+    }).finally(() => {
+      setLoading(false);
     });
+  }
+
+  useEffect(() => {
+    loadAnalytics();
   }, []);
 
   const burnoutTop5 = useMemo(
@@ -63,6 +76,13 @@ export default function AnalyticsPage() {
 
   return (
     <AppShell activeNav="analytics">
+      {loading ? (
+        <LoadStateBlock message="분석 데이터 로딩 중..." />
+      ) : error ? (
+        <LoadStateBlock message={error} tone="error" actionLabel="다시 시도" onAction={loadAnalytics} />
+      ) : burnoutTop5.length === 0 && projects.length === 0 ? (
+        <LoadStateBlock message="표시할 분석 데이터가 없습니다." actionLabel="새로고침" onAction={loadAnalytics} />
+      ) : (
       <section style={{ padding: "1rem", display: "grid", gap: "1rem", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
         <article style={{ border: "1px solid var(--color-border)", borderRadius: 12, background: "var(--color-panel)", padding: "1rem" }}>
           <h2 style={{ marginTop: 0, fontSize: "0.95rem" }}>Burnout Tracker (Top 5)</h2>
@@ -113,6 +133,7 @@ export default function AnalyticsPage() {
           </table>
         </article>
       </section>
+      )}
     </AppShell>
   );
 }

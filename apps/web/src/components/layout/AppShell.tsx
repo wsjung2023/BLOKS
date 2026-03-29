@@ -11,6 +11,9 @@ import { apiGet } from "../../lib/apiClient";
 
 export type { NavItem } from "./AppShell-nav";
 export { ContextPanelContext } from "./AppShell-nav";
+export const ToastContext = React.createContext<{ pushToast: (message: string, tone?: "info" | "error" | "success") => void }>({
+  pushToast: () => {},
+});
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -110,6 +113,7 @@ export default function AppShell({ children, activeNav }: AppShellProps) {
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelTitle, setPanelTitle] = useState("");
   const [panelContent, setPanelContent] = useState<React.ReactNode>(null);
+  const [toasts, setToasts] = useState<Array<{ id: string; message: string; tone: "info" | "error" | "success" }>>([]);
 
   const openPanel = useCallback((title: string, content: React.ReactNode) => {
     setPanelTitle(title);
@@ -118,36 +122,64 @@ export default function AppShell({ children, activeNav }: AppShellProps) {
   }, []);
 
   const closePanel = useCallback(() => setPanelOpen(false), []);
+  const pushToast = useCallback((message: string, tone: "info" | "error" | "success" = "info") => {
+    const id = `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    setToasts((prev) => [...prev, { id, message, tone }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 2600);
+  }, []);
 
   return (
-    <ContextPanelContext.Provider value={{ openPanel, closePanel }}>
-      <div style={{ height: "100vh", overflow: "hidden" }}>
-        <TopGlobalNav />
-        <LeftSidebarNav active={activeNav} />
+    <ToastContext.Provider value={{ pushToast }}>
+      <ContextPanelContext.Provider value={{ openPanel, closePanel }}>
+        <div style={{ height: "100vh", overflow: "hidden" }}>
+          <TopGlobalNav />
+          <LeftSidebarNav {...(activeNav ? { active: activeNav } : {})} />
 
-        <main
-          style={{
-            position: "fixed",
-            top: "var(--nav-top-h)",
-            left: "var(--nav-left-w)",
-            right: panelOpen ? "var(--panel-right-w)" : 0,
-            bottom: "var(--ticker-h)",
-            overflow: "auto",
-            background: "var(--color-bg)",
-            transition: "right 0.22s ease",
-          }}
-        >
-          {children}
-        </main>
+          <main
+            style={{
+              position: "fixed",
+              top: "var(--nav-top-h)",
+              left: "var(--nav-left-w)",
+              right: panelOpen ? "var(--panel-right-w)" : 0,
+              bottom: "var(--ticker-h)",
+              overflow: "auto",
+              background: "var(--color-bg)",
+              transition: "right 0.22s ease",
+            }}
+          >
+            {children}
+          </main>
 
-        <RightContextPanel
-          open={panelOpen}
-          title={panelTitle}
-          content={panelContent}
-          onClose={closePanel}
-        />
-        <BottomLiveTicker />
-      </div>
-    </ContextPanelContext.Provider>
+          <div style={{ position: "fixed", top: "calc(var(--nav-top-h) + 0.75rem)", right: panelOpen ? "calc(var(--panel-right-w) + 0.75rem)" : "0.75rem", zIndex: 80, display: "grid", gap: "0.45rem", pointerEvents: "none" }}>
+            {toasts.map((toast) => (
+              <div
+                key={toast.id}
+                style={{
+                  borderRadius: 8,
+                  padding: "0.5rem 0.7rem",
+                  minWidth: 220,
+                  fontSize: "0.78rem",
+                  color: "white",
+                  background: toast.tone === "error" ? "#c92a2a" : toast.tone === "success" ? "#2f9e44" : "#4263eb",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                }}
+              >
+                {toast.message}
+              </div>
+            ))}
+          </div>
+
+          <RightContextPanel
+            open={panelOpen}
+            title={panelTitle}
+            content={panelContent}
+            onClose={closePanel}
+          />
+          <BottomLiveTicker />
+        </div>
+      </ContextPanelContext.Provider>
+    </ToastContext.Provider>
   );
 }

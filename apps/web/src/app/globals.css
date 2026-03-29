@@ -20,6 +20,36 @@
   --ticker-h: 2rem;
 }
 
+@media (max-width: 1024px) {
+  :root {
+    --nav-left-w: 10rem;
+    --panel-right-w: 16rem;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --nav-left-w: 4rem;
+    --panel-right-w: 100vw;
+    --ticker-h: 0rem;
+  }
+
+  html,
+  body {
+    font-size: 13px;
+  }
+
+  .sidebar-label {
+    display: none;
+  }
+
+  .left-sidebar-nav a {
+    justify-content: center !important;
+    padding: 0.75rem 0 !important;
+    gap: 0 !important;
+  }
+}
+
 * {
   box-sizing: border-box;
 }

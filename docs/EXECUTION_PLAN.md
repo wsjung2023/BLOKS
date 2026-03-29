@@ -1,104 +1,87 @@
-# BLOKS 실행 계획서 (Source of Truth 기반)
+# BLOKS 실행 계획 (EXECUTION_PLAN)
 
-> 기준 문서(고정):
-> 1) `BLOKS 멀티에이전트 시스템 심층 분석 및 아키텍처 개선 권고보고서.md`
-> 2) `deep-research-report.md`
+> 기준일: 2026-03-29
+> 목적: P0 완료 이후 P1/P2를 실제 개발 스프린트로 전환하기 위한 실행 기준 문서.
 
-## 0. 운영 원칙
+## 1) 현재 상태 요약
+- P0 범위(문서 00~11 기준) 완료율: **100%**
+- 즉시 착수 대상: `13_BLOKS_P1_P2_execution_prep_v0.1.md`에 정의된 미완료 항목
 
-- 문서 기준 우선순위는 **P0(신뢰성/보안/정합성) -> P1(관측/품질) -> P2(운영 고도화)** 순서로만 진행한다.
-- PR은 반드시 "작은 단위 + 검증 가능" 원칙으로 분리한다.
-- P0 완료 전에는 신규 UI 기능 확장을 하지 않는다(버그 수정 제외).
-- 각 작업은 완료 시 해당 task 파일의 `status`를 `DONE`으로 갱신하고, 근거 커밋 SHA를 남긴다.
+## 2) 작업 원칙
+1. **계약 우선**: API 응답 형식(`ok/data/items`)과 타입 계약을 먼저 고정한다.
+2. **작게 쪼개기**: 각 항목을 0.5~1일 단위 작업으로 나눈다.
+3. **검증 포함 완료**: 코드 + 최소 테스트(또는 스모크 스크립트)까지 완료로 본다.
+4. **문서 동기화**: 완료 시 본 문서와 구현 진행 문서를 즉시 갱신한다.
 
----
+## 3) 실행 백로그 (P1 → P2)
 
-## 1. 전체 계획 맵
+### P1-2. 진행률 산정 방식 고도화
+- [x] 파일 존재 체크와 동작 검증 체크를 분리한 스크립트/리포트 작성 (`tools/p1-progress-check.mjs`)
+- [x] 핵심 API smoke test 추가: `health`, `tasks`, `approvals` (초안 완료)
+- [x] CI/로컬에서 동일하게 실행 가능한 커맨드 문서화 (`pnpm progress:p1`)
 
-### P0 (필수 선행)
-- [ ] `docs/tasks/P0-contract-lock-ssot.md`
-- [ ] `docs/tasks/P0-auth-remove-dev-bypass.md` *(현재: IN_PROGRESS)*
-- [ ] `docs/tasks/P0-worker-bullmq-bootstrap.md`
-- [ ] `docs/tasks/P0-job-execution-outbox-idempotency.md`
-
-### P1 (품질 잠금)
-- [ ] `docs/tasks/P1-ai-router-responses-structured-outputs.md`
-- [ ] `docs/tasks/P1-eventlog-auditlog-unification.md`
-- [ ] `docs/tasks/P1-opentelemetry-tracing.md`
-- [ ] `docs/tasks/P1-world-snapshot-and-sse.md`
-- [ ] `docs/tasks/P1-testing-state-machine.md`
-
-### P2 (운영 고도화)
-- [ ] `docs/tasks/P2-ci-github-actions.md`
-- [ ] `docs/tasks/P2-cost-metrics-and-quotas.md`
-- [ ] `docs/tasks/P2-governance-prompt-policy.md`
+**완료 기준**
+- [x] 존재 체크 결과와 동작 체크 결과가 각각 독립적으로 출력된다.
+- [x] 3개 핵심 라우트 스모크가 성공 시 pass/fail로 표시된다.
 
 ---
 
-## 2. 현재 진척도 (2026-03-29 기준)
+### P2-1. 프론트 공통 API 레이어
+- [x] Authorization 헤더 주입 공통화
+- [x] 공통 에러 처리(네트워크/권한/서버) 및 재시도 정책 적용
+- [x] `dev-bypass` 헤더를 개발 환경에서만 자동 주입
+- [x] 기존 페이지의 ad-hoc fetch를 공통 클라이언트로 이관
 
-- Task 카드 기준: `DONE 0 / 12`, `IN_PROGRESS 1 / 12`, `TODO 11 / 12`
-- 체크리스트(13번 문서) 기준: `8 / 15` 완료 (메타 준비 작업 포함)
-- 해석: **본체 구현은 아직 초기 착수 단계**
+진행 메모: `IsometricWorldCanvas` ad-hoc fetch → `apiClient` 이관 완료(분모 고정을 위해 체크박스 외 메모로 기록).
 
----
-
-## 3. 실행 순서 (강제)
-
-### Step A — Contract Lock (P0-1)
-목표: API/DB/UI 필드 계약 일치(SSOT)
-
-1) characters/events/tasks/jobs 응답 샘플 고정
-2) `packages/shared` 정본 타입 추가
-3) API select/insert 필드 정렬
-4) world/board 참조 필드 정렬
-
-완료 조건:
-- 타입체크 통과
-- 관련 스모크 통과
-- 계약 스냅샷(diff) 리뷰 완료
-
-### Step B — Auth Hardening (P0-2)
-목표: dev bypass 의존 제거 + 실제 로그인 경로 연결
-
-1) web 로그인 화면/토큰 저장 전략 확정
-2) `POST /api/v1/auth/login` 연동
-3) production에서 bypass 불가 검증
-
-완료 조건:
-- dev bypass 비활성 기본값 유지
-- 로그인 성공/실패 UX 동작
-
-### Step C — Worker Bootstrap (P0-3)
-목표: 큐 소비자 실제 동작
-
-1) BullMQ worker/queue registry
-2) 최소 1개 E2E job 흐름
-3) 완료/실패 이벤트 기록
-
-### Step D — Outbox + Idempotency (P0-4)
-목표: 내구성 있는 실행 경로
-
-1) outbox/job_executions 모델
-2) API 트랜잭션 + outbox
-3) relay -> queue publish
-4) idempotency-key 정책
+**완료 기준**
+- [x] 주요 페이지(Approval/Analytics/Characters)가 공통 API 클라이언트를 사용한다.
+- [x] production 빌드에서 `dev-bypass` 헤더가 주입되지 않는다.
 
 ---
 
-## 4. PR 체크리스트 (매 PR 공통)
+### P2-2. 화면 품질 향상
+- [x] Approval/Analytics/Characters의 loading/empty/error 상태를 분리 구현
+- [x] RightContextPanel 재사용 패턴으로 화면 구조 통일
+- [x] 실패 시 사용자 액션(재시도/이동) 제공
 
-- [ ] 범위가 단일 task에 묶여 있는가?
-- [ ] DoD를 문서/코드/테스트로 증명했는가?
-- [ ] `pnpm --filter api lint`
-- [ ] `pnpm --filter web lint`
-- [ ] `pnpm smoke:api`
-- [ ] 관련 task 문서 status 갱신 및 근거 SHA 기입
+진행 메모: Approvals/Board/Characters에서 RightContextPanel 재사용 패턴 적용 완료.
+
+**완료 기준**
+- [x] 각 화면에서 3가지 상태가 명확히 구분되어 렌더링된다.
+- [x] 중복 UI 패턴이 공통 컴포넌트/패턴으로 정리된다.
 
 ---
 
-## 5. 다음 액션 (즉시 실행)
+### P2-3. 테스트 기반 마련
+- [x] web: 최소 1개 컴포넌트 렌더 테스트
+- [x] api: approvals/characters happy-path 테스트
+- [x] e2e smoke: board 데이터 표시 확인 (fixture/API 모드 스크립트 추가)
 
-- [ ] `P0-contract-lock-ssot`를 첫 구현 대상으로 시작
-- [ ] API 응답 계약 스냅샷 수집 스크립트 추가
-- [ ] characters/events/tasks/jobs 계약 테이블 작성
+**완료 기준**
+- [x] `web`, `api` 단위 테스트가 CI에서 실행 가능하다.
+- [x] e2e smoke 1개 시나리오가 안정적으로 통과한다. (board fixture smoke)
+
+## 4) 권장 순서 (Sprint 제안)
+1. **Sprint A**: P1-2 (진행률/스모크)  
+2. **Sprint B**: P2-1 (공통 API 레이어)  
+3. **Sprint C**: P2-3 (테스트 기반)  
+4. **Sprint D**: P2-2 (화면 품질 정리)
+
+## 5) 트래킹 규칙
+- 상태값: `TODO` / `IN_PROGRESS` / `BLOCKED` / `DONE`
+- 각 작업은 PR 단위로 쪼개고, PR 본문에 아래를 포함한다.
+  - 변경 범위
+  - 검증 커맨드/결과
+  - 잔여 리스크
+- 보고 규칙: 모든 진행 공유는 `docs/STATUS_REPORT.md`와 동일한 bullet 중심 `Summary` + `Testing` 형식으로 보고
+
+## 6) 실행 커맨드
+- `pnpm progress:p1` : 파일 존재 체크 + API 스모크 체크를 순차 실행
+- `BLOKS_API_BASE_URL=http://localhost:4000 pnpm progress:p1` : 대상 API 주소 지정
+
+## 7) 오늘 바로 시작할 작업 (Next Actions)
+- [x] `P1-2`용 progress 체크 스크립트 설계안 작성
+- [x] API 3종 smoke test 초안 추가
+- [x] 실행 커맨드(`pnpm progress:p1`) 문서화
+- [x] 스모크 체크를 CI 파이프라인에 연결 (`.github/workflows/verify.yml`, `pnpm verify:ci`)

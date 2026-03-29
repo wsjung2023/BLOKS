@@ -31,9 +31,10 @@ const NAV_ITEMS: { key: NavItem; label: string; href: Route; icon: string }[] = 
 
 // ── LeftSidebarNav ────────────────────────────────────────────────────────────
 
-export function LeftSidebarNav({ active }: { active: NavItem | undefined }) {
+export function LeftSidebarNav({ active }: { active?: NavItem }) {
   return (
     <nav
+      className="left-sidebar-nav"
       style={{
         position: "fixed", top: "var(--nav-top-h)", left: 0, bottom: "var(--ticker-h)",
         width: "var(--nav-left-w)", zIndex: 40,
@@ -60,7 +61,7 @@ export function LeftSidebarNav({ active }: { active: NavItem | undefined }) {
           }}
         >
           <span style={{ fontSize: "1.1rem" }}>{item.icon}</span>
-          {item.label}
+          <span className="sidebar-label">{item.label}</span>
         </Link>
       ))}
     </nav>

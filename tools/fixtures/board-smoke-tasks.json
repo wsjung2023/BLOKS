@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "data": {
+    "items": [
+      { "id": "task_001", "title": "Design auth flow", "state": "Created", "priority": "P1", "assignee_character_id": "char_001" },
+      { "id": "task_002", "title": "Implement queue worker", "state": "InProgress", "priority": "P0", "assignee_character_id": "char_003" },
+      { "id": "task_003", "title": "Budget review", "state": "Blocked", "priority": "P2", "assignee_character_id": null }
+    ]
+  }
+}

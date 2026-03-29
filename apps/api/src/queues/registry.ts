@@ -1,4 +1,3 @@
-import { Queue } from "bullmq";
 import { ID_PREFIX, QUEUE_NAMES } from "@bloks/shared";
 
 export const queueRegistry = Object.freeze([
@@ -33,12 +32,17 @@ const redisConnection = {
   password: process.env.REDIS_PASSWORD || undefined,
 };
 
-const queues = new Map<QueueName, Queue>();
+type QueueLike = {
+  add: (name: string, data: QueueJobData, options: { jobId: string }) => Promise<{ id: string }>;
+};
 
-function getQueue(queueName: QueueName): Queue {
+const queues = new Map<QueueName, QueueLike>();
+
+async function getQueue(queueName: QueueName): Promise<QueueLike> {
   const existing = queues.get(queueName);
   if (existing) return existing;
 
+  const { Queue } = await import("bullmq");
   const queue = new Queue(queueName, {
     connection: redisConnection,
     defaultJobOptions: {
@@ -71,7 +75,7 @@ export function buildQueueJobData(params: EnqueueJobParams, queuedAtIso: string)
 }
 
 export async function enqueueJob(params: EnqueueJobParams) {
-  const queue = getQueue(params.queueName);
+  const queue = await getQueue(params.queueName);
   const timestamp = Date.now();
   const jobId = createJobId(timestamp);
   const jobData = buildQueueJobData(params, new Date(timestamp).toISOString());
