@@ -1,13 +1,37 @@
 import { getApiBase } from "./apiBase";
 
 const API_BASE = getApiBase();
+const AUTH_TOKEN_KEY = "BLOKS_AUTH_TOKEN";
+
+function getStoredAuthToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+export function setAuthToken(token: string): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(AUTH_TOKEN_KEY, token);
+}
+
+export function clearAuthToken(): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(AUTH_TOKEN_KEY);
+}
 
 const DEFAULT_RETRY_COUNT = 1;
 
 function getAuthHeaders(): HeadersInit {
+  const storedToken = getStoredAuthToken();
+  if (storedToken) {
+    return { Authorization: `Bearer ${storedToken}` };
+  }
+
   if (process.env["NODE_ENV"] === "production") {
     return {};
   }
+
+  const allowBypass = process.env["NEXT_PUBLIC_ENABLE_DEV_BYPASS_AUTH"] === "true";
+  if (!allowBypass) return {};
 
   const token = process.env["NEXT_PUBLIC_DEV_BYPASS_TOKEN"] ?? "dev-bypass";
   return {

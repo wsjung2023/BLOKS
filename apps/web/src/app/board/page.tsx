@@ -1,4 +1,3 @@
-// Board page — Kanban-style task board (from /api/v1/tasks)
 "use client";
 
 import { useContext, useEffect, useMemo, useState } from "react";
@@ -73,6 +72,7 @@ export default function BoardPage() {
       if (!map.has(task.state)) continue;
       map.get(task.state)?.push(task);
     }
+
     return map;
   }, [tasks]);
 
@@ -98,6 +98,7 @@ export default function BoardPage() {
         <div style={{ display: "flex", gap: "0.75rem", height: "100%", overflowX: "auto", padding: "1rem" }}>
           {COLUMN_META.map((col) => {
             const items = grouped.get(col.key) ?? [];
+
             return (
               <div key={col.key} style={{ display: "flex", flexDirection: "column", minWidth: 220, width: 240, flexShrink: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>

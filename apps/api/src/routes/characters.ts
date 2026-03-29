@@ -2,6 +2,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { getSupabase } from "@bloks/db";
+import type { CharacterRuntimeStateRecord } from "@bloks/shared";
 
 export const charactersRouter = Router();
 
@@ -57,10 +58,15 @@ charactersRouter.get("/", async (req, res) => {
     if (activeMode) query = query.eq("active_mode", activeMode);
     if (status) {
       // runtime_status lives in character_runtime_states join
-      query = query.eq("character_runtime_states.runtime_status", status);
+      query = query.eq("character_runtime_states.activity_status", status);
     }
 
     const { data, count, error } = await query;
+
+    const items = ((data ?? []) as Array<Record<string, unknown>>).map((row) => ({
+      ...row,
+      character_runtime_states: (row["character_runtime_states"] as CharacterRuntimeStateRecord[] | CharacterRuntimeStateRecord | undefined) ?? [],
+    }));
 
     if (error) {
       console.error("[characters] list error", error);
@@ -71,7 +77,7 @@ charactersRouter.get("/", async (req, res) => {
     res.json({
       ok: true,
       data: {
-        items: data ?? [],
+        items,
         page,
         pageSize,
         total: count ?? 0,

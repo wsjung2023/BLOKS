@@ -9,6 +9,7 @@ import { approvalsRouter } from "./routes/approvals.js";
 import { artifactsRouter } from "./routes/artifacts.js";
 import { eventsRouter } from "./routes/events.js";
 import { jobsRouter } from "./routes/jobs.js";
+import { authRouter } from "./routes/auth.js";
 import { getSupabase } from "@bloks/db";
 
 const PORT = process.env["PORT"] ?? process.env["API_PORT"] ?? "4000";
@@ -73,6 +74,9 @@ app.get("/health", (_req, res) => {
 app.get("/api/health", (_req, res) => {
   res.redirect("/health");
 });
+
+// Public auth route
+app.use("/api/v1/auth", authRouter);
 
 // Protected /api/v1 routes
 
