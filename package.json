@@ -15,7 +15,10 @@
     "db:migrate": "pnpm --filter @bloks/db exec prisma migrate dev",
     "db:push": "pnpm --filter @bloks/db exec prisma db push",
     "db:seed": "pnpm --filter @bloks/db exec tsx prisma/seed.ts",
-    "db:studio": "pnpm --filter @bloks/db exec prisma studio"
+    "db:studio": "pnpm --filter @bloks/db exec prisma studio",
+    "smoke:api": "node tools/api-smoke.mjs",
+    "contracts:snapshot": "node tools/api-contract-snapshot.mjs",
+    "auth:guard": "node tools/auth-guard-check.mjs"
   },
   "devDependencies": {
     "turbo": "^2.3.0",

@@ -1,0 +1,113 @@
+{
+  "generatedAt": "2026-03-29T05:41:16.254Z",
+  "baseUrl": "http://127.0.0.1:4200",
+  "note": "Snapshot captured in local test mode; DB-backed routes may return 500 when Supabase credentials are absent.",
+  "samples": [
+    {
+      "path": "/health",
+      "status": 200,
+      "ok": true,
+      "contentType": "application/json; charset=utf-8",
+      "body": {
+        "ok": true,
+        "data": {
+          "api": "up",
+          "db": "error",
+          "service": "bloks-api",
+          "version": "0.1.0",
+          "timestamp": "2026-03-29T05:41:16.210Z"
+        }
+      }
+    },
+    {
+      "path": "/api/v1/auth/login",
+      "status": 200,
+      "ok": true,
+      "contentType": "application/json; charset=utf-8",
+      "body": {
+        "ok": true,
+        "data": {
+          "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmb3VuZGVyIiwicm9sZSI6ImZvdW5kZXIiLCJpYXQiOjE3NzQ3NjI4NzYsImV4cCI6MTc3NDgwNjA3Nn0.4cuShPMPrMd_LtR96RLMLQvHKZt-PHj6OicKcBtMadU",
+          "tokenType": "Bearer",
+          "expiresInSec": 43200,
+          "user": {
+            "id": "founder",
+            "role": "founder",
+            "email": "founder@example.com"
+          }
+        }
+      }
+    },
+    {
+      "path": "/api/v1/characters?pageSize=1",
+      "status": 500,
+      "ok": false,
+      "contentType": "application/json; charset=utf-8",
+      "body": {
+        "ok": false,
+        "error": {
+          "code": "INTERNAL_ERROR",
+          "message": "서버 오류가 발생했습니다."
+        }
+      }
+    },
+    {
+      "path": "/api/v1/tasks?pageSize=1",
+      "status": 500,
+      "ok": false,
+      "contentType": "application/json; charset=utf-8",
+      "body": {
+        "ok": false,
+        "error": {
+          "code": "INTERNAL_ERROR",
+          "message": "서버 오류가 발생했습니다."
+        }
+      }
+    },
+    {
+      "path": "/api/v1/approvals?pageSize=1",
+      "status": 500,
+      "ok": false,
+      "contentType": "application/json; charset=utf-8",
+      "body": {
+        "ok": false,
+        "error": {
+          "code": "INTERNAL_ERROR",
+          "message": "서버 오류가 발생했습니다."
+        }
+      }
+    },
+    {
+      "path": "/api/v1/events?limit=1",
+      "status": 500,
+      "ok": false,
+      "contentType": "application/json; charset=utf-8",
+      "body": {
+        "ok": false,
+        "error": {
+          "code": "INTERNAL_ERROR",
+          "message": "서버 오류가 발생했습니다.",
+          "details": {
+            "message": "Error: [db] Missing Supabase credentials. Set SUPABASE_URL and one of SUPABASE_SERVICE_ROLE_KEY / SUPABASE_ANON_KEY."
+          }
+        }
+      }
+    },
+    {
+      "path": "/api/v1/jobs",
+      "status": 500,
+      "ok": false,
+      "contentType": "application/json; charset=utf-8",
+      "body": {
+        "ok": false,
+        "error": {
+          "code": "INTERNAL_ERROR",
+          "message": "서버 오류가 발생했습니다.",
+          "details": {
+            "message": "Error: [db] Missing Supabase credentials. Set SUPABASE_URL and one of SUPABASE_SERVICE_ROLE_KEY / SUPABASE_ANON_KEY."
+          }
+        }
+      }
+    }
+  ]
+}

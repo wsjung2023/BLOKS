@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { EventType } from "@bloks/shared";
+import type { EventLogRecord } from "@bloks/shared";
 import { getSupabase } from "@bloks/db";
 
 export const eventsRouter = Router();
@@ -27,21 +28,22 @@ eventsRouter.get("/", async (req, res) => {
     const sb = getSupabase();
     let query = sb
       .from("event_logs")
-      .select("id, company_id, event_type, actor_id, target_type, target_id, payload, severity, created_at", { count: "exact" })
-      .order("created_at", { ascending: false })
+      .select("id, entity_type, entity_id, event_type, previous_state, next_state, changed_by, changed_at, reason_code, comment, related_project_id, related_task_id", { count: "exact" })
+      .order("changed_at", { ascending: false })
       .limit(limit);
 
-    if (projectId) query = query.contains("payload", { projectId });
-    if (entityType) query = query.eq("target_type", entityType);
+    if (projectId) query = query.eq("related_project_id", projectId);
+    if (entityType) query = query.eq("entity_type", entityType);
     if (eventType) query = query.eq("event_type", eventType);
 
     const { data, count, error } = await query;
+    const items = (data ?? []) as EventLogRecord[];
     if (error) {
       res.status(500).json({ ok: false, error: { code: "DB_ERROR", message: "Event 로그 조회 중 오류가 발생했습니다." } });
       return;
     }
 
-    res.json({ ok: true, data: { items: data ?? [], total: count ?? 0 } });
+    res.json({ ok: true, data: { items, total: count ?? 0 } });
   } catch (err) {
     res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다.", details: { message: String(err) } } });
   }
