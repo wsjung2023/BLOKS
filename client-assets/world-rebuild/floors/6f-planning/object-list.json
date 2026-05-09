@@ -1,0 +1,15 @@
+{
+  "floor": "6f-planning",
+  "objects": [
+    "clean-background",
+    "desk",
+    "chair",
+    "meeting-table",
+    "meeting-chair",
+    "wall-solid",
+    "door",
+    "elevator",
+    "sofa",
+    "lamp"
+  ]
+}

@@ -27,6 +27,20 @@ function getRuntime(character: Character): RuntimeState | undefined {
   return Array.isArray(state) ? state[0] : state;
 }
 
+function getCharacterSpriteUrl(codeName: string): string {
+  return `/sprites-v2/char-${codeName.toLowerCase().replace(/_/g, "-")}-work-stand.png`;
+}
+
+function getInitials(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((part) => part[0] ?? "")
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
 export default function CharacterDirectoryPage() {
   const { openPanel } = useContext(ContextPanelContext);
   const [characters, setCharacters] = useState<Character[]>([]);
@@ -122,12 +136,60 @@ export default function CharacterDirectoryPage() {
                     cursor: "pointer",
                   }}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <strong>{character.name}</strong>
-                    {locked ? <span style={{ fontSize: "0.7rem", color: "var(--color-muted)" }}>LOCKED</span> : null}
-                  </div>
-                  <div style={{ marginTop: "0.3rem", fontSize: "0.75rem", color: "var(--color-muted)" }}>
-                    {character.code_name}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.75rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.7rem", minWidth: 0 }}>
+                      <div
+                        aria-hidden="true"
+                        style={{
+                          position: "relative",
+                          width: 52,
+                          height: 52,
+                          flexShrink: 0,
+                          borderRadius: 12,
+                          overflow: "hidden",
+                          border: "1px solid rgba(0,0,0,0.08)",
+                          background:
+                            "linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(218,198,159,0.42) 100%)",
+                          display: "grid",
+                          placeItems: "center",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: "0.82rem",
+                            fontWeight: 700,
+                            color: "rgba(92, 68, 34, 0.72)",
+                            letterSpacing: "0.04em",
+                          }}
+                        >
+                          {getInitials(character.name)}
+                        </span>
+                        <img
+                          src={getCharacterSpriteUrl(character.code_name)}
+                          alt=""
+                          loading="lazy"
+                          onError={(event) => {
+                            event.currentTarget.style.display = "none";
+                          }}
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "contain",
+                            imageRendering: "pixelated",
+                            transform: "scale(1.18)",
+                          }}
+                        />
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <strong style={{ display: "block", lineHeight: 1.2 }}>{character.name}</strong>
+                        <div style={{ marginTop: "0.3rem", fontSize: "0.75rem", color: "var(--color-muted)" }}>
+                          {character.code_name}
+                        </div>
+                      </div>
+                    </div>
+                    {locked ? <span style={{ fontSize: "0.7rem", color: "var(--color-muted)", flexShrink: 0 }}>LOCKED</span> : null}
                   </div>
                   <div style={{ marginTop: "0.7rem", fontSize: "0.78rem" }}>
                     {(character.persona_summary ?? "persona 미등록").split(" ")[0]}

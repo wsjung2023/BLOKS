@@ -1,0 +1,54 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]: BLOKS
+    - generic [ref=e5]:
+      - generic "일일 API 비용" [ref=e6]: 💰 $0.00 / $20.00
+      - generic "미처리 결재" [ref=e7]: 🔔 0건
+      - generic "현재 시각" [ref=e8]: 🕐 --:--:--
+  - navigation [ref=e9]:
+    - link "🏢 월드" [ref=e10] [cursor=pointer]:
+      - /url: /world
+      - generic [ref=e11]: 🏢
+      - generic [ref=e12]: 월드
+    - link "📋 프로젝트 보드" [ref=e13] [cursor=pointer]:
+      - /url: /board
+      - generic [ref=e14]: 📋
+      - generic [ref=e15]: 프로젝트 보드
+    - link "👥 캐릭터 목록" [ref=e16] [cursor=pointer]:
+      - /url: /characters
+      - generic [ref=e17]: 👥
+      - generic [ref=e18]: 캐릭터 목록
+    - link "✅ 결재 센터" [ref=e19] [cursor=pointer]:
+      - /url: /approvals
+      - generic [ref=e20]: ✅
+      - generic [ref=e21]: 결재 센터
+    - link "📊 분석" [ref=e22] [cursor=pointer]:
+      - /url: /analytics
+      - generic [ref=e23]: 📊
+      - generic [ref=e24]: 분석
+    - link "⚡ 프롬프트 콘솔" [ref=e25] [cursor=pointer]:
+      - /url: /prompts
+      - generic [ref=e26]: ⚡
+      - generic [ref=e27]: 프롬프트 콘솔
+  - main [ref=e28]:
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - generic [ref=e31]: FLOOR
+        - generic [ref=e32]: "OFF"
+        - button "1F Lobby" [ref=e34] [cursor=pointer]
+        - button "2F Ops" [ref=e35] [cursor=pointer]
+        - button "3F Engineering" [ref=e36] [cursor=pointer]
+        - button "4F Research" [ref=e37] [cursor=pointer]
+        - button "5F Marketing" [ref=e38] [cursor=pointer]
+        - button "6F Planning" [ref=e39] [cursor=pointer]
+        - button "7F Cafe" [ref=e40] [cursor=pointer]
+        - button "8F Executive" [ref=e41] [cursor=pointer]
+      - generic [ref=e43]: Loading characters...
+  - complementary:
+    - generic:
+      - generic: 상세 정보
+      - button: ✕
+    - generic: 항목을 클릭하면 상세 정보가 표시됩니다.
+  - contentinfo [ref=e44]:
+    - generic [ref=e45]: ▶ LIVE
+    - generic [ref=e47]: 이벤트 로딩 중...

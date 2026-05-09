@@ -1,0 +1,76 @@
+{
+  "floor": "7f-cafe",
+  "image_size_hint": "1536x1024 wide isometric",
+  "objects": [
+    {
+      "type": "desk",
+      "x": 0.15,
+      "y": 0.75,
+      "scale": 1.0,
+      "instance": 1
+    },
+    {
+      "type": "desk",
+      "x": 0.3,
+      "y": 0.75,
+      "scale": 1.0,
+      "instance": 2
+    },
+    {
+      "type": "meeting-table",
+      "x": 0.5,
+      "y": 0.5,
+      "scale": 1.0,
+      "instance": 1
+    },
+    {
+      "type": "meeting-table",
+      "x": 0.7,
+      "y": 0.2,
+      "scale": 1.0,
+      "instance": 2
+    }
+  ],
+  "seats": [
+    {
+      "type": "desk_seat",
+      "x": 0.15,
+      "y": 0.82,
+      "facing": "south",
+      "linked_object_index": 0
+    },
+    {
+      "type": "desk_seat",
+      "x": 0.3,
+      "y": 0.82,
+      "facing": "south",
+      "linked_object_index": 1
+    }
+  ],
+  "meeting_seats": [
+    {
+      "type": "meeting_seat",
+      "x": 0.45,
+      "y": 0.5,
+      "facing": "south"
+    },
+    {
+      "type": "meeting_seat",
+      "x": 0.55,
+      "y": 0.5,
+      "facing": "north"
+    },
+    {
+      "type": "meeting_seat",
+      "x": 0.65,
+      "y": 0.2,
+      "facing": "south"
+    },
+    {
+      "type": "meeting_seat",
+      "x": 0.75,
+      "y": 0.2,
+      "facing": "north"
+    }
+  ]
+}

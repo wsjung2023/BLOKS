@@ -1,0 +1,754 @@
+﻿[
+  {
+    "slug": "arch",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\arch\\char-arch-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 46,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "aurelion",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\aurelion\\char-aurelion-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 177,
+      "top": 44,
+      "right": 335,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "axiom",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\axiom\\char-axiom-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 143,
+      "top": 44,
+      "right": 370,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "buzz",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\buzz\\char-buzz-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 168,
+      "top": 44,
+      "right": 344,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "byte",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\byte\\char-byte-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 57,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "clover",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\clover\\char-clover-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 147,
+      "top": 44,
+      "right": 365,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "comply",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\comply\\char-comply-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 60,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "debug",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\debug\\char-debug-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 88,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "deploy",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\deploy\\char-deploy-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 55,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "echo-mkt",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\echo-mkt\\char-echo-mkt-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 143,
+      "top": 44,
+      "right": 370,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "echo-twin",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\echo-twin\\char-echo-twin-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 69,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "erp-master",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\erp-master\\char-erp-master-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 55,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "forge",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\forge\\char-forge-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 162,
+      "top": 44,
+      "right": 351,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "founder-01",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\founder-01\\char-founder-01-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 178,
+      "top": 44,
+      "right": 334,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "glitch",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\glitch\\char-glitch-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 64,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "hector",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\hector\\char-hector-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 153,
+      "top": 44,
+      "right": 358,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "iris",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\iris\\char-iris-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 46,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "jae-min",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\jae-min\\char-jae-min-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 163,
+      "top": 44,
+      "right": 349,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "ledger",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\ledger\\char-ledger-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 44,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "lens",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\lens\\char-lens-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 159,
+      "top": 44,
+      "right": 352,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "lumi",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\lumi\\char-lumi-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 142,
+      "top": 44,
+      "right": 371,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "marq",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\marq\\char-marq-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 145,
+      "top": 44,
+      "right": 368,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "memo",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\memo\\char-memo-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 145,
+      "top": 44,
+      "right": 368,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "nabi",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\nabi\\char-nabi-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 162,
+      "top": 44,
+      "right": 350,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "nexus",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\nexus\\char-nexus-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 156,
+      "top": 44,
+      "right": 356,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "nova",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\nova\\char-nova-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 140,
+      "top": 44,
+      "right": 372,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "ops",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\ops\\char-ops-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 140,
+      "top": 44,
+      "right": 373,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "oracle",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\oracle\\char-oracle-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 44,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "ordo",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\ordo\\char-ordo-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 152,
+      "top": 44,
+      "right": 361,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "orion",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\orion\\char-orion-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 144,
+      "top": 44,
+      "right": 368,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "phantom",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\phantom\\char-phantom-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 147,
+      "top": 44,
+      "right": 366,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "pivot",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\pivot\\char-pivot-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 151,
+      "top": 44,
+      "right": 361,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "pixels",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\pixels\\char-pixels-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 69,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "pm-alto",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\pm-alto\\char-pm-alto-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 152,
+      "top": 44,
+      "right": 359,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "pulse",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\pulse\\char-pulse-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 144,
+      "top": 44,
+      "right": 368,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "rhea",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\rhea\\char-rhea-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 155,
+      "top": 44,
+      "right": 357,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "scout",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\scout\\char-scout-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 161,
+      "top": 44,
+      "right": 352,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "selene",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\selene\\char-selene-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 166,
+      "top": 44,
+      "right": 345,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "sigma",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\sigma\\char-sigma-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 44,
+      "right": 373,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "solene",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\solene\\char-solene-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 57,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "sora-txt",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\sora-txt\\char-sora-txt-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 165,
+      "top": 44,
+      "right": 346,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "spec-on",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\spec-on\\char-spec-on-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 46,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "sprint",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\sprint\\char-sprint-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 147,
+      "top": 44,
+      "right": 365,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "stack",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\stack\\char-stack-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 142,
+      "top": 44,
+      "right": 371,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "vant",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\vant\\char-vant-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 150,
+      "top": 44,
+      "right": 362,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "vera-flow",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\vera-flow\\char-vera-flow-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 44,
+      "right": 373,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  },
+  {
+    "slug": "vesper",
+    "identity_anchor": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\characters\\vesper\\char-vesper-stand-right.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 152,
+      "top": 44,
+      "right": 361,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "rule": "All future action sprites must preserve this character identity and must not drift toward another character."
+  }
+]

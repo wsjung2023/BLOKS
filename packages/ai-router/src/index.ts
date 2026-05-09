@@ -1,6 +1,8 @@
 // @bloks/ai-router — routeAI function with character model lookup and provider routing
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { OpenAiProvider } from "./providers/openai.js";
+import { AnthropicProvider } from "./providers/anthropic.js";
+import { GoogleProvider } from "./providers/google.js";
 
 // ── Core types ────────────────────────────────────────────────────────────────
 
@@ -107,18 +109,30 @@ function selectModel(taskType: string, profile: ModelProfile | null): string {
   return TASK_MODEL_MAP[taskType] ?? TASK_MODEL_MAP["default"]!;
 }
 
-// ── Provider resolution (doc 11: MVP OpenAI single-provider) ──────────────────
+// ── Provider resolution ───────────────────────────────────────────────────────
 
 let _openai: OpenAiProvider | null = null;
+let _anthropic: AnthropicProvider | null = null;
+let _google: GoogleProvider | null = null;
 
 function getOpenAi(): OpenAiProvider {
   _openai ??= new OpenAiProvider();
   return _openai;
 }
 
-function resolveProvider(_providerName: string | undefined): AiProvider {
-  // Canonical rule (doc 11): MVP must route through OpenAI only.
-  return getOpenAi();
+function resolveProvider(providerName: string | undefined): AiProvider {
+  switch (providerName) {
+    case "anthropic": {
+      _anthropic ??= new AnthropicProvider();
+      return _anthropic;
+    }
+    case "google": {
+      _google ??= new GoogleProvider();
+      return _google;
+    }
+    default:
+      return getOpenAi();
+  }
 }
 
 // ── Budget guard ──────────────────────────────────────────────────────────────

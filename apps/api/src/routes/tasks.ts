@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getSupabase } from "@bloks/db";
 import { TaskState } from "@bloks/shared";
 import { isAllowedTransition, writeEventLog, reduceAssigneeWorkload } from "./tasks-helpers.js";
+import { emitWorldEvent } from "./stream.js";
 
 export const tasksRouter = Router();
 
@@ -237,6 +238,14 @@ tasksRouter.patch("/:id/state", async (req, res) => {
       comment: comment ?? null,
       relatedProjectId: task.project_id,
       relatedTaskId: taskId,
+    });
+
+    emitWorldEvent("task_state_changed", {
+      taskId,
+      projectId: task.project_id,
+      assigneeCharacterId: task.assignee_character_id,
+      previousState: currentState,
+      nextState,
     });
 
     res.json({ ok: true, data: updated });

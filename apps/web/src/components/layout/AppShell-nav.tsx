@@ -6,7 +6,7 @@ import type { Route } from "next";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type NavItem = "world" | "board" | "directory" | "approval" | "analytics" | "prompts";
+export type NavItem = "world" | "board" | "directory" | "approval" | "analytics" | "prompts" | "floor-editor";
 
 export interface ContextPanelCtx {
   openPanel: (title: string, content: React.ReactNode) => void;
@@ -20,13 +20,14 @@ export const ContextPanelContext = React.createContext<ContextPanelCtx>({
 
 // ── Nav items ─────────────────────────────────────────────────────────────────
 
-const NAV_ITEMS: { key: NavItem; label: string; href: Route; icon: string }[] = [
-  { key: "world",     label: "월드",          href: "/world",     icon: "🏢" },
-  { key: "board",     label: "프로젝트 보드", href: "/board",     icon: "📋" },
-  { key: "directory", label: "캐릭터 목록",   href: "/characters", icon: "👥" },
-  { key: "approval",  label: "결재 센터",     href: "/approvals",  icon: "✅" },
-  { key: "analytics", label: "분석",          href: "/analytics", icon: "📊" },
-  { key: "prompts",   label: "프롬프트 콘솔", href: "/prompts",   icon: "⚡" },
+const NAV_ITEMS: { key: NavItem; label: string; href: Route; icon: string; dividerBefore?: boolean }[] = [
+  { key: "world",        label: "월드",          href: "/world",            icon: "🏢" },
+  { key: "board",        label: "프로젝트 보드", href: "/board",            icon: "📋" },
+  { key: "directory",    label: "캐릭터 목록",   href: "/characters",       icon: "👥" },
+  { key: "approval",     label: "결재 센터",     href: "/approvals",        icon: "✅" },
+  { key: "analytics",    label: "분석",          href: "/analytics",        icon: "📊" },
+  { key: "prompts",      label: "프롬프트 콘솔", href: "/prompts",          icon: "⚡" },
+  { key: "floor-editor", label: "층 에디터",     href: "/dev/floor-editor", icon: "🗺️", dividerBefore: true },
 ];
 
 // ── LeftSidebarNav ────────────────────────────────────────────────────────────
@@ -43,26 +44,30 @@ export function LeftSidebarNav({ active }: { active?: NavItem }) {
       }}
     >
       {NAV_ITEMS.map((item) => (
-        <Link
-          key={item.key}
-          href={item.href}
-          style={{
-            display: "flex", alignItems: "center", gap: "0.625rem",
-            padding: "0.625rem 1rem",
-            color: active === item.key ? "var(--color-brand)" : "var(--color-text)",
-            background: active === item.key ? "rgba(92,74,50,0.08)" : "transparent",
-            borderLeft: active === item.key
-              ? "3px solid var(--color-brand)"
-              : "3px solid transparent",
-            textDecoration: "none",
-            fontSize: "0.875rem",
-            fontWeight: active === item.key ? 600 : 400,
-            transition: "background 0.15s",
-          }}
-        >
-          <span style={{ fontSize: "1.1rem" }}>{item.icon}</span>
-          <span className="sidebar-label">{item.label}</span>
-        </Link>
+        <React.Fragment key={item.key}>
+          {item.dividerBefore && (
+            <div style={{ borderTop: "1px solid var(--color-border)", margin: "0.5rem 0" }} />
+          )}
+          <Link
+            href={item.href}
+            style={{
+              display: "flex", alignItems: "center", gap: "0.625rem",
+              padding: "0.625rem 1rem",
+              color: active === item.key ? "var(--color-brand)" : "var(--color-text)",
+              background: active === item.key ? "rgba(92,74,50,0.08)" : "transparent",
+              borderLeft: active === item.key
+                ? "3px solid var(--color-brand)"
+                : "3px solid transparent",
+              textDecoration: "none",
+              fontSize: "0.875rem",
+              fontWeight: active === item.key ? 600 : 400,
+              transition: "background 0.15s",
+            }}
+          >
+            <span style={{ fontSize: "1.1rem" }}>{item.icon}</span>
+            <span className="sidebar-label">{item.label}</span>
+          </Link>
+        </React.Fragment>
       ))}
     </nav>
   );

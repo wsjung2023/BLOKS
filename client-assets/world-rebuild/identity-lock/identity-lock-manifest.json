@@ -1,0 +1,660 @@
+﻿[
+  {
+    "slug": "arch",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\arch\\char-arch-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\arch\\char-arch-source-left.png",
+    "bbox": {
+      "left": 139,
+      "top": 46,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "aurelion",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\aurelion\\char-aurelion-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\aurelion\\char-aurelion-source-left.png",
+    "bbox": {
+      "left": 177,
+      "top": 44,
+      "right": 335,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "axiom",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\axiom\\char-axiom-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\axiom\\char-axiom-source-left.png",
+    "bbox": {
+      "left": 143,
+      "top": 44,
+      "right": 370,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "buzz",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\buzz\\char-buzz-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\buzz\\char-buzz-source-left.png",
+    "bbox": {
+      "left": 168,
+      "top": 44,
+      "right": 344,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "byte",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\byte\\char-byte-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\byte\\char-byte-source-left.png",
+    "bbox": {
+      "left": 139,
+      "top": 57,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "clover",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\clover\\char-clover-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\clover\\char-clover-source-left.png",
+    "bbox": {
+      "left": 147,
+      "top": 44,
+      "right": 365,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "comply",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\comply\\char-comply-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\comply\\char-comply-source-left.png",
+    "bbox": {
+      "left": 139,
+      "top": 60,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "debug",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\debug\\char-debug-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\debug\\char-debug-source-left.png",
+    "bbox": {
+      "left": 139,
+      "top": 88,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "deploy",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\deploy\\char-deploy-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\deploy\\char-deploy-source-left.png",
+    "bbox": {
+      "left": 139,
+      "top": 55,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "echo-mkt",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\echo-mkt\\char-echo-mkt-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\echo-mkt\\char-echo-mkt-source-left.png",
+    "bbox": {
+      "left": 143,
+      "top": 44,
+      "right": 370,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "echo-twin",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\echo-twin\\char-echo-twin-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\echo-twin\\char-echo-twin-source-left.png",
+    "bbox": {
+      "left": 139,
+      "top": 69,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "erp-master",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\erp-master\\char-erp-master-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\erp-master\\char-erp-master-source-left.png",
+    "bbox": {
+      "left": 139,
+      "top": 55,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "forge",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\forge\\char-forge-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\forge\\char-forge-source-left.png",
+    "bbox": {
+      "left": 162,
+      "top": 44,
+      "right": 351,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "founder-01",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\founder-01\\char-founder-01-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\founder-01\\char-founder-01-source-left.png",
+    "bbox": {
+      "left": 178,
+      "top": 44,
+      "right": 334,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "glitch",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\glitch\\char-glitch-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\glitch\\char-glitch-source-left.png",
+    "bbox": {
+      "left": 139,
+      "top": 64,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "hector",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\hector\\char-hector-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\hector\\char-hector-source-left.png",
+    "bbox": {
+      "left": 153,
+      "top": 44,
+      "right": 358,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "iris",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\iris\\char-iris-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\iris\\char-iris-source-left.png",
+    "bbox": {
+      "left": 139,
+      "top": 46,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "jae-min",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\jae-min\\char-jae-min-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\jae-min\\char-jae-min-source-left.png",
+    "bbox": {
+      "left": 163,
+      "top": 44,
+      "right": 349,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "ledger",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\ledger\\char-ledger-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\ledger\\char-ledger-source-left.png",
+    "bbox": {
+      "left": 139,
+      "top": 44,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "lens",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\lens\\char-lens-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\lens\\char-lens-source-left.png",
+    "bbox": {
+      "left": 159,
+      "top": 44,
+      "right": 352,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "lumi",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\lumi\\char-lumi-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\lumi\\char-lumi-source-left.png",
+    "bbox": {
+      "left": 142,
+      "top": 44,
+      "right": 371,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "marq",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\marq\\char-marq-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\marq\\char-marq-source-left.png",
+    "bbox": {
+      "left": 145,
+      "top": 44,
+      "right": 368,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "memo",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\memo\\char-memo-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\memo\\char-memo-source-left.png",
+    "bbox": {
+      "left": 145,
+      "top": 44,
+      "right": 368,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "nabi",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\nabi\\char-nabi-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\nabi\\char-nabi-source-left.png",
+    "bbox": {
+      "left": 162,
+      "top": 44,
+      "right": 350,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "nexus",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\nexus\\char-nexus-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\nexus\\char-nexus-source-left.png",
+    "bbox": {
+      "left": 156,
+      "top": 44,
+      "right": 356,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "nova",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\nova\\char-nova-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\nova\\char-nova-source-left.png",
+    "bbox": {
+      "left": 140,
+      "top": 44,
+      "right": 372,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "ops",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\ops\\char-ops-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\ops\\char-ops-source-left.png",
+    "bbox": {
+      "left": 140,
+      "top": 44,
+      "right": 373,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "oracle",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\oracle\\char-oracle-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\oracle\\char-oracle-source-left.png",
+    "bbox": {
+      "left": 139,
+      "top": 44,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "ordo",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\ordo\\char-ordo-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\ordo\\char-ordo-source-left.png",
+    "bbox": {
+      "left": 152,
+      "top": 44,
+      "right": 361,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "orion",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\orion\\char-orion-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\orion\\char-orion-source-left.png",
+    "bbox": {
+      "left": 144,
+      "top": 44,
+      "right": 368,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "phantom",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\phantom\\char-phantom-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\phantom\\char-phantom-source-left.png",
+    "bbox": {
+      "left": 147,
+      "top": 44,
+      "right": 366,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "pivot",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\pivot\\char-pivot-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\pivot\\char-pivot-source-left.png",
+    "bbox": {
+      "left": 151,
+      "top": 44,
+      "right": 361,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "pixels",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\pixels\\char-pixels-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\pixels\\char-pixels-source-left.png",
+    "bbox": {
+      "left": 139,
+      "top": 69,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "pm-alto",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\pm-alto\\char-pm-alto-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\pm-alto\\char-pm-alto-source-left.png",
+    "bbox": {
+      "left": 152,
+      "top": 44,
+      "right": 359,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "pulse",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\pulse\\char-pulse-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\pulse\\char-pulse-source-left.png",
+    "bbox": {
+      "left": 144,
+      "top": 44,
+      "right": 368,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "rhea",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\rhea\\char-rhea-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\rhea\\char-rhea-source-left.png",
+    "bbox": {
+      "left": 155,
+      "top": 44,
+      "right": 357,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "scout",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\scout\\char-scout-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\scout\\char-scout-source-left.png",
+    "bbox": {
+      "left": 161,
+      "top": 44,
+      "right": 352,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "selene",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\selene\\char-selene-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\selene\\char-selene-source-left.png",
+    "bbox": {
+      "left": 166,
+      "top": 44,
+      "right": 345,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "sigma",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\sigma\\char-sigma-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\sigma\\char-sigma-source-left.png",
+    "bbox": {
+      "left": 139,
+      "top": 44,
+      "right": 373,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "solene",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\solene\\char-solene-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\solene\\char-solene-source-left.png",
+    "bbox": {
+      "left": 139,
+      "top": 57,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "sora-txt",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\sora-txt\\char-sora-txt-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\sora-txt\\char-sora-txt-source-left.png",
+    "bbox": {
+      "left": 165,
+      "top": 44,
+      "right": 346,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "spec-on",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\spec-on\\char-spec-on-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\spec-on\\char-spec-on-source-left.png",
+    "bbox": {
+      "left": 139,
+      "top": 46,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "sprint",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\sprint\\char-sprint-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\sprint\\char-sprint-source-left.png",
+    "bbox": {
+      "left": 147,
+      "top": 44,
+      "right": 365,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "stack",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\stack\\char-stack-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\stack\\char-stack-source-left.png",
+    "bbox": {
+      "left": 142,
+      "top": 44,
+      "right": 371,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "vant",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\vant\\char-vant-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\vant\\char-vant-source-left.png",
+    "bbox": {
+      "left": 150,
+      "top": 44,
+      "right": 362,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "vera-flow",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\vera-flow\\char-vera-flow-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\vera-flow\\char-vera-flow-source-left.png",
+    "bbox": {
+      "left": 139,
+      "top": 44,
+      "right": 373,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  },
+  {
+    "slug": "vesper",
+    "source_right": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\vesper\\char-vesper-source-right.png",
+    "source_left": "D:\\Projects\\BLOKS\\client-assets\\world-rebuild\\identity-lock\\vesper\\char-vesper-source-left.png",
+    "bbox": {
+      "left": 152,
+      "top": 44,
+      "right": 361,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "locked": true,
+    "instruction": "Use only this character as the identity anchor for future action sprites. Never drift toward another character."
+  }
+]

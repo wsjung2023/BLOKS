@@ -1,0 +1,15 @@
+{
+  "floor": "5f-marketing",
+  "objects": [
+    "clean-background",
+    "desk",
+    "chair",
+    "partition",
+    "wall-glass",
+    "wall-solid",
+    "door",
+    "elevator",
+    "poster-board",
+    "plant"
+  ]
+}

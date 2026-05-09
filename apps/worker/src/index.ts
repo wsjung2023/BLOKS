@@ -3,6 +3,7 @@ import { EventType, QUEUE_NAMES } from "@bloks/shared";
 import { getSupabase } from "@bloks/db";
 
 import { runQueueHandler, type WorkerJobPayload } from "./handlers.js";
+import { WorldTickEngine } from "./tick-engine.js";
 
 const redisConnection = {
   host: process.env.REDIS_HOST ?? "127.0.0.1",
@@ -137,8 +138,13 @@ console.log("[worker] started", {
   concurrency: Number(process.env.WORKER_CONCURRENCY ?? 5),
 });
 
+// Start the world tick engine
+const tickEngine = new WorldTickEngine();
+tickEngine.start();
+
 async function shutdown(signal: string) {
   console.log(`[worker] shutting down (${signal})`);
+  tickEngine.stop();
   await Promise.all(workers.map((worker) => worker.close()));
   process.exit(0);
 }

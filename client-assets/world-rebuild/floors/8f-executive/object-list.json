@@ -1,0 +1,21 @@
+{
+  "floor": "8f-executive",
+  "objects": [
+    "clean-background",
+    "executive-desk",
+    "executive-chair",
+    "meeting-table",
+    "meeting-chair",
+    "sofa",
+    "coffee-table",
+    "cabinet",
+    "lamp",
+    "wall-glass",
+    "wall-solid",
+    "door",
+    "elevator",
+    "bathroom-stall",
+    "sink",
+    "plant"
+  ]
+}

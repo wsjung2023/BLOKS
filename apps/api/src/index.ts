@@ -9,7 +9,10 @@ import { approvalsRouter } from "./routes/approvals.js";
 import { artifactsRouter } from "./routes/artifacts.js";
 import { eventsRouter } from "./routes/events.js";
 import { jobsRouter } from "./routes/jobs.js";
+import { promptsRouter } from "./routes/prompts.js";
+import { memoriesRouter } from "./routes/memories.js";
 import { authRouter } from "./routes/auth.js";
+import { streamRouter } from "./routes/stream.js";
 import { getSupabase } from "@bloks/db";
 
 const PORT = process.env["PORT"] ?? process.env["API_PORT"] ?? "4000";
@@ -75,8 +78,9 @@ app.get("/api/health", (_req, res) => {
   res.redirect("/health");
 });
 
-// Public auth route
+// Public routes (no auth)
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/stream", streamRouter);
 
 // Protected /api/v1 routes
 
@@ -90,6 +94,8 @@ v1.use("/approvals", approvalsRouter);
 v1.use("/artifacts", artifactsRouter);
 v1.use("/events", eventsRouter);
 v1.use("/jobs", jobsRouter);
+v1.use("/prompts", promptsRouter);
+v1.use("/memories", memoriesRouter);
 
 app.use("/api/v1", v1);
 

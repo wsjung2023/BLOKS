@@ -1,0 +1,15 @@
+{
+  "floor": "3f-engineering",
+  "objects": [
+    "clean-background",
+    "desk",
+    "chair",
+    "partition",
+    "meeting-table",
+    "meeting-chair",
+    "wall-glass",
+    "wall-solid",
+    "door",
+    "elevator"
+  ]
+}

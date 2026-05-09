@@ -1,0 +1,13 @@
+{
+  "floor": "1f-lobby",
+  "objects": [
+    "clean-background",
+    "elevator",
+    "sofa",
+    "table",
+    "plant",
+    "wall-glass",
+    "wall-solid",
+    "door"
+  ]
+}

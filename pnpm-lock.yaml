@@ -29,6 +29,9 @@ importers:
       '@bloks/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@bloks/memory':
+        specifier: workspace:*
+        version: link:../../packages/memory
       '@bloks/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -44,6 +47,9 @@ importers:
       express:
         specifier: ^4.21.0
         version: 4.22.1
+      ioredis:
+        specifier: ^5.10.1
+        version: 5.10.1
       jsonwebtoken:
         specifier: ^9.0.0
         version: 9.0.3
@@ -87,6 +93,9 @@ importers:
       next:
         specifier: ^15.1.0
         version: 15.5.14(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      phaser:
+        specifier: ^3.90.0
+        version: 3.90.0
       pixi.js:
         specifier: ^8.6.0
         version: 8.17.1
@@ -124,15 +133,24 @@ importers:
 
   apps/worker:
     dependencies:
+      '@bloks/ai-router':
+        specifier: workspace:*
+        version: link:../../packages/ai-router
       '@bloks/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@bloks/memory':
+        specifier: workspace:*
+        version: link:../../packages/memory
       '@bloks/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       bullmq:
         specifier: ^5.58.0
         version: 5.71.1
+      ioredis:
+        specifier: ^5.10.1
+        version: 5.10.1
     devDependencies:
       '@types/node':
         specifier: ^22.0.0
@@ -155,6 +173,9 @@ importers:
       '@bloks/shared':
         specifier: workspace:*
         version: link:../shared
+      '@google/generative-ai':
+        specifier: ^0.21.0
+        version: 0.21.0
       '@supabase/supabase-js':
         specifier: ^2.100.0
         version: 2.100.0
@@ -193,6 +214,28 @@ importers:
       typescript:
         specifier: ^5.8.0
         version: 5.9.3
+
+  packages/memory:
+    dependencies:
+      '@bloks/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@supabase/supabase-js':
+        specifier: ^2.100.0
+        version: 2.100.0
+      openai:
+        specifier: ^4.70.0
+        version: 4.104.0(ws@8.20.0)(zod@3.25.76)
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.15
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@22.19.15)
 
   packages/shared:
     devDependencies:
@@ -517,6 +560,10 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@google/generative-ai@0.21.0':
+    resolution: {integrity: sha512-7XhUbtnlkSEZK15kN3t+tzIMxsbKm/dSkKBFalj+20NvPKe1kBY7mR2P7vuijEn+f06z5+A8bVGKO0v39cr6Wg==}
+    engines: {node: '>=18.0.0'}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -1804,6 +1851,9 @@ packages:
   perfect-debounce@1.0.0:
     resolution: {integrity: sha512-xCy9V055GLEqoFaHoC1SoLIaLmWctgCUaBaWxDZ7/Zx4CTyX7cJQLJOok/orfjZAh9kEYpjJa4d0KcJmCbctZA==}
 
+  phaser@3.90.0:
+    resolution: {integrity: sha512-/cziz/5ZIn02uDkC9RzN8VF9x3Gs3XdFFf9nkiMEQT3p7hQlWuyjy4QWosU802qqno2YSLn2BfqwOKLv/sSVfQ==}
+
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
 
@@ -2421,6 +2471,8 @@ snapshots:
 
   '@esbuild/win32-x64@0.27.4':
     optional: true
+
+  '@google/generative-ai@0.21.0': {}
 
   '@img/colour@1.1.0':
     optional: true
@@ -3641,6 +3693,10 @@ snapshots:
   pathval@2.0.1: {}
 
   perfect-debounce@1.0.0: {}
+
+  phaser@3.90.0:
+    dependencies:
+      eventemitter3: 5.0.4
 
   picocolors@1.1.1: {}
 

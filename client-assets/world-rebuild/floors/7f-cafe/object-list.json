@@ -1,0 +1,14 @@
+{
+  "floor": "7f-cafe",
+  "objects": [
+    "clean-background",
+    "table",
+    "chair",
+    "sofa",
+    "counter",
+    "wall-solid",
+    "door",
+    "elevator",
+    "plant"
+  ]
+}

@@ -1,0 +1,10 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - heading "Founder 로그인" [level=1] [ref=e4]
+    - generic [ref=e5]:
+      - text: Email
+      - textbox [ref=e6]
+    - generic [ref=e7]:
+      - text: Password
+      - textbox [ref=e8]
+    - button "로그인" [ref=e9]

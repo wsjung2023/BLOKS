@@ -164,3 +164,36 @@ model ModelProfile {
 
   @@map("model_profiles")
 }
+
+model MemoryNode {
+  id              String      @id @default(cuid())
+  memoryScope     MemoryScope
+  scopeEntityId   String
+  memoryType      MemoryType
+  summary         String
+  importanceScore Float       @default(0.5)
+  decayPolicy     DecayPolicy @default(medium)
+  tokenSize       Int         @default(0)
+  sourceEventId   String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  characterLinks CharacterMemoryLink[]
+
+  @@index([memoryScope, scopeEntityId])
+  @@map("memory_nodes")
+}
+
+model CharacterMemoryLink {
+  id               String  @id @default(cuid())
+  characterId      String
+  memoryId         String
+  relevanceScore   Float   @default(1.0)
+  visibilityLevel  String  @default("private")
+
+  character Character  @relation(fields: [characterId], references: [id])
+  memory    MemoryNode @relation(fields: [memoryId], references: [id])
+
+  @@unique([characterId, memoryId])
+  @@map("character_memory_links")
+}

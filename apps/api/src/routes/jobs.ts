@@ -95,7 +95,7 @@ jobsRouter.post("/", async (req, res) => {
       queueName: parsed.data.queueName,
       payload: {
         input: parsed.data.payload,
-        companyId,
+        companyId: "default",
         actorId,
       },
       requestedByCharacterId: actorId,

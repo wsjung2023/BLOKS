@@ -1,0 +1,1647 @@
+[
+  {
+    "slug": "arch",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-arch-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 46,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "aurelion",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-aurelion-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 177,
+      "top": 44,
+      "right": 335,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "axiom",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-axiom-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 143,
+      "top": 44,
+      "right": 370,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "buzz",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-buzz-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 168,
+      "top": 44,
+      "right": 344,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "byte",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-byte-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 57,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "clover",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-clover-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 147,
+      "top": 44,
+      "right": 365,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "comply",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-comply-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 60,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "debug",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-debug-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 88,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "deploy",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-deploy-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 55,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "echo-mkt",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-echo-mkt-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 143,
+      "top": 44,
+      "right": 370,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "echo-twin",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-echo-twin-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 69,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "erp-master",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-erp-master-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 55,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "forge",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-forge-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 162,
+      "top": 44,
+      "right": 351,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "founder-01",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-founder-01-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 162,
+      "top": 44,
+      "right": 350,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "glitch",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-glitch-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 64,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "hector",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-hector-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 153,
+      "top": 44,
+      "right": 358,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "iris",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-iris-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 46,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "jae-min",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-jae-min-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 163,
+      "top": 44,
+      "right": 349,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "ledger",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-ledger-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 44,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "lens",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-lens-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 159,
+      "top": 44,
+      "right": 352,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "lumi",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-lumi-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 142,
+      "top": 44,
+      "right": 371,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "marq",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-marq-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 145,
+      "top": 44,
+      "right": 368,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "memo",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-memo-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 145,
+      "top": 44,
+      "right": 368,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "nabi",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-nabi-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 162,
+      "top": 44,
+      "right": 350,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "nexus",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-nexus-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 156,
+      "top": 44,
+      "right": 356,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "nova",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-nova-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 140,
+      "top": 44,
+      "right": 372,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "ops",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-ops-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 140,
+      "top": 44,
+      "right": 373,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "oracle",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-oracle-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 44,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "ordo",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-ordo-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 152,
+      "top": 44,
+      "right": 361,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "orion",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-orion-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 144,
+      "top": 44,
+      "right": 368,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "phantom",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-phantom-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 147,
+      "top": 44,
+      "right": 366,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "pivot",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-pivot-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 151,
+      "top": 44,
+      "right": 361,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "pixels",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-pixels-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 69,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "pm-alto",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-pm-alto-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 152,
+      "top": 44,
+      "right": 359,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "pulse",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-pulse-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 144,
+      "top": 44,
+      "right": 368,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "rhea",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-rhea-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 155,
+      "top": 44,
+      "right": 357,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "scout",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-scout-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 161,
+      "top": 44,
+      "right": 352,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "selene",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-selene-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 166,
+      "top": 44,
+      "right": 345,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "sigma",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-sigma-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 44,
+      "right": 373,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "solene",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-solene-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 57,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "sora-txt",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-sora-txt-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 165,
+      "top": 44,
+      "right": 346,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "spec-on",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-spec-on-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 46,
+      "right": 374,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "sprint",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-sprint-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 147,
+      "top": 44,
+      "right": 365,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "stack",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-stack-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 142,
+      "top": 44,
+      "right": 371,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "vant",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-vant-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 150,
+      "top": 44,
+      "right": 362,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "vera-flow",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-vera-flow-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 139,
+      "top": 44,
+      "right": 373,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  },
+  {
+    "slug": "vesper",
+    "source": "D:\\Projects\\BLOKS\\apps\\web\\public\\sprites-v2\\char-vesper-work-stand.png",
+    "canvas": {
+      "width": 512,
+      "height": 512
+    },
+    "bbox": {
+      "left": 152,
+      "top": 44,
+      "right": 361,
+      "bottom": 484
+    },
+    "footline_y": 484,
+    "actions_ready": [
+      "stand-right",
+      "stand-left"
+    ],
+    "actions_pending": [
+      "walk-left-1",
+      "walk-left-2",
+      "walk-left-3",
+      "walk-left-4",
+      "walk-right-1",
+      "walk-right-2",
+      "walk-right-3",
+      "walk-right-4",
+      "sit-left",
+      "sit-right",
+      "talk-left",
+      "talk-right",
+      "lie",
+      "think"
+    ]
+  }
+]

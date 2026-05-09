@@ -3,6 +3,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { getSupabase } from "@bloks/db";
 import type { CharacterRuntimeStateRecord } from "@bloks/shared";
+import { emitWorldEvent } from "./stream.js";
 
 export const charactersRouter = Router();
 
@@ -17,6 +18,7 @@ const listQuerySchema = z.object({
 });
 
 const runtimePatchSchema = z.object({
+  activityStatus: z.string().max(120).optional(),
   workloadScore: z.number().min(0).max(100).optional(),
   fatigueScore: z.number().min(0).max(100).optional(),
   burnoutTriggered: z.boolean().optional(),
@@ -49,7 +51,7 @@ charactersRouter.get("/", async (req, res) => {
 
     let query = sb
       .from("characters")
-      .select(`id, name, code_name, active_mode, active_flag, trust_base, influence_base, persona_summary, division_id, department_id, rank_id, role_id, character_runtime_states(activity_status, workload_score, fatigue_score, burnout_triggered)`,
+      .select(`id, name, code_name, active_mode, active_flag, trust_base, influence_base, persona_summary, division_id, department_id, rank_id, role_id, character_runtime_states(activity_status, workload_score, fatigue_score, burnout_triggered), divisions(code)`,
         { count: "exact" }
       )
       .range(from, to);
@@ -103,7 +105,7 @@ charactersRouter.get("/:id", async (req, res) => {
 
     const { data, error } = await sb
       .from("characters")
-      .select(`id, name, code_name, active_mode, active_flag, trust_base, influence_base, persona_summary, division_id, department_id, rank_id, role_id, character_runtime_states(activity_status, workload_score, fatigue_score, burnout_triggered)`
+      .select(`id, name, code_name, active_mode, active_flag, trust_base, influence_base, persona_summary, division_id, department_id, rank_id, role_id, character_runtime_states(activity_status, workload_score, fatigue_score, burnout_triggered), divisions(code)`
       )
       .eq("id", id)
       .single();
@@ -138,6 +140,7 @@ charactersRouter.patch("/:id/runtime", async (req, res) => {
   }
 
   const updates: Record<string, unknown> = {};
+  if (parsed.data.activityStatus !== undefined) updates["activity_status"] = parsed.data.activityStatus;
   if (parsed.data.workloadScore !== undefined) updates["workload_score"] = parsed.data.workloadScore;
   if (parsed.data.fatigueScore !== undefined) updates["fatigue_score"] = parsed.data.fatigueScore;
   if (parsed.data.burnoutTriggered !== undefined) updates["burnout_triggered"] = parsed.data.burnoutTriggered;
@@ -165,6 +168,15 @@ charactersRouter.patch("/:id/runtime", async (req, res) => {
       });
       return;
     }
+
+    // Broadcast runtime change to all SSE clients
+    emitWorldEvent("runtime_update", {
+      characterId: id,
+      workload_score: (data as Record<string, unknown>)["workload_score"],
+      fatigue_score: (data as Record<string, unknown>)["fatigue_score"],
+      burnout_triggered: (data as Record<string, unknown>)["burnout_triggered"],
+      activity_status: (data as Record<string, unknown>)["activity_status"],
+    });
 
     res.json({ ok: true, data });
   } catch (err) {

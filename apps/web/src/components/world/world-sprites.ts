@@ -1,6 +1,5 @@
-// world-sprites.ts — constants, zone data, and PIXI builder utilities
+// world-sprites.ts - constants, zone data, and PIXI builder utilities
 
-// ── Grid/tile constants ───────────────────────────────────────────────────────
 export const GRID_COLS = 12;
 export const GRID_ROWS = 10;
 export const TILE_W = 64;
@@ -11,22 +10,196 @@ export const DESK_H = TILE_H * 0.48;
 export const DESK_DEPTH = 5;
 export const DESK_COLOR = 0xe8d9b8;
 
-// ── Zone / division data ──────────────────────────────────────────────────────
+export interface FloorSlot {
+  x: number;
+  y: number;
+}
+
+export interface FloorConfig {
+  id: string;
+  label: string;
+  imageUrl: string;
+  stageCleanUrl?: string;
+  divisionCodes: string[];
+  slots: FloorSlot[];
+}
+
+export const FLOORS: FloorConfig[] = [
+  {
+    id: "lobby",
+    label: "1F Lobby",
+    imageUrl: "/sprites-v2/floor-lobby-1f.png",
+    stageCleanUrl: "/floors/1f-lobby/background/stage-clean.png",
+    divisionCodes: [],
+    slots: [
+      { x: 0.32, y: 0.60 }, { x: 0.46, y: 0.65 },
+      { x: 0.58, y: 0.62 }, { x: 0.70, y: 0.57 },
+    ],
+  },
+  {
+    id: "ops",
+    label: "2F Ops",
+    imageUrl: "/sprites-v2/floor-ops-2f.png",
+    stageCleanUrl: "/floors/2f-ops/background/stage-clean.png",
+    divisionCodes: ["ops", "div_ops", "operations"],
+    slots: [
+      { x: 0.26, y: 0.55 }, { x: 0.40, y: 0.61 },
+      { x: 0.53, y: 0.55 }, { x: 0.66, y: 0.61 },
+      { x: 0.79, y: 0.56 },
+    ],
+  },
+  {
+    id: "engineering",
+    label: "3F Engineering",
+    imageUrl: "/sprites-v2/floor-engineering-3f.png",
+    stageCleanUrl: "/floors/3f-engineering/background/stage-clean.png",
+    divisionCodes: ["engineering", "div_engineering"],
+    slots: [
+      { x: 0.27, y: 0.50 }, { x: 0.39, y: 0.57 },
+      { x: 0.51, y: 0.50 }, { x: 0.63, y: 0.57 },
+      { x: 0.75, y: 0.50 }, { x: 0.31, y: 0.65 },
+      { x: 0.55, y: 0.65 }, { x: 0.70, y: 0.65 },
+    ],
+  },
+  {
+    id: "research",
+    label: "4F Research",
+    imageUrl: "/sprites-v2/floor-research-4f.png",
+    stageCleanUrl: "/floors/4f-research/background/stage-clean.png",
+    divisionCodes: ["research", "div_research"],
+    slots: [
+      { x: 0.28, y: 0.55 }, { x: 0.42, y: 0.62 },
+      { x: 0.56, y: 0.55 }, { x: 0.70, y: 0.62 },
+      { x: 0.49, y: 0.70 },
+    ],
+  },
+  {
+    id: "marketing",
+    label: "5F Marketing",
+    imageUrl: "/sprites-v2/floor-marketing-5f.png",
+    stageCleanUrl: "/floors/5f-marketing/background/stage-clean.png",
+    divisionCodes: ["marketing", "div_marketing"],
+    slots: [
+      { x: 0.31, y: 0.55 }, { x: 0.43, y: 0.62 },
+      { x: 0.55, y: 0.56 }, { x: 0.67, y: 0.63 },
+      { x: 0.79, y: 0.56 }, { x: 0.43, y: 0.70 },
+    ],
+  },
+  {
+    id: "finance",
+    label: "6F Planning",
+    imageUrl: "/sprites-v2/floor-planning-6f.png",
+    stageCleanUrl: "/floors/6f-planning/background/stage-clean.png",
+    divisionCodes: ["strategy", "div_strategy", "finance", "div_finance"],
+    slots: [
+      { x: 0.28, y: 0.55 }, { x: 0.43, y: 0.62 },
+      { x: 0.58, y: 0.55 }, { x: 0.72, y: 0.62 },
+    ],
+  },
+  {
+    id: "cafe",
+    label: "7F Cafe",
+    imageUrl: "/sprites-v2/floor-cafe-7f.png",
+    stageCleanUrl: "/floors/7f-cafe/background/stage-clean.png",
+    divisionCodes: [],
+    slots: [
+      { x: 0.28, y: 0.57 }, { x: 0.43, y: 0.64 },
+      { x: 0.58, y: 0.57 }, { x: 0.72, y: 0.62 },
+    ],
+  },
+  {
+    id: "executive",
+    label: "8F Executive",
+    imageUrl: "/sprites-v2/floor-executive-8f.png",
+    stageCleanUrl: "/floors/8f-executive/background/stage-clean.png",
+    divisionCodes: ["executive", "exec", "div_exec", "management"],
+    slots: [
+      { x: 0.26, y: 0.52 }, { x: 0.40, y: 0.60 },
+      { x: 0.60, y: 0.52 }, { x: 0.74, y: 0.60 },
+    ],
+  },
+];
+
+export const FLOOR_DIVISION_MAP: Record<string, string> = {};
+for (const floor of FLOORS) {
+  for (const code of floor.divisionCodes) {
+    FLOOR_DIVISION_MAP[code.toLowerCase()] = floor.id;
+  }
+}
+
+export interface RuntimeStateForSprite {
+  activity_status?: string;
+  runtime_status?: string;
+  burnout_triggered?: boolean;
+  fatigue_score?: number;
+  workload_score?: number;
+  current_task_count?: number;
+}
+
+export type SpritePose = "stand" | "walk" | "desk" | "meeting" | "rest" | "phone";
+
+export function getSpritePose(rt: RuntimeStateForSprite): SpritePose {
+  const status = (rt.activity_status ?? rt.runtime_status ?? "").toLowerCase();
+  const fatigue = rt.fatigue_score ?? 0;
+  const tasks = rt.current_task_count ?? 0;
+
+  if (status.includes("meeting")) return "meeting";
+  if (status.includes("walk") || status.includes("move")) return "walk";
+  if (status.includes("desk") || status.includes("seat") || status.includes("sit")) return "desk";
+  if (status.includes("phone")) return "phone";
+  if (status.includes("rest") || status.includes("break")) return "rest";
+  if (fatigue > 80) return "rest";
+  if (fatigue > 60) return "rest";
+  if (tasks > 0 || status.includes("work") || status.includes("progress")) return "desk";
+  return "stand";
+}
+
+export const DIVISION_COLORS: Record<string, number> = {
+  engineering: 0x5c9ce6,
+  product: 0x5c9ce6,
+  marketing: 0xe6905c,
+  design: 0x5ce6a0,
+  finance: 0xe6c85c,
+  management: 0xb05ce6,
+  executive: 0xe65ca0,
+  hr: 0x5ce6d6,
+};
+
+export const FLOOR_DIR: Record<string, string> = {
+  lobby:       "1f-lobby",
+  ops:         "2f-ops",
+  engineering: "3f-engineering",
+  research:    "4f-research",
+  marketing:   "5f-marketing",
+  finance:     "6f-planning",
+  cafe:        "7f-cafe",
+  executive:   "8f-executive",
+};
+
+// Elevator zone position per floor (normalized 0-1). Characters walk here
+// before transitioning between floors. Derived from layout.json elevator objects.
+export const ELEVATOR_ZONE: { x: number; y: number } = { x: 0.88, y: 0.25 };
+
+
 export const ZONE_FLOOR_URLS: Record<string, string> = {
-  engineering: "/sprites/building-floor-engineering.png",
-  marketing:   "/sprites/building-floor-marketing.png",
-  management:  "/sprites/building-floor-executive.png",
+  engineering: "/sprites-v2/floor-engineering-3f.png",
+  marketing: "/sprites-v2/floor-marketing-5f.png",
+  management: "/sprites-v2/floor-executive-8f.png",
+  research: "/sprites-v2/floor-research-4f.png",
 };
 
 export const ZONE_COLORS: Record<string, number> = {
-  engineering: 0xc8deff, marketing: 0xffddc8,
-  design: 0xd4f5d4, finance: 0xfff3c8, management: 0xf0d4f5,
+  engineering: 0xc8deff,
+  marketing: 0xffddc8,
+  design: 0xd4f5d4,
+  finance: 0xfff3c8,
+  management: 0xf0d4f5,
 };
 
 export const ZONE_MAP: string[][] = Array.from({ length: GRID_ROWS }, (_, row) =>
   Array.from({ length: GRID_COLS }, (_, col) => {
-    if (col < 4)  return "engineering";
-    if (col < 7)  return row < 5 ? "marketing" : "design";
+    if (col < 4) return "engineering";
+    if (col < 7) return row < 5 ? "marketing" : "design";
     if (col < 10) return "finance";
     return "management";
   })
@@ -37,18 +210,16 @@ export const ZONE_LABELS = [
   { col: 5, row: 1, label: "Marketing" },
   { col: 5, row: 7, label: "Design" },
   { col: 8, row: 4, label: "Research" },
-  { col: 10, row: 4, label: "Engineering" },
+  { col: 10, row: 4, label: "Management" },
 ];
 
 export const DIVISION_TO_ZONE: Record<string, string> = {
-  // Exact DB division_id values from Supabase
-  "div_exec": "management",
-  "div_strategy": "management",
-  "div_marketing": "marketing",
-  "div_research": "finance",
-  "div_engineering": "engineering",
-  "div_ops": "management",
-  // short fallbacks
+  div_exec: "management",
+  div_strategy: "management",
+  div_marketing: "marketing",
+  div_research: "finance",
+  div_engineering: "engineering",
+  div_ops: "management",
   engineering: "engineering",
   marketing: "marketing",
   research: "finance",
@@ -58,19 +229,58 @@ export const DIVISION_TO_ZONE: Record<string, string> = {
   ops: "management",
 };
 
-export const DIVISION_COLORS: Record<string, number> = {
-  engineering: 0x5c9ce6, product: 0x5c9ce6, marketing: 0xe6905c,
-  design: 0x5ce6a0, finance: 0xe6c85c, management: 0xb05ce6,
-  executive: 0xe65ca0, hr: 0x5ce6d6,
-};
-
-// ── Pure helpers ──────────────────────────────────────────────────────────────
 export function codeNameToSpriteUrl(code_name: string): string {
-  return `/sprites/char-${code_name.toLowerCase().replace(/_/g, "-")}.png`;
+  return `/sprites-v2/char-${code_name.toLowerCase().replace(/_/g, "-")}-work-stand.png`;
+}
+
+function codeNameToSlug(codeName: string): string {
+  return codeName.toLowerCase().replace(/_/g, "-");
 }
 
 export function getInitials(name: string): string {
-  return name.split(" ").map((w) => w[0] ?? "").join("").slice(0, 2).toUpperCase();
+  return name
+    .split(" ")
+    .map((w) => w[0] ?? "")
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+export function getActivitySpriteUrl(
+  codeName: string,
+  _rt: RuntimeStateForSprite,
+): string {
+  return getRoleFallback(codeName);
+}
+
+export function getRoleFallback(codeName: string): string {
+  const slug = codeNameToSlug(codeName);
+  return `/sprites-v2/char-${slug}-work-stand.png`;
+}
+
+function actionPoseToFileName(pose: SpritePose): string {
+  switch (pose) {
+    case "walk":
+      return "walk";
+    case "desk":
+      return "desk";
+    case "meeting":
+      return "meeting";
+    case "rest":
+      return "rest";
+    case "phone":
+      return "phone";
+    case "stand":
+    default:
+      return "stand";
+  }
+}
+
+export function getActivitySpriteCandidates(
+  codeName: string,
+  _rt: RuntimeStateForSprite,
+): string[] {
+  return [getRoleFallback(codeName)];
 }
 
 export function isoToScreen(col: number, row: number, ox: number, oy: number) {
@@ -87,15 +297,30 @@ export function shadeColor(color: number, amt: number): number {
   return (r << 16) | (g << 8) | b;
 }
 
-// PIXI effect builder — sprite from texture or emoji text fallback
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function buildEffect(PIXI: any, tex: any, x: number, y: number, w: number, h: number, emoji: string, emojiColor: number): any {
+export function buildEffect(
+  PIXI: any,
+  tex: any,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  emoji: string,
+  emojiColor: number,
+): any {
   if (tex) {
     const sp = new PIXI.Sprite(tex);
-    sp.anchor.set(0.5, 1.0); sp.width = w; sp.height = h; sp.x = x; sp.y = y;
+    sp.anchor.set(0.5, 1.0);
+    sp.width = w;
+    sp.height = h;
+    sp.x = x;
+    sp.y = y;
     return sp;
   }
+
   const t = new PIXI.Text({ text: emoji, style: { fontSize: 11, fill: emojiColor } });
-  t.anchor.set(0.5, 1.0); t.x = x; t.y = y;
+  t.anchor.set(0.5, 1.0);
+  t.x = x;
+  t.y = y;
   return t;
 }
