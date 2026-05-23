@@ -63,18 +63,13 @@ pnpm bloks-os start
 1. [supabase.com](https://supabase.com) 에서 무료 계정 생성
 2. 새 프로젝트 생성
 3. **Settings → API** 에서 `Project URL`과 `service_role` 키 복사
-4. `pnpm bloks-os init` 실행 시 입력, 또는 `.env` 파일에 직접 입력:
+4. `pnpm bloks-os init` 실행 시 입력 (자동으로 `.env`에 저장됩니다)
 
-```env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-```
-
-5. 데이터베이스 스키마 적용:
+5. 데이터베이스 스키마 생성 및 초기 데이터 삽입:
 
 ```bash
-pnpm db:migrate
-pnpm db:seed
+pnpm db:push    # Supabase에 테이블 생성
+pnpm db:seed    # 캐릭터, 조직 등 초기 데이터 삽입
 ```
 
 ---
