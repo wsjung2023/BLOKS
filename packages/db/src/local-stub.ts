@@ -12,7 +12,17 @@
  */
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
+
+const SEEDS_DIR = join(dirname(new URL(import.meta.url).pathname), "seeds");
+
+function loadSeed(filename: string): Row[] {
+  try {
+    const p = join(SEEDS_DIR, filename);
+    if (existsSync(p)) return JSON.parse(readFileSync(p, "utf-8")) as Row[];
+  } catch { /* fall back to empty */ }
+  return [];
+}
 
 // ── Persistence ───────────────────────────────────────────────────────────────
 
@@ -39,29 +49,13 @@ function persistTables(): void {
 
 type Row = Record<string, unknown>;
 
-const SEED_CHARACTERS: Row[] = [
-  { id: "local-char-01", name: "아크", code_name: "ARCH", persona_summary: "시스템 아키텍처를 담당하는 시니어 엔지니어", department: "engineering", active_flag: true, ai_enabled: false, location_zone: "desk" },
-  { id: "local-char-02", name: "글리치", code_name: "GLITCH", persona_summary: "프론트엔드 개발 전문가, 버그 찾기를 즐김", department: "engineering", active_flag: true, ai_enabled: false, location_zone: "desk" },
-  { id: "local-char-03", name: "스프린트", code_name: "SPRINT", persona_summary: "프로덕트 매니저, 일정과 목표를 관리", department: "operations", active_flag: true, ai_enabled: false, location_zone: "meeting-room" },
-  { id: "local-char-04", name: "나비", code_name: "NABI", persona_summary: "UX/UI 디자이너, 사용자 경험을 최우선으로", department: "marketing", active_flag: true, ai_enabled: false, location_zone: "lounge" },
-  { id: "local-char-05", name: "악시옴", code_name: "AXIOM", persona_summary: "데이터 분석 전문가, 인사이트 도출을 담당", department: "research", active_flag: true, ai_enabled: false, location_zone: "desk" },
-];
-
-const SEED_RUNTIME_STATES: Row[] = [
-  { character_id: "local-char-01", workload_score: 45, fatigue_score: 20, burnout_triggered: false, activity_status: "Working", location_zone: "desk", floor_id: "3f-engineering" },
-  { character_id: "local-char-02", workload_score: 60, fatigue_score: 30, burnout_triggered: false, activity_status: "Working", location_zone: "desk", floor_id: "3f-engineering" },
-  { character_id: "local-char-03", workload_score: 50, fatigue_score: 25, burnout_triggered: false, activity_status: "InMeeting", location_zone: "meeting-room", floor_id: "2f-ops" },
-  { character_id: "local-char-04", workload_score: 20, fatigue_score: 10, burnout_triggered: false, activity_status: "Idle", location_zone: "lounge", floor_id: "5f-marketing" },
-  { character_id: "local-char-05", workload_score: 35, fatigue_score: 15, burnout_triggered: false, activity_status: "Working", location_zone: "desk", floor_id: "4f-research" },
-];
-
 // Tables that have real in-memory data; others fall through to no-op.
-// Persisted data from .bloks-data/local-db.json takes priority over seeds.
+// Priority: .bloks-data/local-db.json (user data) > seeds/ (default roster)
 const _persisted = loadPersistedTables();
 
 const localTables: Record<string, Row[]> = {
-  characters: _persisted["characters"] ?? [...SEED_CHARACTERS],
-  character_runtime_states: _persisted["character_runtime_states"] ?? [...SEED_RUNTIME_STATES],
+  characters: _persisted["characters"] ?? loadSeed("characters.json"),
+  character_runtime_states: _persisted["character_runtime_states"] ?? loadSeed("character_runtime_states.json"),
   character_conversations: _persisted["character_conversations"] ?? [],
   character_bubbles: _persisted["character_bubbles"] ?? [],
   projects: _persisted["projects"] ?? [],
