@@ -1,6 +1,7 @@
 /**
  * bloks-os init
- * 최초 설정 마법사: .env 생성, 프로파일 선택, API 키 설정
+ * 최초 설정 마법사: .env 생성, API 키 설정
+ * 기본값: 로컬 모드 (Supabase/Docker/Redis 불필요)
  */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline";
@@ -39,16 +40,7 @@ export async function init(_args: string[]): Promise<void> {
   }
   ok(`Node.js v${nodeVer}`);
 
-  // ── 2. 프로파일 선택 ──────────────────────────────────────────────────────
-  sep();
-  console.log(`\n${c.bold}실행 프로파일 선택${c.reset}`);
-  console.log(`  ${c.green}1) 로컬 모드${c.reset} (권장) — Supabase/Redis 불필요, 즉시 시작 가능`);
-  console.log(`  ${c.yellow}2) 연결 모드${c.reset} — Supabase + Redis 필요, 팀 협업 지원`);
-  const profileChoice = await prompt("선택", "1");
-  const profile = profileChoice === "2" ? "connected" : "local";
-  ok(`프로파일: ${c.bold}${profile}${c.reset}`);
-
-  // ── 3. .env 파일 생성 ─────────────────────────────────────────────────────
+  // ── 2. .env 파일 생성 ─────────────────────────────────────────────────────
   sep();
   const envPath = join(ROOT, ".env");
   const examplePath = join(ROOT, ".env.example");
@@ -72,65 +64,90 @@ export async function init(_args: string[]): Promise<void> {
     }
   }
 
-  // 프로파일 설정
-  setEnvVar("BLOKS_PROFILE", profile);
+  // 로컬 모드 기본값
+  setEnvVar("BLOKS_PROFILE", "local");
+  setEnvVar("PORT", "4000");
+  setEnvVar("NEXT_PUBLIC_API_URL", "http://localhost:4000/api/v1");
+  setEnvVar("ENABLE_DEV_BYPASS_AUTH", "true");
+  setEnvVar("NEXT_PUBLIC_ENABLE_DEV_BYPASS_AUTH", "true");
+  setEnvVar("NEXT_PUBLIC_DEV_BYPASS_TOKEN", "dev-bypass");
 
-  // ── 4. OpenAI API 키 (선택) ───────────────────────────────────────────────
-  console.log(`\n${c.bold}AI 기능 설정 (선택사항)${c.reset}`);
-  console.log(`  ${c.dim}AI 키 없이도 툴 실행, 결재, 감사 기능은 모두 동작합니다.${c.reset}`);
-  const wantAI = await promptYN("OpenAI API 키를 지금 설정하시겠습니까?", false);
-  if (wantAI) {
-    const key = await prompt("OpenAI API 키 (sk-...)");
-    if (key.startsWith("sk-")) {
-      setEnvVar("OPENAI_API_KEY", key);
-      ok("OpenAI API 키 저장됨");
-    } else {
-      warn("유효하지 않은 키 형식 — 나중에 .env 파일에서 직접 설정하세요.");
-    }
-  } else {
-    info("AI 키 설정 건너뜀 — 나중에 .env에서 OPENAI_API_KEY= 로 추가 가능");
+  // ── 3. AI API 키 설정 (선택) ─────────────────────────────────────────────
+  sep();
+  console.log(`\n${c.bold}AI API 키 설정 (선택사항)${c.reset}`);
+  console.log(`  ${c.dim}AI 키 없이도 월드 뷰, 태스크 보드, 결재, 감사 기능이 모두 동작합니다.${c.reset}`);
+  console.log(`  ${c.dim}AI 캐릭터가 실제로 응답하려면 최소 하나의 키가 필요합니다.${c.reset}\n`);
+
+  // OpenAI
+  const openaiKey = await prompt("OpenAI API 키 (sk-proj-... 또는 sk-...  없으면 Enter 스킵)");
+  if (openaiKey.startsWith("sk-")) {
+    setEnvVar("OPENAI_API_KEY", openaiKey);
+    ok("OpenAI API 키 저장됨");
+  } else if (openaiKey) {
+    warn("OpenAI 키 형식이 올바르지 않아 저장하지 않습니다.");
   }
 
-  // ── 5. Supabase 설정 (연결 모드일 때만) ──────────────────────────────────
-  if (profile === "connected") {
-    sep();
-    console.log(`\n${c.bold}Supabase 설정${c.reset}`);
-    console.log(`  ${c.dim}Supabase 프로젝트 → Settings → API 에서 확인할 수 있습니다.${c.reset}`);
-    const supabaseUrl = await prompt("SUPABASE_URL (Project URL)", "https://your-project.supabase.co");
-    const supabaseKey = await prompt("SUPABASE_SERVICE_ROLE_KEY (service_role 키)");
+  // Anthropic (Claude)
+  const anthropicKey = await prompt("Anthropic API 키 (sk-ant-...  없으면 Enter 스킵)");
+  if (anthropicKey.startsWith("sk-ant-")) {
+    setEnvVar("ANTHROPIC_API_KEY", anthropicKey);
+    ok("Anthropic(Claude) API 키 저장됨");
+  } else if (anthropicKey) {
+    warn("Anthropic 키 형식이 올바르지 않아 저장하지 않습니다.");
+  }
+
+  // Google AI (Gemini)
+  const googleKey = await prompt("Google AI API 키 (AIza...  없으면 Enter 스킵)");
+  if (googleKey.startsWith("AIza")) {
+    setEnvVar("GOOGLE_AI_API_KEY", googleKey);
+    ok("Google AI(Gemini) API 키 저장됨");
+  } else if (googleKey) {
+    warn("Google AI 키 형식이 올바르지 않아 저장하지 않습니다.");
+  }
+
+  if (!openaiKey && !anthropicKey && !googleKey) {
+    info("AI 키 없이 시작합니다 — 나중에 .env 파일에서 직접 추가할 수 있습니다.");
+  }
+
+  // ── 4. Supabase (고급 옵션) ───────────────────────────────────────────────
+  sep();
+  console.log(`\n${c.bold}고급 설정: Supabase 클라우드 DB (선택사항)${c.reset}`);
+  console.log(`  ${c.dim}기본 로컬 모드는 Supabase 없이 작동합니다. 팀 협업이나 데이터 영구 보존이 필요할 때만 설정하세요.${c.reset}`);
+  const wantSupabase = await promptYN("Supabase를 연결하시겠습니까?", false);
+  if (wantSupabase) {
+    const supabaseUrl = await prompt("SUPABASE_URL");
+    const supabaseKey = await prompt("SUPABASE_SERVICE_ROLE_KEY");
     if (supabaseUrl && supabaseKey) {
       setEnvVar("SUPABASE_URL", supabaseUrl);
+      setEnvVar("NEXT_PUBLIC_SUPABASE_URL", supabaseUrl);
       setEnvVar("SUPABASE_SERVICE_ROLE_KEY", supabaseKey);
-      ok("Supabase 설정 저장됨");
+      console.log(`\n  ${c.dim}Supabase → Connect → Session pooler → URI 탭에서 복사하세요.${c.reset}`);
+      console.log(`  ${c.dim}⚠️ 비밀번호에 @, # 등 특수문자가 있으면 URL 인코딩 필요 (@ → %40)${c.reset}`);
+      const dbUrl = await prompt("DATABASE_URL (Session pooler URI)", "postgresql://postgres.[ref]:[password]@aws-1-[region].pooler.supabase.com:5432/postgres");
+      if (dbUrl && dbUrl.startsWith("postgresql://")) {
+        setEnvVar("DATABASE_URL", dbUrl);
+        setEnvVar("BLOKS_PROFILE", "connected");
+        ok("Supabase 설정 저장됨 (연결 모드)");
+      } else {
+        warn("DATABASE_URL 형식이 올바르지 않습니다 — 나중에 .env에서 직접 설정하세요.");
+      }
     }
-    console.log(`\n  ${c.dim}Supabase 프로젝트 → Settings → Database → Connection string (URI) 에서 확인.${c.reset}`);
-    const dbUrl = await prompt("DATABASE_URL (PostgreSQL 연결 문자열)", "postgresql://postgres:[password]@db.[project].supabase.co:5432/postgres");
-    if (dbUrl && dbUrl.startsWith("postgresql://")) {
-      setEnvVar("DATABASE_URL", dbUrl);
-      ok("DATABASE_URL 저장됨");
-    } else {
-      warn("DATABASE_URL 형식이 올바르지 않습니다 — 나중에 .env에서 직접 설정하세요.");
-    }
+  } else {
+    info("로컬 모드로 시작합니다 — 데이터는 .bloks-data/local-db.json 에 저장됩니다.");
   }
 
-  // ── 6. 기본 포트 설정 ─────────────────────────────────────────────────────
-  setEnvVar("PORT", "4000");
-  setEnvVar("DAEMON_PORT", "4001");
-  setEnvVar("NEXT_PUBLIC_ENABLE_DEV_BYPASS_AUTH", "true");
-  setEnvVar("NEXT_PUBLIC_API_URL", "http://localhost:4000/api/v1");
-
-  // ── 7. .env 저장 ──────────────────────────────────────────────────────────
+  // ── 5. .env 저장 ──────────────────────────────────────────────────────────
   writeFileSync(envPath, envLines.filter(Boolean).join("\n") + "\n", "utf-8");
   sep();
   ok(`.env 파일 저장 완료: ${envPath}`);
 
-  // ── 8. 완료 안내 ──────────────────────────────────────────────────────────
+  // ── 6. 완료 안내 ──────────────────────────────────────────────────────────
   console.log(`
 ${c.bold}${c.green}설정 완료!${c.reset}
 
 다음 명령으로 시작하세요:
 
-  ${c.cyan}pnpm bloks-os start${c.reset}    ${c.gray}# 서비스 시작${c.reset}
+  ${c.cyan}pnpm bloks-os start${c.reset}    ${c.gray}# 서비스 시작 (브라우저 자동 오픈)${c.reset}
   ${c.cyan}pnpm bloks-os doctor${c.reset}   ${c.gray}# 환경 진단${c.reset}
 `);
 }

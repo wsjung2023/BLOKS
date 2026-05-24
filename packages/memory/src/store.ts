@@ -1,6 +1,8 @@
-// Memory persistence — upsert, link, delete via Supabase
+// Memory persistence — upsert, link, delete via Supabase (no-op in local profile)
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { embedText, vectorToSql } from "./embed.js";
+
+const IS_LOCAL = process.env["BLOKS_PROFILE"] !== "connected";
 
 export type MemoryScope = "company" | "team" | "character" | "project";
 export type MemoryType = "preference" | "lesson" | "warning" | "relationship" | "strategy";
@@ -46,11 +48,12 @@ export interface MemorySearchResult {
 
 let _sb: SupabaseClient | null = null;
 
-function getSupabase(): SupabaseClient {
+function getSupabase(): SupabaseClient | null {
+  if (IS_LOCAL) return null;
   if (_sb) return _sb;
   const url = process.env["SUPABASE_URL"];
   const key = process.env["SUPABASE_SERVICE_ROLE_KEY"];
-  if (!url || !key) throw new Error("[memory] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !key) return null;
   _sb = createClient(url, key, { auth: { persistSession: false } });
   return _sb;
 }
@@ -59,6 +62,7 @@ function getSupabase(): SupabaseClient {
 
 export async function createMemory(input: CreateMemoryInput): Promise<MemoryNode> {
   const sb = getSupabase();
+  if (!sb) throw new Error("[memory] createMemory not available in local profile");
   const now = new Date().toISOString();
 
   const embedding = await embedText(input.summary);
@@ -104,6 +108,7 @@ export async function linkMemoryToCharacters(
   opts: { relevanceScore?: number; visibilityLevel?: VisibilityLevel } = {}
 ): Promise<void> {
   const sb = getSupabase();
+  if (!sb) return;
   const rows = characterIds.map((characterId) => ({
     character_id: characterId,
     memory_id: memoryId,
@@ -123,6 +128,7 @@ export async function searchMemories(opts: {
   threshold?: number;
 }): Promise<MemorySearchResult[]> {
   const sb = getSupabase();
+  if (!sb) return [];
   const embedding = await embedText(opts.query);
 
   const { data, error } = await sb.rpc("match_memories", {
@@ -148,6 +154,7 @@ export async function searchMemoriesByScope(opts: {
   threshold?: number;
 }): Promise<MemorySearchResult[]> {
   const sb = getSupabase();
+  if (!sb) return [];
   const embedding = await embedText(opts.query);
 
   const { data, error } = await sb.rpc("match_memories_by_scope", {
@@ -173,6 +180,7 @@ export async function listCharacterMemories(
   opts: { limit?: number | undefined; memoryType?: MemoryType | undefined } = {}
 ): Promise<MemoryNode[]> {
   const sb = getSupabase();
+  if (!sb) return [];
 
   let query = sb
     .from("character_memory_links")
@@ -203,5 +211,73 @@ export async function listCharacterMemories(
 
 export async function deleteMemory(memoryId: string): Promise<void> {
   const sb = getSupabase();
+  if (!sb) return;
   await sb.from("memory_nodes").delete().eq("id", memoryId);
+}
+
+// ── Auto-compression ──────────────────────────────────────────────────────────
+// When a character has >threshold memories, summarize the oldest batch via LLM
+// and replace them with a single "summary" memory node.
+// Returns number of memories compressed (0 if nothing to do).
+
+export async function compressCharacterMemories(
+  characterId: string,
+  opts: {
+    threshold?: number;
+    batchSize?: number;
+    summarize: (texts: string[]) => Promise<string>;
+  }
+): Promise<number> {
+  const { threshold = 30, batchSize = 20, summarize } = opts;
+  const sb = getSupabase();
+  if (!sb) return 0;
+
+  // Count current memories
+  const { count } = await sb
+    .from("character_memory_links")
+    .select("*", { count: "exact", head: true })
+    .eq("character_id", characterId);
+
+  if ((count ?? 0) <= threshold) return 0;
+
+  // Fetch oldest batchSize memories (by created_at asc via join)
+  const { data: linkRows } = await sb
+    .from("character_memory_links")
+    .select("memory_id, memory_nodes(id, summary, memory_type, importance_score, created_at)")
+    .eq("character_id", characterId)
+    .order("memory_nodes(created_at)", { ascending: true })
+    .limit(batchSize);
+
+  const nodes: MemoryNode[] = [];
+  for (const row of linkRows ?? []) {
+    const node = (row as Record<string, unknown>)["memory_nodes"];
+    if (node) {
+      const n = Array.isArray(node) ? node[0] : node;
+      if (n) nodes.push(n as MemoryNode);
+    }
+  }
+
+  if (nodes.length === 0) return 0;
+
+  // Summarize via injected LLM function
+  const texts = nodes.map(n => `[${n.memory_type}] ${n.summary}`);
+  const summaryText = await summarize(texts);
+
+  // Create new summary memory node
+  const avgImportance = nodes.reduce((s, n) => s + n.importance_score, 0) / nodes.length;
+  await createMemory({
+    memoryScope: "character",
+    scopeEntityId: characterId,
+    memoryType: "lesson",
+    summary: summaryText.slice(0, 500),
+    importanceScore: Math.max(avgImportance, 0.6),
+    decayPolicy: "long",
+    characterIds: [characterId],
+  });
+
+  // Delete the original compressed memories
+  const ids = nodes.map(n => n.id);
+  await sb.from("memory_nodes").delete().in("id", ids);
+
+  return ids.length;
 }

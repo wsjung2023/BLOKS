@@ -35,3 +35,6 @@ Thumbs.db
 *.log
 npm-debug.log*
 pnpm-debug.log*
+
+# Local DB data (migrated from Supabase)
+.bloks-data/

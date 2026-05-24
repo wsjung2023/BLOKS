@@ -1,6 +1,6 @@
 # BLOKS OS
 
-**AI 에이전트를 직원처럼 운영하는 오픈소스 시뮬레이션 OS**
+**AI 에이전트를 직원처럼 운영하는 오픈소스 시뮬레이션 OS**  
 AI가 실제로 일하는 모습을 실시간으로 보고, 위험한 행동은 직접 승인하고, 모든 기록을 감사할 수 있습니다.
 
 ---
@@ -9,7 +9,7 @@ AI가 실제로 일하는 모습을 실시간으로 보고, 위험한 행동은 
 
 BLOKS OS는 AI 에이전트를 **직원처럼 운영**할 수 있는 오픈소스 플랫폼입니다.
 
-- 여러 AI 캐릭터가 가상 오피스에서 동시에 일함
+- 68명의 AI 캐릭터가 가상 오피스에서 동시에 일함
 - 파일 읽기/쓰기, 코드 실행 같은 실제 도구를 사용
 - 위험한 행동은 사람이 직접 승인/차단
 - 모든 행동이 감사 로그에 기록되고 검증 가능
@@ -21,7 +21,6 @@ BLOKS OS는 AI 에이전트를 **직원처럼 운영**할 수 있는 오픈소�
 - **결재 센터** — L0~L3 위험 등급별 도구 실행 승인/차단
 - **감사 로그** — SHA-256 해시 체인으로 모든 행동 기록, CSV/JSONL 내보내기
 - **킬 스위치** — 긴급 시 모든 실행 즉시 일시정지
-- **로컬 우선** — Supabase/Redis 없이도 즉시 실행 가능
 
 ---
 
@@ -34,53 +33,53 @@ BLOKS OS는 AI 에이전트를 **직원처럼 운영**할 수 있는 오픈소�
 | Node.js 20+ | [nodejs.org](https://nodejs.org) |
 | pnpm | `npm install -g pnpm` |
 | Git | [git-scm.com](https://git-scm.com) |
-| OpenAI API 키 | [platform.openai.com](https://platform.openai.com) — AI 기능 사용 시 필요 |
-| Supabase 프로젝트 | [supabase.com](https://supabase.com) — 데이터 저장 시 필요 (무료 플랜 가능) |
 
-> **로컬 모드**: OpenAI 키와 Supabase 없이도 툴 실행, 결재, 감사 기능을 바로 써볼 수 있습니다.
+> Docker, Supabase, Redis **필요 없습니다.** 설치 후 바로 실행됩니다.
 
 ### 설치
 
 ```bash
-# 1. 저장소 클론
 git clone https://github.com/wsjung2023/BLOKS.git
 cd BLOKS
-
-# 2. 패키지 설치
 pnpm install
-
-# 3. 설정 마법사 실행 (Supabase/OpenAI 키 입력)
-pnpm bloks-os init
-
-# 4. 실행
 pnpm bloks-os start
 ```
 
-브라우저가 자동으로 열립니다. 🎉
+브라우저가 자동으로 열립니다. API 키 없이도 월드 뷰, 태스크 보드, 결재, 감사 기능을 바로 사용할 수 있습니다.
 
-### Supabase 설정 방법
+데이터는 `.bloks-data/local-db.json`에 저장되며 재시작 후에도 유지됩니다.
 
-1. [supabase.com](https://supabase.com) 에서 무료 계정 생성
-2. 새 프로젝트 생성
-3. **Settings → API** 에서 `Project URL`과 `service_role` 키 복사
-4. `pnpm bloks-os init` 실행 시 입력 (자동으로 `.env`에 저장됩니다)
+### AI 기능 활성화 (선택)
 
-5. 데이터베이스 스키마 생성 및 초기 데이터 삽입:
+AI 캐릭터가 실제로 응답하게 하려면 본인의 API 키가 필요합니다. 아래 중 하나 이상 입력하면 됩니다.
 
 ```bash
-pnpm db:push    # Supabase에 테이블 생성
-pnpm db:seed    # 캐릭터, 조직 등 초기 데이터 삽입
+pnpm bloks-os init
+```
+
+init 마법사가 단계별로 안내합니다. 또는 `.env` 파일을 직접 수정할 수도 있습니다.
+
+```bash
+# .env — 사용하는 AI 서비스 키만 입력 (모두 선택사항)
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+GOOGLE_AI_API_KEY=AIza...
 ```
 
 ---
 
-## 환경 진단
+## 개발 환경
 
 ```bash
+# 전체 개발 서버 (API + Web + Worker)
+pnpm dev
+
+# 테스트
+pnpm test
+
+# 환경 진단
 pnpm bloks-os doctor
 ```
-
-설정 문제를 자동으로 감지하고 해결 방법을 안내합니다.
 
 ---
 
@@ -89,27 +88,21 @@ pnpm bloks-os doctor
 | 레이어 | 기술 |
 |--------|------|
 | 프론트엔드 | Next.js 15, Phaser 3 (월드), React |
-| 백엔드 | Express, BullMQ |
-| 데이터베이스 | Supabase (PostgreSQL), Prisma |
-| AI | OpenAI (기본), ai-router로 멀티 프로바이더 확장 가능 |
-| 인프라 | Docker Compose, Helm (Kubernetes) |
+| 백엔드 | Express |
+| 데이터 | 로컬 JSON (기본) / Supabase (선택, `BLOKS_PROFILE=connected`) |
+| AI | OpenAI, Anthropic, Google AI (ai-router로 자동 선택) |
 
 ---
 
-## 개발 환경 실행
+## 클라우드 연결 모드 (선택)
+
+Supabase + Redis를 사용하는 팀 협업 모드가 필요하면 `.env`에서 설정합니다.
 
 ```bash
-# 의존 서비스 (PostgreSQL + Redis)
-docker compose up -d
-
-# 전체 개발 서버
-pnpm dev
-
-# 테스트
-pnpm test
-
-# E2E 테스트
-pnpm --filter web exec playwright test
+BLOKS_PROFILE=connected
+SUPABASE_URL=https://[ref].supabase.co
+SUPABASE_SERVICE_ROLE_KEY=...
+REDIS_URL=redis://...
 ```
 
 ---

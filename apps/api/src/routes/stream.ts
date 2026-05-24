@@ -1,6 +1,6 @@
 // SSE stream — broadcasts world events to all connected clients
 import { Router, type Request, type Response } from "express";
-import Redis from "ioredis";
+import { getRuntimeProfile } from "@bloks/db";
 
 export const WORLD_EVENTS_CHANNEL = "world:events";
 
@@ -21,7 +21,22 @@ export interface WorldEvent {
     | "character_status"
     | "character_moved"
     | "character_bubble"
-    | "world_tick";
+    | "character_flags_updated"
+    | "character_message"
+    | "founder_override"
+    | "world_tick"
+    | "agent_message"
+    | "workflow_stage"
+    | "character_levelup"
+    // ── Tool execution lifecycle (BLOKS OS runtime) ──────────────────────────
+    | "tool_requested"
+    | "tool_policy_evaluated"
+    | "tool_approval_requested"
+    | "tool_approved"
+    | "tool_denied"
+    | "tool_executed"
+    | "tool_failed"
+    | "tool_audit_persisted";
   payload: Record<string, unknown>;
   timestamp: string;
 }
@@ -50,33 +65,30 @@ const heartbeatInterval = setInterval(
 );
 heartbeatInterval.unref();
 
-// ── Redis subscriber ───────────────────────────────────────────────────────────
-// Listens on world:events channel and forwards to SSE clients
+// ── Redis subscriber (connected mode only) ────────────────────────────────────
+// In local mode SSE still works for in-process emits; no Redis needed.
 
-const redisSub = new Redis({
-  host: process.env["REDIS_HOST"] ?? "127.0.0.1",
-  port: Number(process.env["REDIS_PORT"] ?? 6379),
-  password: process.env["REDIS_PASSWORD"] || undefined,
-  lazyConnect: true,
-  maxRetriesPerRequest: null,
-});
-
-redisSub.connect().catch(() => {
-  // Redis unavailable — SSE still works for in-process emits
-});
-
-redisSub.subscribe(WORLD_EVENTS_CHANNEL).catch((err: Error) => {
-  console.warn("[stream] Redis subscribe failed:", err.message);
-});
-
-redisSub.on("message", (_channel: string, message: string) => {
-  try {
-    const { type, payload } = JSON.parse(message) as WorldEvent;
-    emitWorldEvent(type, payload);
-  } catch {
-    // ignore malformed frames
-  }
-});
+if (getRuntimeProfile() === "connected") {
+  import("ioredis").then(({ default: Redis }) => {
+    const redisSub = new Redis({
+      host: process.env["REDIS_HOST"] ?? "127.0.0.1",
+      port: Number(process.env["REDIS_PORT"] ?? 6379),
+      password: process.env["REDIS_PASSWORD"] || undefined,
+      lazyConnect: true,
+      maxRetriesPerRequest: null,
+    });
+    redisSub.connect().catch(() => {});
+    redisSub.subscribe(WORLD_EVENTS_CHANNEL).catch((err: Error) => {
+      console.warn("[stream] Redis subscribe failed:", err.message);
+    });
+    redisSub.on("message", (_channel: string, message: string) => {
+      try {
+        const { type, payload } = JSON.parse(message) as WorldEvent;
+        emitWorldEvent(type, payload);
+      } catch { /* ignore malformed frames */ }
+    });
+  }).catch(() => {});
+}
 
 // ── GET /api/v1/stream ─────────────────────────────────────────────────────────
 

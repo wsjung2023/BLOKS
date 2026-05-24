@@ -1,9 +1,16 @@
 // @bloks/db — singleton Supabase service-role client for server-side DB access
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { getRuntimeProfile } from './profile.js';
+import { localSupabaseStub } from './local-stub.js';
 
 let _client: SupabaseClient | null = null;
 
 export function getSupabase(): SupabaseClient {
+  // Local profile: return no-op stub so the server starts without Supabase credentials.
+  if (getRuntimeProfile() === "local") {
+    return localSupabaseStub as SupabaseClient;
+  }
+
   if (_client) return _client;
   const url =
     process.env['SUPABASE_URL'] ??
@@ -19,7 +26,7 @@ export function getSupabase(): SupabaseClient {
 
   if (!url || !key) {
     throw new Error(
-      '[db] Missing Supabase credentials. Set SUPABASE_URL and one of SUPABASE_SERVICE_ROLE_KEY / SUPABASE_ANON_KEY.'
+      '[db] Missing Supabase credentials. Set SUPABASE_URL and one of SUPABASE_SERVICE_ROLE_KEY / SUPABASE_ANON_KEY. Or set BLOKS_PROFILE=local to run without a database.'
     );
   }
 

@@ -1,15 +1,32 @@
 import { type Job, Worker } from "bullmq";
 import { EventType, QUEUE_NAMES } from "@bloks/shared";
-import { getSupabase } from "@bloks/db";
+import { getSupabase, getRuntimeProfile } from "@bloks/db";
+import { globalExecutionBus } from "@bloks/agent-runtime";
 
 import { runQueueHandler, type WorkerJobPayload } from "./handlers.js";
 import { WorldTickEngine } from "./tick-engine.js";
+import "./tools.js";
 
 const redisConnection = {
   host: process.env.REDIS_HOST ?? "127.0.0.1",
   port: Number(process.env.REDIS_PORT ?? 6379),
   password: process.env.REDIS_PASSWORD || undefined,
 };
+
+const WORLD_EVENTS_CHANNEL = "world:events";
+
+// Forward RuntimeEngine lifecycle events to the Redis world-events channel
+// so the SSE stream in apps/api/src/routes/stream.ts picks them up.
+const toolEventTypes = [
+  EventType.ToolRequested,
+  EventType.ToolPolicyEvaluated,
+  EventType.ToolApprovalRequested,
+  EventType.ToolApproved,
+  EventType.ToolDenied,
+  EventType.ToolExecuted,
+  EventType.ToolFailed,
+  EventType.ToolAuditPersisted,
+] as const;
 
 const queueNames = Object.values(QUEUE_NAMES);
 
@@ -71,7 +88,8 @@ async function writeJobEvent(event: {
   }
 }
 
-const workers = queueNames.map((queueName) => {
+// Local profile: skip BullMQ Workers entirely (no Redis available)
+const workers = getRuntimeProfile() === "local" ? [] : queueNames.map((queueName) => {
   const worker = new Worker(
     queueName,
     async (job) => {
@@ -131,6 +149,28 @@ const workers = queueNames.map((queueName) => {
 
   return worker;
 });
+
+// Wire RuntimeEngine lifecycle events → Redis world-events channel (connected mode only)
+// In local profile, skip Redis pub — SSE stream won't receive tool events but the
+// audit log still captures all execution lifecycle via the in-process AuditWriter.
+if (getRuntimeProfile() === "connected") {
+  const Redis = (await import("ioredis")).default;
+  const redisPubForBus = new Redis({
+    ...redisConnection,
+    lazyConnect: true,
+    maxRetriesPerRequest: null,
+  });
+  redisPubForBus.connect().catch(() => {});
+
+  const toolEventSet = new Set<string>(toolEventTypes);
+  globalExecutionBus.subscribe((event) => {
+    if (!toolEventSet.has(event.eventType)) return;
+    redisPubForBus.publish(
+      WORLD_EVENTS_CHANNEL,
+      JSON.stringify({ type: event.eventType.replace(/\./g, "_"), payload: { execution: event.payload.execution }, timestamp: new Date().toISOString() }),
+    ).catch(() => {});
+  });
+}
 
 console.log("[worker] started", {
   queues: queueNames,

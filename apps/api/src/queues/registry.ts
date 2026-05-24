@@ -1,4 +1,5 @@
 import { ID_PREFIX, QUEUE_NAMES } from "@bloks/shared";
+import { getRuntimeProfile } from "@bloks/db";
 
 export const queueRegistry = Object.freeze([
   QUEUE_NAMES.workflowTransitions,
@@ -7,6 +8,9 @@ export const queueRegistry = Object.freeze([
   QUEUE_NAMES.artifactPostprocess,
   QUEUE_NAMES.analyticsRollups,
   QUEUE_NAMES.notifications,
+  QUEUE_NAMES.founderMessage,
+  QUEUE_NAMES.orchestrate,
+  QUEUE_NAMES.monthlyReport,
 ]);
 
 export type QueueName = (typeof queueRegistry)[number];
@@ -16,6 +20,9 @@ export type EnqueueJobParams = {
   payload: Record<string, unknown>;
   requestedByCharacterId?: string | null;
   traceId?: string | null;
+  // If provided, used as deterministic BullMQ job ID to prevent duplicate enqueueing.
+  // BullMQ skips adding a job whose ID already exists in the queue.
+  idempotencyKey?: string | null;
 };
 
 export type QueueJobData = {
@@ -24,6 +31,7 @@ export type QueueJobData = {
   requestedByCharacterId: string | null;
   queuedAt: string;
   traceId: string | null;
+  idempotencyKey: string | null;
 };
 
 const redisConnection = {
@@ -36,11 +44,32 @@ type QueueLike = {
   add: (name: string, data: QueueJobData, options: { jobId: string }) => Promise<{ id: string }>;
 };
 
+// In-memory queue for local profile — stores jobs in a Map; no Redis required.
+// Jobs are processed synchronously (fire-and-forget) within the same process.
+const inMemoryJobs = new Map<string, { name: string; data: QueueJobData }>();
+
+function makeInMemoryQueue(): QueueLike {
+  return {
+    add: async (name: string, data: QueueJobData, options: { jobId: string }) => {
+      inMemoryJobs.set(options.jobId, { name, data });
+      console.log(`[queue:local] enqueued ${name} → ${options.jobId}`);
+      return { id: options.jobId };
+    },
+  };
+}
+
 const queues = new Map<QueueName, QueueLike>();
 
 async function getQueue(queueName: QueueName): Promise<QueueLike> {
   const existing = queues.get(queueName);
   if (existing) return existing;
+
+  // Local profile: skip Redis entirely
+  if (getRuntimeProfile() === "local") {
+    const q = makeInMemoryQueue();
+    queues.set(queueName, q);
+    return q;
+  }
 
   const { Queue } = await import("bullmq");
   const queue = new Queue(queueName, {
@@ -71,13 +100,18 @@ export function buildQueueJobData(params: EnqueueJobParams, queuedAtIso: string)
     requestedByCharacterId: params.requestedByCharacterId ?? null,
     queuedAt: queuedAtIso,
     traceId: params.traceId ?? null,
+    idempotencyKey: params.idempotencyKey ?? null,
   };
 }
 
 export async function enqueueJob(params: EnqueueJobParams) {
   const queue = await getQueue(params.queueName);
   const timestamp = Date.now();
-  const jobId = createJobId(timestamp);
+  // Use idempotencyKey as deterministic job ID when provided.
+  // BullMQ will skip adding if the same job ID already exists (pending/active).
+  const jobId = params.idempotencyKey
+    ? `${ID_PREFIX.job}idem_${params.idempotencyKey}`
+    : createJobId(timestamp);
   const jobData = buildQueueJobData(params, new Date(timestamp).toISOString());
 
   const job = await queue.add("execute", jobData, {
