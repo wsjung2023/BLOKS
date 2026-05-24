@@ -130,62 +130,6 @@ pnpm dev
 
 ---
 
-## 서버 시작 / 종료
-
-### 매번 수동으로 시작하기
-
-터미널을 열고 BLOKS 폴더로 이동한 뒤 실행합니다.
-
-**Windows:**
-```
-cd ~\BLOKS
-pnpm dev
-```
-
-**Mac:**
-```
-cd ~/BLOKS
-pnpm dev
-```
-
-브라우저에서 `http://localhost:3000` 접속 → BLOKS OS 시작  
-종료: 터미널에서 `Ctrl + C`
-
-> ⚠️ 터미널을 닫으면 서버도 같이 종료됩니다. 터미널을 열어 둔 채로 사용하세요.
-
----
-
-## PC 켤 때 자동 시작 설정
-
-매번 터미널을 열지 않아도 PC를 켜면 BLOKS가 백그라운드에서 자동으로 실행되게 할 수 있습니다.
-
-### 자동 시작 등록
-
-BLOKS 폴더에서 한 번만 실행하면 됩니다:
-
-```
-pnpm bloks-os autostart enable
-```
-
-등록 후 PC를 재시작하면 자동으로 서버가 뜹니다. 브라우저에서 `http://localhost:3000` 으로 접속하면 됩니다.
-
-> - **Windows**: 시작프로그램 폴더에 스크립트가 등록됩니다. 로그인하면 터미널 창 없이 백그라운드에서 실행됩니다.
-> - **Mac**: LaunchAgent에 등록됩니다. 로그인 시 백그라운드에서 실행됩니다.
-
-### 자동 시작 해제
-
-```
-pnpm bloks-os autostart disable
-```
-
-### 등록 상태 확인
-
-```
-pnpm bloks-os autostart status
-```
-
----
-
 ### 5단계: AI 기능 켜기 (선택사항)
 
 AI 직원이 **실제로 생각하고 대화하고 일**하게 하려면 AI API 키가 필요합니다.
@@ -214,6 +158,110 @@ open -e .env
 
 ---
 
+## 서버 시작 / 종료
+
+설치 이후 매일 사용할 때는 아래 방법으로 서버를 켜고 끕니다.
+
+### 수동으로 시작하기
+
+터미널을 열고 BLOKS 폴더로 이동한 뒤 실행합니다.
+
+**Windows:**
+```
+cd ~\BLOKS
+pnpm dev
+```
+
+**Mac:**
+```
+cd ~/BLOKS
+pnpm dev
+```
+
+브라우저에서 `http://localhost:3000` 접속 → BLOKS OS 시작
+
+종료할 때는 터미널에서 `Ctrl + C`를 누르세요.
+
+> ⚠️ **터미널 창을 닫으면 서버도 같이 꺼집니다.** 사용 중에는 터미널을 열어 둬야 합니다.
+
+---
+
+## PC 켤 때 자동 시작 설정
+
+매번 터미널을 열고 명령어를 입력하는 게 번거롭다면, PC를 켜면 BLOKS가 자동으로 실행되도록 설정할 수 있습니다.
+
+### 자동 시작 등록 (한 번만 하면 됩니다)
+
+BLOKS 폴더에서 아래 명령어를 실행하세요:
+
+```
+pnpm bloks-os autostart enable
+```
+
+성공하면 이런 메시지가 나옵니다:
+```
+✓ 자동 시작 등록 완료
+→ PC 켤 때 백그라운드에서 BLOKS가 자동으로 시작됩니다.
+```
+
+이후 PC를 재시작하면 자동으로 서버가 켜집니다. 브라우저에서 `http://localhost:3000` 으로 접속하면 바로 사용할 수 있습니다.
+
+> - **Windows**: 시작프로그램 폴더에 스크립트가 등록됩니다. 로그인하면 터미널 창 없이 백그라운드에서 실행됩니다.
+> - **Mac**: LaunchAgent에 등록됩니다. 로그인 시 백그라운드에서 자동으로 실행됩니다.
+
+### 자동 시작 해제
+
+자동 실행을 끄고 싶다면:
+```
+pnpm bloks-os autostart disable
+```
+
+### 현재 등록 상태 확인
+
+자동 시작이 켜져 있는지 확인하려면:
+```
+pnpm bloks-os autostart status
+```
+
+---
+
+## 업데이트
+
+새 버전이 나왔을 때 업데이트하는 방법입니다. BLOKS 폴더에서 아래 순서대로 실행하세요.
+
+**Windows:**
+```
+cd ~\BLOKS
+git pull
+pnpm install
+pnpm dev
+```
+
+**Mac:**
+```
+cd ~/BLOKS
+git pull
+pnpm install
+pnpm dev
+```
+
+> `git pull` 후 어떤 내용이 바뀌었는지 보려면:
+> ```
+> git log --oneline -10
+> ```
+
+### git pull이 실패할 때
+
+`pnpm-lock.yaml` 충돌 오류가 나는 경우 아래를 먼저 실행한 뒤 다시 시도하세요:
+
+```
+git checkout pnpm-lock.yaml
+git pull
+pnpm install
+```
+
+---
+
 ## 자주 묻는 질문
 
 **Q. Docker, Supabase, Redis가 필요한가요?**  
@@ -224,79 +272,6 @@ BLOKS OS 자체는 완전 무료입니다. AI API 키를 사용하면 사용량�
 
 **Q. 데이터는 어디에 저장되나요?**  
 내 컴퓨터 안 `.bloks-data/local-db.json` 파일에 저장됩니다. 인터넷에 올라가지 않습니다.
-
-**Q. 다시 시작하려면?**
-
-Windows:
-```
-cd ~\BLOKS
-pnpm dev
-```
-
-Mac:
-```
-cd ~/BLOKS
-pnpm dev
-```
-
-**Q. PC 켤 때마다 자동으로 시작되게 하고 싶어요.**
-
-BLOKS 폴더에서 한 번만 실행하세요:
-```
-pnpm bloks-os autostart enable
-```
-
-이후 PC를 재시작하면 백그라운드에서 자동으로 실행됩니다. 브라우저에서 `http://localhost:3000` 으로 접속하면 됩니다.
-
-해제하려면:
-```
-pnpm bloks-os autostart disable
-```
-
-현재 상태 확인:
-```
-pnpm bloks-os autostart status
-```
-
-**Q. 최신 버전으로 업데이트하려면?**
-
-BLOKS 폴더에서 아래 순서대로 실행하세요:
-
-```
-git pull
-pnpm install
-pnpm dev
-```
-
-> `pnpm-lock.yaml` 충돌 오류가 나면 아래를 먼저 실행한 뒤 다시 시도하세요:
-> ```
-> git checkout pnpm-lock.yaml
-> git pull
-> pnpm install
-> ```
-
-업데이트 후 변경 사항을 확인하려면:
-```
-git log --oneline -10
-```
-
-**Q. 캐릭터 스프라이트(이미지)가 깨지거나 검은 박스로 보여요.**
-
-업데이트 도중 이미지 파일이 손실되는 경우가 있습니다. 아래 명령어 하나로 복원할 수 있습니다:
-
-Windows:
-```
-cd ~\BLOKS
-git checkout -- apps/web/public/sprites-v2/
-```
-
-Mac:
-```
-cd ~/BLOKS
-git checkout -- apps/web/public/sprites-v2/
-```
-
-> 이 명령어는 sprites-v2 폴더 안의 파일만 복원하며, 다른 데이터(.bloks-data 등)에는 영향을 주지 않습니다.
 
 **Q. AI 직원이 말을 안 해요.**  
 AI API 키를 아직 설정하지 않아서입니다. 위 5단계를 참고해 `.env`에 키를 입력해주세요.
@@ -320,10 +295,28 @@ pnpm bloks-os doctor
 |------|---------|
 | `git pull` 실패 (pnpm-lock.yaml 충돌) | `git checkout pnpm-lock.yaml` 후 다시 `git pull` |
 | 캐릭터가 한 명도 안 나와요 | `pnpm dev` 재시작, 안 되면 `.bloks-data/` 폴더 삭제 후 재시작 |
-| 스프라이트가 검은 박스로 보여요 | `git checkout -- apps/web/public/sprites-v2/` |
+| 스프라이트가 검은 박스로 보여요 | 아래 이미지 복원 명령어 참고 |
 | 로그인 화면이 뜨고 넘어가지 않아요 | 브라우저 주소창에 `http://localhost:3000` 직접 입력 |
 | 포트 4000 이미 사용 중 오류 | 이미 실행 중인 BLOKS를 먼저 종료 (`Ctrl+C`) 후 재시작 |
 | `pnpm: command not found` | `npm install -g pnpm` 실행 후 터미널 재시작 |
+
+### 캐릭터 이미지가 검은 박스로 보일 때
+
+업데이트 도중 이미지 파일이 손실되는 경우가 있습니다. 아래 명령어로 복원할 수 있습니다:
+
+**Windows:**
+```
+cd ~\BLOKS
+git checkout -- apps/web/public/sprites-v2/
+```
+
+**Mac:**
+```
+cd ~/BLOKS
+git checkout -- apps/web/public/sprites-v2/
+```
+
+> `.bloks-data/` 등 내 데이터에는 영향을 주지 않습니다.
 
 ---
 
