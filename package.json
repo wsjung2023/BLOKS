@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "packageManager": "pnpm@9.0.0",
   "scripts": {
+    "predev": "node tools/ensure-env.mjs",
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
@@ -21,7 +22,15 @@
     "progress:report": "node tools/progress-report.mjs",
     "smoke:board": "BLOKS_BOARD_SMOKE_MODE=api node tools/e2e-board-smoke.mjs",
     "smoke:board:fixture": "BLOKS_BOARD_SMOKE_MODE=fixture node tools/e2e-board-smoke.mjs",
-    "verify:ci": "pnpm --filter web lint && pnpm --filter web test && pnpm --filter api lint && pnpm --filter api test && pnpm smoke:board:fixture"
+    "perf:p95": "node tools/perf-p95.mjs",
+    "verify:ci": "pnpm --filter web lint && pnpm --filter web test && pnpm --filter api lint && pnpm --filter api test && pnpm smoke:board:fixture",
+    "demo:homepage": "node tools/demo/run-scenario.mjs --scenario=homepage",
+    "demo:ppt": "node tools/demo/run-scenario.mjs --scenario=ppt",
+    "demo:program": "node tools/demo/run-scenario.mjs --scenario=program",
+    "demo:capture": "playwright test --config=apps/web/playwright.config.ts",
+    "demo:report": "node tools/demo/generate-report.mjs",
+    "demo:finalize": "node tools/demo/finalize-scenario.mjs",
+    "bloks-os": "tsx tools/cli/src/index.ts"
   },
   "devDependencies": {
     "turbo": "^2.3.0",

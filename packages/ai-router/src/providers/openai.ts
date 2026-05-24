@@ -1,4 +1,4 @@
-// OpenAI provider — wraps OpenAI SDK with BLOKS AiExecutionResult contract
+// OpenAI provider — uses Responses API with Structured Outputs (strict json_schema)
 import OpenAI from "openai";
 import type { AiProvider, AiRequest, AiExecutionResult } from "../index.js";
 
@@ -15,6 +15,16 @@ const COST_PER_1M: Record<string, { input: number; output: number }> = {
 function estimateCost(model: string, inputTokens: number, outputTokens: number): number {
   const rates = COST_PER_1M[model] ?? { input: 10.0, output: 30.0 };
   return (inputTokens / 1_000_000) * rates.input + (outputTokens / 1_000_000) * rates.output;
+}
+
+// ── Schema validation (basic structural check) ────────────────────────────────
+
+function tryParseJson(text: string): { ok: true; value: unknown } | { ok: false } {
+  try {
+    return { ok: true, value: JSON.parse(text) };
+  } catch {
+    return { ok: false };
+  }
 }
 
 // ── Provider implementation ───────────────────────────────────────────────────
@@ -39,62 +49,11 @@ export class OpenAiProvider implements AiProvider {
     const model = request.model ?? "gpt-4o-mini";
 
     try {
-      const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-        ...(request.systemPrompt
-          ? [{ role: "system" as const, content: request.systemPrompt }]
-          : []),
-        { role: "user" as const, content: request.userPrompt },
-      ];
-
-      const response = await this.client.chat.completions.create({
-        model,
-        messages,
-        max_tokens: request.maxTokens ?? 2048,
-        temperature: request.temperature ?? 0.7,
-        ...(request.responseFormat === "json"
-          ? { response_format: { type: "json_object" } }
-          : {}),
-      });
-
-      const choice = response.choices[0];
-      const rawText = choice?.message.content ?? "";
-      const inputTokens = response.usage?.prompt_tokens ?? 0;
-      const outputTokens = response.usage?.completion_tokens ?? 0;
-      const costUsdEstimate = estimateCost(model, inputTokens, outputTokens);
-
-      let output: T | null = null;
-      if (request.responseFormat === "json" && rawText) {
-        try {
-          output = JSON.parse(rawText) as T;
-        } catch {
-          return {
-            ok: false,
-            model,
-            provider: this.name,
-            costUsdEstimate,
-            confidence: 0,
-            output: null,
-            rawText,
-            errorCode: "JSON_PARSE_ERROR",
-          };
-        }
-      } else {
-        output = rawText as unknown as T;
-      }
-
-      return {
-        ok: true,
-        model,
-        provider: this.name,
-        costUsdEstimate,
-        confidence: 0.9,
-        output,
-        rawText,
-      };
+      return await this.executeWithRetry<T>(request, model);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
       const isRateLimit = message.includes("rate_limit") || message.includes("429");
-      const isContextLength = message.includes("context_length");
+      const isContextLength = message.includes("context_length") || message.includes("maximum context");
 
       return {
         ok: false,
@@ -106,5 +65,125 @@ export class OpenAiProvider implements AiProvider {
         errorCode: isRateLimit ? "RATE_LIMITED" : isContextLength ? "CONTEXT_TOO_LONG" : "PROVIDER_ERROR",
       };
     }
+  }
+
+  private buildParams(request: AiRequest, model: string): OpenAI.Responses.ResponseCreateParamsNonStreaming {
+    const params: OpenAI.Responses.ResponseCreateParamsNonStreaming = {
+      model,
+      input: request.userPrompt,
+      max_output_tokens: request.maxTokens ?? 2048,
+    };
+
+    // System instructions
+    if (request.systemPrompt) {
+      params.instructions = request.systemPrompt;
+    }
+
+    // Output format
+    if (request.jsonSchema) {
+      // Structured Outputs — strict JSON schema validation
+      params.text = {
+        format: {
+          type: "json_schema",
+          name: "output",
+          schema: request.jsonSchema,
+          strict: true,
+        },
+      };
+    } else if (request.responseFormat === "json") {
+      params.text = { format: { type: "json_object" } };
+    }
+
+    return params;
+  }
+
+  private async callResponsesApi(
+    request: AiRequest,
+    model: string,
+    overridePrompt?: string,
+  ): Promise<{ rawText: string; inputTokens: number; outputTokens: number }> {
+    const params = this.buildParams(request, model);
+    if (overridePrompt !== undefined) params.input = overridePrompt;
+
+    const response = await this.client.responses.create(params);
+    const rawText = response.output_text ?? "";
+    const inputTokens = response.usage?.input_tokens ?? 0;
+    const outputTokens = response.usage?.output_tokens ?? 0;
+
+    return { rawText, inputTokens, outputTokens };
+  }
+
+  private async executeWithRetry<T>(
+    request: AiRequest,
+    model: string,
+  ): Promise<AiExecutionResult<T>> {
+    const { rawText, inputTokens, outputTokens } = await this.callResponsesApi(request, model);
+    const costUsdEstimate = estimateCost(model, inputTokens, outputTokens);
+
+    // Plain text response
+    if (!request.jsonSchema && request.responseFormat !== "json") {
+      return {
+        ok: true,
+        model,
+        provider: this.name,
+        costUsdEstimate,
+        confidence: 0.9,
+        output: rawText as unknown as T,
+        rawText,
+      };
+    }
+
+    // JSON response — parse and validate
+    const parsed = tryParseJson(rawText);
+    if (parsed.ok) {
+      return {
+        ok: true,
+        model,
+        provider: this.name,
+        costUsdEstimate,
+        confidence: 0.9,
+        output: parsed.value as T,
+        rawText,
+      };
+    }
+
+    // Schema mismatch / parse failure — one retry with correction prompt
+    const correctionPrompt = [
+      request.userPrompt,
+      "",
+      "이전 응답이 유효한 JSON 형식이 아니었습니다. 반드시 유효한 JSON만 반환해 주세요.",
+      request.jsonSchema
+        ? "스키마를 준수해야 합니다: " + JSON.stringify(request.jsonSchema)
+        : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const retry = await this.callResponsesApi(request, model, correctionPrompt);
+    const totalCost = costUsdEstimate + estimateCost(model, retry.inputTokens, retry.outputTokens);
+    const retryParsed = tryParseJson(retry.rawText);
+
+    if (retryParsed.ok) {
+      return {
+        ok: true,
+        model,
+        provider: this.name,
+        costUsdEstimate: totalCost,
+        confidence: 0.7, // lower confidence after retry
+        output: retryParsed.value as T,
+        rawText: retry.rawText,
+      };
+    }
+
+    return {
+      ok: false,
+      model,
+      provider: this.name,
+      costUsdEstimate: totalCost,
+      confidence: 0,
+      output: null,
+      rawText,
+      errorCode: "JSON_PARSE_ERROR",
+    };
   }
 }

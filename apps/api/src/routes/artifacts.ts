@@ -16,6 +16,7 @@ const createArtifactSchema = z.object({
 const listQuerySchema = z.object({
   projectId: z.string().optional(),
   taskId: z.string().optional(),
+  authorCharacterId: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
   offset: z.coerce.number().int().min(0).default(0),
 });
@@ -35,7 +36,7 @@ artifactsRouter.get("/", async (req, res) => {
     return;
   }
 
-  const { projectId, taskId, limit, offset } = parsed.data;
+  const { projectId, taskId, authorCharacterId, limit, offset } = parsed.data;
   try {
     const sb = getSupabase();
     let query = sb
@@ -46,6 +47,7 @@ artifactsRouter.get("/", async (req, res) => {
 
     if (projectId) query = query.eq("project_id", projectId);
     if (taskId) query = query.eq("task_id", taskId);
+    if (authorCharacterId) query = query.eq("author_character_id", authorCharacterId);
 
     const { data, count, error } = await query;
     if (error) {

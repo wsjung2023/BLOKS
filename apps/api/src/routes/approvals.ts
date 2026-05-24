@@ -2,24 +2,36 @@
 import { Router } from "express";
 import { z } from "zod";
 import { getSupabase } from "@bloks/db";
-import { ApprovalState, APPROVAL_TRANSITIONS } from "@bloks/shared";
 import { writeEventLog } from "./tasks-helpers.js";
+import { emitWorldEvent } from "./stream.js";
 
 export const approvalsRouter = Router();
 
-// ── Pending states ────────────────────────────────────────────────────────────
+// Actual Supabase state values — "Pending" is the single waiting state for all levels
+const DB_PENDING_STATES = ["Pending"] as const;
+const DB_STATE = z.enum(["Pending", "Approved", "Rejected", "Escalated", "Withdrawn"]);
 
-const PENDING_STATES = new Set<ApprovalState>([
-  ApprovalState.WaitingL1,
-  ApprovalState.WaitingL2,
-  ApprovalState.WaitingL3,
-  ApprovalState.WaitingFounder,
-]);
+// Approval level ordering for chain advancement
+const LEVEL_ORDER = ["L0", "L1", "L2", "L3", "Founder"] as const;
+type ALevel = (typeof LEVEL_ORDER)[number];
+function levelIndex(l: string): number { return LEVEL_ORDER.indexOf(l as ALevel); }
+
+// Priority → max required approval level
+function maxLevelForPriority(priority: string | null | undefined): ALevel {
+  switch (priority) {
+    case "P0": return "Founder";
+    case "P1": return "L3";
+    case "P2": return "L2";
+    case "P3": return "L1";
+    case "P4": return "L0";
+    default: return "L1";
+  }
+}
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
 const listQuerySchema = z.object({
-  state: z.nativeEnum(ApprovalState).optional(),
+  state: DB_STATE.optional(),
   level: z.string().optional(),
   assigneeCharacterId: z.string().optional(),
   projectId: z.string().optional(),
@@ -38,6 +50,10 @@ const rejectSchema = z.object({
   comment: z.string().min(1).max(2000),
   rejectedByCharacterId: z.string().optional(),
 });
+
+// Rename actual DB columns to the field names the frontend expects
+const SELECT_COLS =
+  "id, entity_type:target_type, entity_id:target_id, approval_level:required_level, state, approver_character_id:approver_id, reason_code, comment, created_at, decided_at";
 
 // ── GET /approvals ────────────────────────────────────────────────────────────
 
@@ -59,18 +75,18 @@ approvalsRouter.get("/", async (req, res) => {
     const sb = getSupabase();
     let query = sb
       .from("approvals")
-      .select("id, entity_type, entity_id, approval_level, state, requested_by_character_id, approver_character_id, summary, reason_code, comment, created_at, updated_at", { count: "exact" })
+      .select(SELECT_COLS, { count: "exact" })
       .range(from, to)
       .order("created_at", { ascending: false });
 
     if (state) query = query.eq("state", state);
-    if (level) query = query.eq("approval_level", level);
-    if (assigneeCharacterId) query = query.eq("approver_character_id", assigneeCharacterId);
-    if (projectId) query = query.eq("project_id", projectId);
-    if (entityType) query = query.eq("entity_type", entityType);
+    if (level) query = query.eq("required_level", level);
+    if (assigneeCharacterId) query = query.eq("approver_id", assigneeCharacterId);
+    if (projectId) query = query.eq("target_id", projectId);
+    if (entityType) query = query.eq("target_type", entityType);
 
-    // Default to pending only if no state filter
-    if (!state) query = query.in("state", Array.from(PENDING_STATES));
+    // Default: show pending only
+    if (!state) query = query.in("state", DB_PENDING_STATES);
 
     const { data, count, error } = await query;
     if (error) {
@@ -104,7 +120,7 @@ approvalsRouter.post("/:id/approve", async (req, res) => {
     const sb = getSupabase();
     const { data: approval, error: fetchError } = await sb
       .from("approvals")
-      .select("id, state, entity_type, entity_id, approval_level, project_id, task_id")
+      .select("id, state, target_type, target_id, required_level")
       .eq("id", approvalId)
       .single();
 
@@ -116,7 +132,7 @@ approvalsRouter.post("/:id/approve", async (req, res) => {
       return;
     }
 
-    if (!PENDING_STATES.has(approval.state as ApprovalState)) {
+    if (approval.state !== "Pending") {
       res.status(409).json({
         ok: false,
         error: { code: "APPROVAL_ALREADY_RESOLVED", message: "이미 처리된 결재 건입니다.", details: { state: approval.state } },
@@ -124,23 +140,16 @@ approvalsRouter.post("/:id/approve", async (req, res) => {
       return;
     }
 
-    // Determine next approval state — escalate or finalize
-    const currentState = approval.state as ApprovalState;
-    const allowedNext = APPROVAL_TRANSITIONS[currentState] ?? [];
-    const nextState = allowedNext.includes(ApprovalState.Approved)
-      ? ApprovalState.Approved
-      : (allowedNext.find((s) => s.startsWith("Waiting")) ?? ApprovalState.Approved);
-
     const actor = parsed.data.approvedByCharacterId ?? req.auth?.sub ?? "system";
     const now = new Date().toISOString();
 
     const { data: updated, error: updateError } = await sb
       .from("approvals")
       .update({
-        state: nextState,
-        approver_character_id: actor,
+        state: "Approved",
+        approver_id: actor,
         comment: parsed.data.comment ?? null,
-        updated_at: now,
+        decided_at: now,
       })
       .eq("id", approvalId)
       .select()
@@ -151,23 +160,46 @@ approvalsRouter.post("/:id/approve", async (req, res) => {
       return;
     }
 
-    // If fully approved, update the target task or project state
-    if (nextState === ApprovalState.Approved) {
-      if (approval.entity_type === "task" && approval.task_id) {
-        await sb.from("tasks").update({ state: "Approved", updated_at: now }).eq("id", approval.task_id);
-      } else if (approval.entity_type === "project" && approval.project_id) {
-        await sb.from("projects").update({ approval_state: "Approved", updated_at: now }).eq("id", approval.project_id);
-      }
-    }
-
     await writeEventLog(sb, {
       entityType: "approval", entityId: approvalId, eventType: "approval.approved",
-      previousState: currentState, nextState,
+      previousState: approval.state, nextState: "Approved",
       changedBy: actor,
       comment: parsed.data.comment ?? null,
-      relatedProjectId: approval.project_id ?? null,
-      relatedTaskId: approval.task_id ?? null,
+      relatedProjectId: approval.target_type === "project" ? approval.target_id : null,
+      relatedTaskId: approval.target_type === "task" ? approval.target_id : null,
     });
+
+    // Multi-level chain: if task requires a higher level, create the next approval record
+    if (approval.target_type === "task") {
+      const { data: task } = await sb
+        .from("tasks")
+        .select("priority, ai_output, assignee_character_id")
+        .eq("id", approval.target_id)
+        .single();
+
+      const currentLevel = approval.required_level as string ?? "L1";
+      const maxLevel = maxLevelForPriority(task?.priority as string ?? null);
+      const now = new Date().toISOString();
+
+      if (levelIndex(currentLevel) < levelIndex(maxLevel)) {
+        // Advance chain: create next level approval
+        const nextLevel = LEVEL_ORDER[levelIndex(currentLevel) + 1]!;
+        const nextId = `appr_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+        await sb.from("approvals").insert({
+          id: nextId,
+          target_type: "task",
+          target_id: approval.target_id,
+          required_level: nextLevel,
+          state: "Pending",
+          created_at: now,
+        });
+        emitWorldEvent("approval_resolved", { approvalId, nextApprovalId: nextId, nextLevel, taskId: approval.target_id });
+      } else {
+        // All levels satisfied — complete the task
+        await sb.from("tasks").update({ state: "Done", updated_at: now }).eq("id", approval.target_id);
+        emitWorldEvent("task_state_changed", { taskId: approval.target_id, from: "InReview", to: "Done" });
+      }
+    }
 
     res.json({ ok: true, data: updated });
   } catch (err) {
@@ -194,7 +226,7 @@ approvalsRouter.post("/:id/reject", async (req, res) => {
     const sb = getSupabase();
     const { data: approval, error: fetchError } = await sb
       .from("approvals")
-      .select("id, state, entity_type, entity_id, project_id, task_id")
+      .select("id, state, target_type, target_id")
       .eq("id", approvalId)
       .single();
 
@@ -206,7 +238,7 @@ approvalsRouter.post("/:id/reject", async (req, res) => {
       return;
     }
 
-    if (!PENDING_STATES.has(approval.state as ApprovalState)) {
+    if (approval.state !== "Pending") {
       res.status(409).json({
         ok: false,
         error: { code: "APPROVAL_ALREADY_RESOLVED", message: "이미 처리된 결재 건입니다.", details: { state: approval.state } },
@@ -220,11 +252,11 @@ approvalsRouter.post("/:id/reject", async (req, res) => {
     const { data: updated, error: updateError } = await sb
       .from("approvals")
       .update({
-        state: ApprovalState.Rejected,
-        approver_character_id: actor,
+        state: "Rejected",
+        approver_id: actor,
         reason_code: parsed.data.reasonCode,
         comment: parsed.data.comment,
-        updated_at: now,
+        decided_at: now,
       })
       .eq("id", approvalId)
       .select()
@@ -237,12 +269,12 @@ approvalsRouter.post("/:id/reject", async (req, res) => {
 
     await writeEventLog(sb, {
       entityType: "approval", entityId: approvalId, eventType: "approval.rejected",
-      previousState: approval.state, nextState: ApprovalState.Rejected,
+      previousState: approval.state, nextState: "Rejected",
       changedBy: actor,
       reasonCode: parsed.data.reasonCode,
       comment: parsed.data.comment,
-      relatedProjectId: approval.project_id ?? null,
-      relatedTaskId: approval.task_id ?? null,
+      relatedProjectId: approval.target_type === "project" ? approval.target_id : null,
+      relatedTaskId: approval.target_type === "task" ? approval.target_id : null,
     });
 
     res.json({ ok: true, data: updated });

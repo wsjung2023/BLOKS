@@ -2,6 +2,7 @@
 import express from "express";
 import cors from "cors";
 import { authenticateRequest } from "./middleware/auth.js";
+import { tracingMiddleware } from "./middleware/tracing.js";
 import { charactersRouter } from "./routes/characters.js";
 import { tasksRouter } from "./routes/tasks.js";
 import { projectsRouter } from "./routes/projects.js";
@@ -13,6 +14,12 @@ import { promptsRouter } from "./routes/prompts.js";
 import { memoriesRouter } from "./routes/memories.js";
 import { authRouter } from "./routes/auth.js";
 import { streamRouter } from "./routes/stream.js";
+import { agentMessagesRouter } from "./routes/agent-messages.js";
+import { worldRouter } from "./routes/world.js";
+import { metricsRouter } from "./routes/metrics.js";
+import { runtimeRouter } from "./routes/runtime.js";
+import { runtimeApprovalsRouter } from "./routes/runtime-approvals.js";
+import { runtimeAuditRouter } from "./routes/runtime-audit.js";
 import { getSupabase } from "@bloks/db";
 
 const PORT = process.env["PORT"] ?? process.env["API_PORT"] ?? "4000";
@@ -34,19 +41,23 @@ app.use(
 
 app.use(express.json({ limit: "1mb" }));
 
-// Request ID injection
-app.use((req, _res, next) => {
-  const reqId = (req.headers["x-request-id"] as string | undefined) ?? crypto.randomUUID();
-  req.headers["x-request-id"] = reqId;
-  next();
-});
+// W3C traceparent → traceId 전파
+app.use(tracingMiddleware);
 
-// Request logging — method + path + ms
+// Request logging — method + path + ms; 10% sample written to DB
 app.use((req, res, next) => {
   const start = Date.now();
   res.on("finish", () => {
     const ms = Date.now() - start;
+    const path = req.route?.path ?? req.path;
     console.log(`[API] ${req.method} ${req.originalUrl} ${res.statusCode} ${ms}ms`);
+    if (Math.random() < 0.1) {
+      try {
+        void getSupabase()
+          .from("request_metrics")
+          .insert({ method: req.method, path, status_code: res.statusCode, duration_ms: ms });
+      } catch { /* non-fatal */ }
+    }
   });
   next();
 });
@@ -78,6 +89,11 @@ app.get("/api/health", (_req, res) => {
   res.redirect("/health");
 });
 
+// Kubernetes liveness/readiness probe alias
+app.get("/healthz", (_req, res) => {
+  res.redirect("/health");
+});
+
 // Public routes (no auth)
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/stream", streamRouter);
@@ -96,6 +112,12 @@ v1.use("/events", eventsRouter);
 v1.use("/jobs", jobsRouter);
 v1.use("/prompts", promptsRouter);
 v1.use("/memories", memoriesRouter);
+v1.use("/agent-messages", agentMessagesRouter);
+v1.use("/world", worldRouter);
+v1.use("/metrics", metricsRouter);
+v1.use("/runtime", runtimeRouter);
+v1.use("/runtime/approvals", runtimeApprovalsRouter);
+v1.use("/runtime/audit", runtimeAuditRouter);
 
 app.use("/api/v1", v1);
 

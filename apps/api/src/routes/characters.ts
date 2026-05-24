@@ -1,9 +1,11 @@
 // Characters routes — GET/PATCH/POST for /api/v1/characters with Supabase
 import { Router } from "express";
 import { z } from "zod";
-import { getSupabase } from "@bloks/db";
+import { getSupabase, writeEventLog } from "@bloks/db";
 import type { CharacterRuntimeStateRecord } from "@bloks/shared";
 import { emitWorldEvent } from "./stream.js";
+import { enqueueJob } from "../queues/registry.js";
+import { QUEUE_NAMES } from "@bloks/shared";
 
 export const charactersRouter = Router();
 
@@ -22,6 +24,14 @@ const runtimePatchSchema = z.object({
   workloadScore: z.number().min(0).max(100).optional(),
   fatigueScore: z.number().min(0).max(100).optional(),
   burnoutTriggered: z.boolean().optional(),
+});
+
+const characterFlagsPatchSchema = z.object({
+  active_flag: z.boolean().optional(),
+  ai_enabled: z.boolean().optional(),
+  default_model_profile_id: z.string().optional(),
+}).refine((d) => d.active_flag !== undefined || d.ai_enabled !== undefined || d.default_model_profile_id !== undefined, {
+  message: "active_flag, ai_enabled, default_model_profile_id 중 하나 이상을 포함해야 합니다.",
 });
 
 const assignTaskSchema = z.object({
@@ -51,7 +61,7 @@ charactersRouter.get("/", async (req, res) => {
 
     let query = sb
       .from("characters")
-      .select(`id, name, code_name, active_mode, active_flag, trust_base, influence_base, persona_summary, division_id, department_id, rank_id, role_id, character_runtime_states(activity_status, workload_score, fatigue_score, burnout_triggered), divisions(code)`,
+      .select(`id, name, code_name, active_mode, active_flag, ai_enabled, trust_base, influence_base, persona_summary, division_id, department_id, rank_id, role_id, default_model_profile_id, current_level, total_experience, level_experience, total_tasks_done, character_runtime_states(activity_status, workload_score, fatigue_score, burnout_triggered), divisions(division_type), ranks(name), roles(name), model_profiles(id, profile_name, primary_model, provider_name)`,
         { count: "exact" }
       )
       .range(from, to);
@@ -91,6 +101,26 @@ charactersRouter.get("/", async (req, res) => {
   }
 });
 
+// GET /characters/model-profiles — list all AI model profiles
+
+charactersRouter.get("/model-profiles", async (_req, res) => {
+  try {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from("model_profiles")
+      .select("id, profile_name, primary_model, provider_name")
+      .order("provider_name", { ascending: true });
+    if (error) {
+      res.status(500).json({ ok: false, error: { code: "DB_ERROR", message: "DB 조회 오류가 발생했습니다." } });
+      return;
+    }
+    res.json({ ok: true, data: data ?? [] });
+  } catch (err) {
+    console.error("[characters] model-profiles exception", err);
+    res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다." } });
+  }
+});
+
 // GET /characters/:id
 
 charactersRouter.get("/:id", async (req, res) => {
@@ -105,7 +135,7 @@ charactersRouter.get("/:id", async (req, res) => {
 
     const { data, error } = await sb
       .from("characters")
-      .select(`id, name, code_name, active_mode, active_flag, trust_base, influence_base, persona_summary, division_id, department_id, rank_id, role_id, character_runtime_states(activity_status, workload_score, fatigue_score, burnout_triggered), divisions(code)`
+      .select(`id, name, code_name, active_mode, active_flag, ai_enabled, trust_base, influence_base, persona_summary, division_id, department_id, rank_id, role_id, character_runtime_states(activity_status, workload_score, fatigue_score, burnout_triggered), divisions(division_type), ranks(name), roles(name)`
       )
       .eq("id", id)
       .single();
@@ -121,6 +151,56 @@ charactersRouter.get("/:id", async (req, res) => {
     res.json({ ok: true, data });
   } catch (err) {
     console.error("[characters] detail exception", err);
+    res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다." } });
+  }
+});
+
+// PATCH /characters/:id — update active_flag / ai_enabled
+
+charactersRouter.patch("/:id", async (req, res) => {
+  const id = req.params["id"];
+  const parsed = characterFlagsPatchSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    res.status(422).json({
+      ok: false,
+      error: { code: "VALIDATION_ERROR", message: "입력값이 올바르지 않습니다.", details: parsed.error.flatten() },
+    });
+    return;
+  }
+
+  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (parsed.data.active_flag !== undefined) updates["active_flag"] = parsed.data.active_flag;
+  if (parsed.data.ai_enabled !== undefined) updates["ai_enabled"] = parsed.data.ai_enabled;
+  if (parsed.data.default_model_profile_id !== undefined) updates["default_model_profile_id"] = parsed.data.default_model_profile_id;
+
+  try {
+    const sb = getSupabase();
+
+    const { data, error } = await sb
+      .from("characters")
+      .update(updates)
+      .eq("id", id)
+      .select("id, active_flag, ai_enabled, default_model_profile_id")
+      .single();
+
+    if (error || !data) {
+      res.status(404).json({
+        ok: false,
+        error: { code: "CHARACTER_NOT_FOUND", message: "캐릭터를 찾을 수 없습니다.", details: { id } },
+      });
+      return;
+    }
+
+    emitWorldEvent("character_flags_updated", {
+      characterId: id,
+      active_flag: (data as Record<string, unknown>)["active_flag"],
+      ai_enabled: (data as Record<string, unknown>)["ai_enabled"],
+    });
+
+    res.json({ ok: true, data });
+  } catch (err) {
+    console.error("[characters] flags patch exception", err);
     res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다." } });
   }
 });
@@ -258,18 +338,14 @@ charactersRouter.post("/:id/assign-task", async (req, res) => {
       .update({ workload_score: Math.min(100, currentWorkload + 10), updated_at: now })
       .eq("character_id", characterId);
 
-    // Log event
-    await sb.from("event_logs").insert({
-      entity_type: "task",
-      entity_id: taskId,
-      event_type: "task.assigned",
-      previous_state: task.state,
-      next_state: "Assigned",
-      changed_by: assignedByCharacterId ?? req.auth?.sub ?? "system",
-      changed_at: now,
-      reason_code: "ASSIGNED",
+    await writeEventLog(sb, {
+      entityType: "task", entityId: taskId,
+      eventType: "task.assigned",
+      previousState: task.state as string, nextState: "Assigned",
+      changedBy: assignedByCharacterId ?? req.auth?.sub ?? "system",
+      reasonCode: "ASSIGNED",
       comment: reason ?? null,
-      related_task_id: taskId,
+      relatedTaskId: taskId,
     });
 
     res.json({ ok: true, data: updatedTask });
@@ -277,5 +353,125 @@ charactersRouter.post("/:id/assign-task", async (req, res) => {
     console.error("[characters] assign-task exception", err);
     res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다." } });
   }
+});
+
+// ── POST /characters/:id/message ─────────────────────────────────────────────
+// Founder → character direct message. Emits founder bubble + optional AI response.
+
+const messageSchema = z.object({
+  message: z.string().min(1).max(500),
+});
+
+charactersRouter.post("/:id/message", async (req, res) => {
+  const charId = req.params["id"];
+  const parsed = messageSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(422).json({ ok: false, error: { code: "VALIDATION_ERROR", message: "message 필드가 필요합니다." } });
+    return;
+  }
+
+  const { message } = parsed.data;
+
+  try {
+    const sb = getSupabase();
+    const { data: char, error } = await sb
+      .from("characters")
+      .select("id, name, code_name, ai_enabled, persona_summary")
+      .eq("id", charId)
+      .single();
+
+    if (error || !char) {
+      res.status(404).json({ ok: false, error: { code: "NOT_FOUND", message: "캐릭터를 찾을 수 없습니다." } });
+      return;
+    }
+
+    // Emit founder's message as a gold bubble on the character
+    emitWorldEvent("character_bubble", {
+      characterId: charId,
+      bubbleType: "speech",
+      text: message,
+      isFounderMessage: true,
+      duration: 10000,
+    });
+
+    emitWorldEvent("character_message", {
+      characterId: charId,
+      characterName: char.name,
+      message,
+      direction: "founder_to_char",
+    });
+
+    // Enqueue LLM reply job to worker (only if AI enabled)
+    if ((char.ai_enabled as boolean) !== false) {
+      void enqueueJob({
+        queueName: QUEUE_NAMES.founderMessage,
+        payload: { characterId: charId, message },
+      });
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[characters] message exception", err);
+    res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다." } });
+  }
+});
+
+// GET /api/v1/characters/:id/memories
+charactersRouter.get("/:id/memories", async (req, res) => {
+  const charId = req.params["id"];
+  const limit = Math.min(Number(req.query["limit"] ?? 20), 50);
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from("character_memory_links")
+    .select("relevance_score, memory_nodes(id, summary, memory_type, importance_score, created_at)")
+    .eq("character_id", charId)
+    .order("relevance_score", { ascending: false })
+    .limit(limit);
+  if (error) {
+    res.json({ ok: true, data: [] });
+    return;
+  }
+  const memories = (data ?? []).map((row: Record<string, unknown>) => {
+    const node = row["memory_nodes"] as Record<string, unknown> | null;
+    return {
+      id: node?.["id"] as string,
+      content: node?.["summary"] as string,
+      memory_type: node?.["memory_type"] as string,
+      importance: node?.["importance_score"] as number,
+      created_at: node?.["created_at"] as string,
+    };
+  }).filter(m => m.id);
+  res.json({ ok: true, data: memories });
+});
+
+// POST /api/v1/characters/:id/memories
+charactersRouter.post("/:id/memories", async (req, res) => {
+  const charId = req.params["id"];
+  const { content, memory_type = "lesson", importance = 3 } = req.body as {
+    content?: string; memory_type?: string; importance?: number;
+  };
+  if (!content || content.trim().length === 0) {
+    res.status(400).json({ ok: false, error: { code: "BAD_REQUEST", message: "content is required" } });
+    return;
+  }
+  const sb = getSupabase();
+  const { data: node, error: e1 } = await sb.from("memory_nodes").insert({
+    memory_scope: "character",
+    scope_entity_id: charId,
+    memory_type,
+    summary: content.slice(0, 300),
+    importance_score: Math.min(5, Math.max(1, importance)) / 5,
+    token_size: Math.ceil(content.length / 4),
+  }).select("id").single();
+  if (e1 || !node) {
+    res.status(500).json({ ok: false, error: { code: "DB_ERROR", message: e1?.message } });
+    return;
+  }
+  await sb.from("character_memory_links").insert({
+    character_id: charId,
+    memory_id: node.id,
+    relevance_score: Math.min(5, Math.max(1, importance)) / 5,
+  });
+  res.status(201).json({ ok: true, data: { id: node.id } });
 });
 

@@ -7,6 +7,7 @@ export {
   searchMemoriesByScope,
   listCharacterMemories,
   deleteMemory,
+  compressCharacterMemories,
 } from "./store.js";
 export type {
   MemoryNode,
