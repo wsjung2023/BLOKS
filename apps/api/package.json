@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@bloks/agent-runtime": "workspace:*",
+    "@bloks/ai-router": "workspace:*",
     "@bloks/audit": "workspace:*",
     "@bloks/db": "workspace:*",
     "@bloks/memory": "workspace:*",

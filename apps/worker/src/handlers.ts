@@ -163,7 +163,7 @@ async function processWorkflowTransitions(jobData: WorkerJobPayload): Promise<Wo
   const now = new Date().toISOString();
   let advanced = 0;
 
-  const advance = async (id: string, from: TaskState, to: TaskState) => {
+  const advance = async (id: string, from: TaskState, to: TaskState, meta?: { characterId?: string | null; taskTitle?: string | null }) => {
     await sb.from("tasks").update({ state: to, updated_at: now }).eq("id", id);
     await logEvent({
       entityType: "task", entityId: id,
@@ -172,21 +172,21 @@ async function processWorkflowTransitions(jobData: WorkerJobPayload): Promise<Wo
       changedBy: "worker:workflow-transitions",
       relatedTaskId: id, now,
     });
-    void publishWorldEvent("task_state_changed", { taskId: id, from, to });
+    void publishWorldEvent("task_state_changed", { taskId: id, from, to, ...(meta ?? {}) });
     advanced++;
   };
 
   if (taskId) {
     const { data: task } = await sb
       .from("tasks")
-      .select("id, state, assignee_character_id")
+      .select("id, title, state, assignee_character_id")
       .eq("id", taskId)
       .single();
 
     if (task?.state === TaskState.Todo) {
-      await advance(task.id, TaskState.Todo, TaskState.InProgress);
+      await advance(task.id, TaskState.Todo, TaskState.InProgress, { characterId: task.assignee_character_id as string | null, taskTitle: task.title as string | null });
     } else if (task?.state === TaskState.InProgress) {
-      await advance(task.id, TaskState.InProgress, TaskState.InReview);
+      await advance(task.id, TaskState.InProgress, TaskState.InReview, { characterId: task.assignee_character_id as string | null, taskTitle: task.title as string | null });
     }
   } else {
     // Batch: advance tasks stale >5 min
@@ -534,7 +534,7 @@ async function findApproverForLevel(
 async function advanceApprovalChain(opts: {
   sb: ReturnType<typeof getSupabase>;
   approval: { id: string; target_id: string; required_level: string };
-  task: { priority: string | null; ai_output: unknown; assignee_character_id: string | null };
+  task: { priority: string | null; ai_output: unknown; assignee_character_id: string | null; title?: string | null };
   actor: string;
   now: string;
 }): Promise<"chained" | "done"> {
@@ -582,7 +582,7 @@ async function advanceApprovalChain(opts: {
 
   // All levels approved → complete task
   await sb.from("tasks").update({ state: "Done", updated_at: now }).eq("id", approval.target_id);
-  void publishWorldEvent("task_state_changed", { taskId: approval.target_id, from: "InReview", to: "Done" });
+  void publishWorldEvent("task_state_changed", { taskId: approval.target_id, characterId: task.assignee_character_id, taskTitle: task.title, from: "InReview", to: "Done" });
   if (task.assignee_character_id) {
     void grantExperience(task.assignee_character_id, task.priority ?? "P3", !!task.ai_output, approval.target_id, now);
   }
@@ -612,7 +612,7 @@ async function processApprovals(jobData: WorkerJobPayload): Promise<WorkerHandle
   const level = (approval.required_level as string) ?? "L1";
   const { data: task } = await sb
     .from("tasks")
-    .select("priority, ai_output, assignee_character_id")
+    .select("priority, ai_output, assignee_character_id, title")
     .eq("id", approval.target_id as string)
     .single();
 
@@ -620,7 +620,7 @@ async function processApprovals(jobData: WorkerJobPayload): Promise<WorkerHandle
   if (level === "L0") {
     const result = await advanceApprovalChain({
       sb, approval: approval as { id: string; target_id: string; required_level: string },
-      task: { priority: task?.priority as string ?? null, ai_output: task?.ai_output, assignee_character_id: task?.assignee_character_id as string ?? null },
+      task: { priority: task?.priority as string ?? null, ai_output: task?.ai_output, assignee_character_id: task?.assignee_character_id as string ?? null, title: task?.title as string ?? null },
       actor: "worker:approvals:auto", now,
     });
     return { ok: true, handler: QUEUE_NAMES.approvals, processedAt: now, summary: `L0 auto-approved ${approval.id} → ${result}` };
@@ -1125,7 +1125,7 @@ async function processAgentMessages(_jobData: WorkerJobPayload): Promise<WorkerH
         content: `"${shortTitle}" 리뷰 완료 — 승인! ${decision.feedback.slice(0, 50)} ✅`,
         relatedTaskId: taskId, now,
       });
-      void publishWorldEvent("task_state_changed", { taskId, from: TaskState.InReview, to: TaskState.Done });
+      void publishWorldEvent("task_state_changed", { taskId, characterId: assigneeCharId, taskTitle: task.title, from: TaskState.InReview, to: TaskState.Done });
 
       // 경험치 부여
       const { data: doneTask } = await sb.from("tasks").select("priority, ai_output, assignee_character_id").eq("id", taskId).single();
@@ -1161,7 +1161,7 @@ async function processAgentMessages(_jobData: WorkerJobPayload): Promise<WorkerH
         relatedTaskId: taskId, now,
       });
 
-      void publishWorldEvent("task_state_changed", { taskId, from: TaskState.InReview, to: TaskState.InProgress });
+      void publishWorldEvent("task_state_changed", { taskId, characterId: assigneeCharId, taskTitle: task.title, from: TaskState.InReview, to: TaskState.InProgress });
 
       // 재작업 잡 즉시 재큐잉 — BullMQ Queue 직접 사용
       const { Queue: BullQueue } = await import("bullmq");

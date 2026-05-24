@@ -284,6 +284,8 @@ function TaskPanel({ task, charMap, projMap, onTransition, onTriggerAI }: {
   const [triggeringAI,  setTriggeringAI]  = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [currentState, setCurrentState] = useState(task.state);
+  const [savingArtifact, setSavingArtifact] = useState(false);
+  const [savedArtifactId, setSavedArtifactId] = useState<string | null>(null);
 
   const nextStates = NEXT_STATES[currentState] ?? [];
   const assigneeName = task.assignee_character_id
@@ -403,6 +405,49 @@ function TaskPanel({ task, charMap, projMap, onTransition, onTriggerAI }: {
               {task.ai_output.tokensUsed} tokens {task.ai_output.costUsd ? `· $${task.ai_output.costUsd.toFixed(4)}` : ""}
             </div>
           )}
+          <div style={{ marginTop: "0.5rem" }}>
+            {savedArtifactId ? (
+              <a
+                href={`/artifacts/${savedArtifactId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: "0.72rem", color: "#4ade80", textDecoration: "underline" }}
+              >
+                📝 아티팩트로 저장됨 — 열기 →
+              </a>
+            ) : (
+              <button
+                disabled={savingArtifact || !task.project_id}
+                onClick={async () => {
+                  setSavingArtifact(true);
+                  try {
+                    const r = await apiPost<{ ok: boolean; data?: { id: string } }>("/artifacts", {
+                      projectId: task.project_id,
+                      taskId: task.id,
+                      artifactType: "document",
+                      title: task.title,
+                      content: task.ai_output!.text,
+                      createdByCharacterId: task.assignee_character_id,
+                    });
+                    if (r.ok && r.data?.id) setSavedArtifactId(r.data.id);
+                    else setMsg("아티팩트 저장 실패");
+                  } catch {
+                    setMsg("아티팩트 저장 실패");
+                  } finally {
+                    setSavingArtifact(false);
+                  }
+                }}
+                style={{
+                  padding: "0.3rem 0.7rem", borderRadius: 6, fontSize: "0.72rem",
+                  background: "rgba(160,100,240,0.12)", border: "1px solid rgba(160,100,240,0.35)",
+                  color: savingArtifact ? "var(--color-muted)" : "#c084fc",
+                  cursor: savingArtifact || !task.project_id ? "default" : "pointer",
+                }}
+              >
+                {savingArtifact ? "저장 중..." : "📝 아티팩트로 저장"}
+              </button>
+            )}
+          </div>
         </div>
       )}
 

@@ -9,6 +9,7 @@ import {
 } from "../../lib/useWorldStream";
 import { FLOORS, FLOOR_DIVISION_MAP, FLOOR_DIR, MEETING_ZONES, LOCATION_ZONE_FLOOR } from "./world-sprites";
 import { createWorldScene, type CharInfo, type WorldSceneAPI } from "./WorldScene";
+import { useCanvasRecorder } from "../../hooks/useCanvasRecorder";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -698,6 +699,9 @@ export default function IsometricWorldCanvas() {
   const [liveFeed, setLiveFeed] = useState<Array<{ id: string; emoji: string; text: string; ts: number }>>([]);
   const [charTaskStates, setCharTaskStates] = useState<Record<string, string>>({});
   const [charLocationZones, setCharLocationZones] = useState<Record<string, string>>({});
+  const [dramaMode, setDramaMode] = useState(false);
+
+  const { recordingState, elapsed, startRecording, stopRecording } = useCanvasRecorder();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<import("phaser").Game | null>(null);
@@ -1027,11 +1031,17 @@ export default function IsometricWorldCanvas() {
         scene?.triggerFlash(255, 215, 0); // gold flash
         if (p.speakerId && p.text) {
           scene?.showBubble(p.speakerId as string, "speech", p.text as string, 8000, "🎁", "excited");
+          scene?.triggerParticleBurst(p.speakerId as string);
+          if (dramaMode) scene?.focusCameraOnChar(p.speakerId as string);
         }
-        // 팀원 전체에 축하 버블
+        // 팀원 전체에 축하 버블 + 파티클
         for (const charId of (p.characterIds ?? [])) {
           if (charId !== p.speakerId) {
-            setTimeout(() => scene?.showBubble(charId as string, "speech", "🎉", 5000, "🎉", "excited"), 800 + Math.random() * 1200);
+            const delay = 800 + Math.random() * 1200;
+            setTimeout(() => {
+              scene?.showBubble(charId as string, "speech", "🎉", 5000, "🎉", "excited");
+              scene?.triggerParticleBurst(charId as string);
+            }, delay);
           }
         }
         setTickerEvents((prev) => [...prev, {
@@ -1107,8 +1117,34 @@ export default function IsometricWorldCanvas() {
       if (p.characterId) {
         setCharTaskStates((prev) => ({ ...prev, [p.characterId!]: p.to === "Done" ? "" : (p.to ?? "") }));
       }
-      if (p.to === "Done") {
-        setTickerEvents((prev) => [...prev, { id: `${Date.now()}-${Math.random()}`, emoji: "✅", text: `${charName} 작업 완료` }].slice(-20));
+
+      // 드라마 연출: 태스크 시작 — 버블 + 글로우
+      if (p.to === "InProgress" && p.characterId) {
+        const label = p.taskTitle ? `💼 ${p.taskTitle.slice(0, 28)}` : "💼 작업 시작!";
+        sceneRef.current?.showBubble(p.characterId, "speech", label, 7000, "💼", "working");
+        sceneRef.current?.setCharacterGlow(p.characterId, true);
+        if (dramaMode) sceneRef.current?.focusCameraOnChar(p.characterId);
+      }
+
+      // 드라마 연출: 검토 중 — 말풍선
+      if (p.to === "InReview" && p.characterId) {
+        const label = p.taskTitle ? `🔍 검토 중: ${p.taskTitle.slice(0, 22)}` : "🔍 검토 요청";
+        sceneRef.current?.showBubble(p.characterId, "thought", label, 6000, "🔍", "question");
+      }
+
+      // 드라마 연출: 완료 — 파티클 + 버블 + 글로우 해제
+      if (p.to === "Done" && p.characterId) {
+        const label = p.taskTitle ? `✅ 완료: ${p.taskTitle.slice(0, 24)}` : "✅ 완료!";
+        sceneRef.current?.showBubble(p.characterId, "speech", label, 6000, "✅", "excited");
+        sceneRef.current?.triggerParticleBurst(p.characterId);
+        sceneRef.current?.setCharacterGlow(p.characterId, false);
+        sceneRef.current?.triggerFlash(74, 222, 128);
+        setTickerEvents((prev) => [...prev, { id: `${Date.now()}-${Math.random()}`, emoji: "✅", text: `${charName} 작업 완료${p.taskTitle ? `: ${p.taskTitle.slice(0, 15)}` : ""}` }].slice(-20));
+      }
+
+      // 드라마 연출: 블록됨
+      if (p.to === "Blocked" && p.characterId) {
+        sceneRef.current?.showBubble(p.characterId, "thought", "🔒 진행 불가...", 5000, "🔒", "sad");
       }
     }
 
@@ -1250,7 +1286,57 @@ export default function IsometricWorldCanvas() {
           );
         })}
 
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "0.2rem", flexShrink: 0 }}>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "0.35rem", flexShrink: 0 }}>
+          {/* 드라마 모드 토글 */}
+          <button
+            onClick={() => setDramaMode(v => !v)}
+            title="드라마 모드: 활성 캐릭터로 카메라 자동 이동"
+            style={{
+              padding: "0.2rem 0.55rem", borderRadius: 4, cursor: "pointer", fontSize: "0.65rem",
+              border: dramaMode ? "1px solid rgba(255,165,0,0.6)" : "1px solid rgba(255,255,255,0.12)",
+              background: dramaMode ? "rgba(255,165,0,0.18)" : "rgba(255,255,255,0.05)",
+              color: dramaMode ? "#ffa500" : "rgba(255,255,255,0.4)",
+              fontWeight: dramaMode ? 700 : 400,
+            }}
+          >
+            🎬 {dramaMode ? "DRAMA" : "드라마"}
+          </button>
+
+          {/* 녹화 버튼 */}
+          <button
+            onClick={() => {
+              if (recordingState === "idle") {
+                const canvas = gameRef.current?.canvas;
+                if (canvas) startRecording(canvas);
+              } else if (recordingState === "recording") {
+                stopRecording();
+              }
+            }}
+            disabled={recordingState === "saving"}
+            title={recordingState === "idle" ? "화면 녹화 시작" : recordingState === "recording" ? "녹화 정지 후 저장" : "저장 중..."}
+            style={{
+              display: "flex", alignItems: "center", gap: "0.3rem",
+              padding: "0.2rem 0.55rem", borderRadius: 4, cursor: recordingState === "saving" ? "default" : "pointer",
+              fontSize: "0.65rem", fontWeight: 600,
+              border: recordingState === "recording" ? "1px solid rgba(255,60,60,0.8)" : "1px solid rgba(255,255,255,0.12)",
+              background: recordingState === "recording" ? "rgba(255,40,40,0.2)" : "rgba(255,255,255,0.05)",
+              color: recordingState === "recording" ? "#ff4444" : recordingState === "saving" ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.5)",
+            }}
+          >
+            {recordingState === "recording" ? (
+              <>
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#ff4444", animation: "pulse 1s infinite", display: "inline-block" }} />
+                {`${String(Math.floor(elapsed / 60)).padStart(2, "0")}:${String(elapsed % 60).padStart(2, "0")}`}
+              </>
+            ) : recordingState === "saving" ? "저장 중..." : (
+              <>
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "rgba(255,255,255,0.4)", display: "inline-block" }} />
+                REC
+              </>
+            )}
+          </button>
+
+          {/* 줌 컨트롤 */}
           <button onClick={() => setCameraZoom(z => Math.max(0.5, parseFloat((z - 0.25).toFixed(2))))}
             style={{ padding: "0.2rem 0.5rem", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", borderRadius: 4, cursor: "pointer", fontSize: "0.85rem", lineHeight: 1 }}>−</button>
           <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)", minWidth: 32, textAlign: "center" }}>{Math.round(cameraZoom * 100)}%</span>

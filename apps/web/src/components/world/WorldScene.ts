@@ -35,6 +35,9 @@ export interface WorldSceneAPI {
   setCameraZoom(zoom: number): void;
   triggerFlash(r: number, g: number, b: number): void;
   triggerShake(): void;
+  triggerParticleBurst(charId: string): void;
+  setCharacterGlow(charId: string, active: boolean): void;
+  focusCameraOnChar(charId: string): void;
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -148,6 +151,7 @@ export function createWorldScene(
     private pendingBubbles: PendingBubble[] = [];
     // walkability grid: true = can walk, false = blocked
     private walkabilityGrid: boolean[][] = [];
+    private glowGraphics = new Map<string, Phaser.GameObjects.Graphics>();
 
     constructor() {
       super({ key: "WorldScene" });
@@ -370,6 +374,75 @@ export function createWorldScene(
 
     triggerShake() {
       this.cameras.main.shake(300, 0.005);
+    }
+
+    triggerParticleBurst(charId: string) {
+      const cs = this.chars.get(charId);
+      if (!cs) return;
+
+      const cx = cs.container.x;
+      const cy = cs.container.y - cs.sprite.displayHeight / 2;
+      const colors = [0xFFD700, 0xFFFFFF, 0xFF8C00, 0x88FFAA, 0xFF88FF];
+      const count = 28;
+
+      for (let i = 0; i < count; i++) {
+        const angle = (i / count) * Math.PI * 2 + Math.random() * 0.4;
+        const speed = 60 + Math.random() * 140;
+        const size = 3 + Math.random() * 6;
+        const color = colors[Math.floor(Math.random() * colors.length)]!;
+
+        const p = this.add.arc(cx, cy, size, 0, 360, false, color, 1)
+          .setDepth(cs.container.y + 200);
+
+        this.tweens.add({
+          targets: p,
+          x: cx + Math.cos(angle) * speed,
+          y: cy + Math.sin(angle) * speed - 50,
+          alpha: 0,
+          scaleX: 0.1,
+          scaleY: 0.1,
+          duration: 600 + Math.random() * 600,
+          ease: "Power2",
+          onComplete: () => p.destroy(),
+        });
+      }
+    }
+
+    setCharacterGlow(charId: string, active: boolean) {
+      const cs = this.chars.get(charId);
+      if (!cs) return;
+
+      const existing = this.glowGraphics.get(charId);
+      if (existing) {
+        this.tweens.killTweensOf(existing);
+        existing.destroy();
+        this.glowGraphics.delete(charId);
+      }
+      if (!active) return;
+
+      const spriteH = cs.sprite.displayHeight;
+      const glow = this.add.graphics();
+      glow.lineStyle(4, 0xFFD700, 0.75);
+      glow.strokeEllipse(0, -spriteH / 2, 58, spriteH + 10);
+      glow.lineStyle(2, 0xFFFF88, 0.35);
+      glow.strokeEllipse(0, -spriteH / 2, 70, spriteH + 22);
+      cs.container.addAt(glow, 0);
+      this.glowGraphics.set(charId, glow);
+
+      this.tweens.add({
+        targets: glow,
+        alpha: 0.2,
+        duration: 750,
+        ease: "Sine.easeInOut",
+        yoyo: true,
+        repeat: -1,
+      });
+    }
+
+    focusCameraOnChar(charId: string) {
+      const cs = this.chars.get(charId);
+      if (!cs) return;
+      this.cameras.main.pan(cs.container.x, cs.container.y - 60, 800, "Power2");
     }
 
     // ── PRIVATE ────────────────────────────────────────────────────────────────

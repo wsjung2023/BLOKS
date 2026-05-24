@@ -6,7 +6,7 @@ import type { Route } from "next";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type NavItem = "world" | "projects" | "board" | "directory" | "char-editor" | "approval" | "analytics" | "prompts" | "map-editor" | "demo";
+export type NavItem = "world" | "projects" | "board" | "directory" | "char-editor" | "approval" | "analytics" | "prompts" | "map-editor" | "demo" | "artifacts";
 
 export interface ContextPanelCtx {
   openPanel: (title: string, content: React.ReactNode) => void;
@@ -24,6 +24,7 @@ const NAV_ITEMS: { key: NavItem; label: string; href: Route; icon: string; divid
   { key: "world",        label: "월드",          href: "/world",            icon: "🏢" },
   { key: "projects",     label: "프로젝트",      href: "/projects",         icon: "🗂️" },
   { key: "board",        label: "태스크 보드",   href: "/board",            icon: "📋" },
+  { key: "artifacts",    label: "아티팩트",      href: "/artifacts",        icon: "📝" },
   { key: "directory",    label: "캐릭터 목록",     href: "/characters",         icon: "👥" },
   { key: "char-editor", label: "스프라이트 에디터", href: "/characters/editor",  icon: "🎨" },
   { key: "approval",     label: "결재 센터",     href: "/approvals",        icon: "✅" },

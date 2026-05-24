@@ -382,7 +382,7 @@ ${roster}
   // Immediately kick off first AI tasks (don't wait up to 60s for tick engine)
   const { data: readyTasks } = await sb
     .from("tasks")
-    .select("id, assignee_character_id")
+    .select("id, title, assignee_character_id")
     .eq("project_id", projectId)
     .eq("state", "Todo")
     .not("assignee_character_id", "is", null)
@@ -391,7 +391,7 @@ ${roster}
   const aiQueue = await getAiActionsQueue();
   for (const task of readyTasks ?? []) {
     await sb.from("tasks").update({ state: "InProgress", updated_at: now }).eq("id", task.id);
-    void publishWorldEvent("task_state_changed", { taskId: task.id, from: "Todo", to: "InProgress" });
+    void publishWorldEvent("task_state_changed", { taskId: task.id, characterId: task.assignee_character_id, taskTitle: task.title, from: "Todo", to: "InProgress" });
     if (!aiQueue) continue;
     await aiQueue.add("execute", {
       queueName: QUEUE_NAMES.aiActions,
