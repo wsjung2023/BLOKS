@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "declaration": true,
+    "paths": {
+      "@bloks/shared": ["../../packages/shared/src/index.ts"],
+      "@bloks/shared/*": ["../../packages/shared/src/*"],
+      "@bloks/policy-engine": ["../../packages/policy-engine/src/index.ts"],
+      "@bloks/policy-engine/*": ["../../packages/policy-engine/src/*"],
+      "@bloks/audit": ["../../packages/audit/src/index.ts"],
+      "@bloks/audit/*": ["../../packages/audit/src/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
