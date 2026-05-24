@@ -184,6 +184,13 @@ export const FLOOR_DIR: Record<string, string> = {
 // before transitioning between floors. Derived from layout.json elevator objects.
 export const ELEVATOR_ZONE: { x: number; y: number } = { x: 0.88, y: 0.25 };
 
+// Maps location_zone values to their home floor ID.
+// Edit this object (not scattered component code) when adding new zones or floors.
+export const LOCATION_ZONE_FLOOR: Record<string, string> = {
+  "cafe":         "cafe",       // Burnout / break → 7F Cafe
+  "meeting-room": "executive",  // InMeeting      → 8F Executive
+};
+
 // Meeting zone positions per floor — clustered around a central conference table.
 // Characters move here during workflow_stage: meeting_called events.
 export const MEETING_ZONES: Record<string, Array<{ x: number; y: number }>> = {

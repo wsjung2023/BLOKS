@@ -7,7 +7,7 @@ import { apiGet, apiPatch, apiPost } from "../../lib/apiClient";
 import {
   useWorldStream, extractRuntimePatch, type RuntimePatch,
 } from "../../lib/useWorldStream";
-import { FLOORS, FLOOR_DIVISION_MAP, FLOOR_DIR, MEETING_ZONES } from "./world-sprites";
+import { FLOORS, FLOOR_DIVISION_MAP, FLOOR_DIR, MEETING_ZONES, LOCATION_ZONE_FLOOR } from "./world-sprites";
 import { createWorldScene, type CharInfo, type WorldSceneAPI } from "./WorldScene";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -930,21 +930,26 @@ export default function IsometricWorldCanvas() {
       if (location_zone) {
         setCharLocationZones((prev) => ({ ...prev, [characterId]: location_zone }));
 
-        // Walk character to the target zone if visible on current floor
+        // Switch floor if this zone has a designated home floor
+        const zoneHomeFloor = LOCATION_ZONE_FLOOR[location_zone];
+        if (zoneHomeFloor) setSelectedFloorId(zoneHomeFloor);
+
         const charInfo = sceneCharsRef.current.find(c => c.id === characterId);
         if (charInfo && location_zone !== "offline") {
           if (location_zone === "desk") {
-            // Return to assigned seat
             sceneRef.current?.walkToPositions([{ charId: characterId, x: charInfo.seatX, y: charInfo.seatY }]);
-          } else if (location_zone === "cafe") {
-            // Walk to break-room corner — prefer layout zone if defined, else canvas bottom-right
-            const zones = layoutZonesRef.current[selectedFloorIdRef.current] ?? [];
-            const zone = zones.find(z => z.type === "cafe");
-            const targetX = zone ? ((zone.x1 + zone.x2) / 2) * CANVAS_W : CANVAS_W * 0.88;
-            const targetY = zone ? ((zone.y1 + zone.y2) / 2) * CANVAS_H : CANVAS_H * 0.82;
-            sceneRef.current?.walkToPositions([{ charId: characterId, x: targetX, y: targetY }]);
+          } else if (location_zone !== "meeting-room") {
+            // Walk to the matching zone's center on the target floor
+            const targetFloor = zoneHomeFloor ?? selectedFloorIdRef.current;
+            const zones = layoutZonesRef.current[targetFloor] ?? [];
+            const zone = zones.find(z => z.type === location_zone);
+            if (zone) {
+              const targetX = ((zone.x1 + zone.x2) / 2) * CANVAS_W;
+              const targetY = ((zone.y1 + zone.y2) / 2) * CANVAS_H;
+              sceneRef.current?.walkToPositions([{ charId: characterId, x: targetX, y: targetY }]);
+            }
           }
-          // meeting_room is handled via meetingGuestIds → sceneChars recompute below
+          // meeting-room is handled via meetingGuestIds → sceneChars recompute below
         }
       }
       if (toStatus === "InMeeting") {
@@ -988,10 +993,10 @@ export default function IsometricWorldCanvas() {
       }
 
       if (p.stage === "meeting_called" && p.characterIds) {
-        const targetFloor = p.floorId ?? "executive";
+        const targetFloor = p.floorId ?? LOCATION_ZONE_FLOOR["meeting-room"] ?? FLOORS[FLOORS.length - 1]!.id;
         setMeetingGuestIds(new Set(p.characterIds));
         setSelectedFloorId(targetFloor);
-        setMeetingBanner(`🏢 ${p.projectTitle ?? "프로젝트"} — 임원 회의 진행 중`);
+        setMeetingBanner(`🏢 ${p.projectTitle ?? "프로젝트"} — 회의 진행 중`);
         if (p.speakerId && p.text) {
           scene?.showBubble(p.speakerId, "speech", p.text, 5000, "📢", "excited");
         }

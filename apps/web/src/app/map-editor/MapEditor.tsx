@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { FLOORS, FLOOR_DIR } from "../../components/world/world-sprites";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const MAP_COLS = 48;
@@ -262,6 +263,95 @@ export default function MapEditor() {
   const [floorLabel, setFloorLabel] = useState("신규 층");
   const [isPainting, setIsPainting] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [availableFloors, setAvailableFloors] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // ── Known floors from world-sprites (dir name → label) ───────────────────
+  const knownFloorOptions = FLOORS.map(f => ({
+    dir: FLOOR_DIR[f.id] ?? f.id,
+    label: f.label,
+  }));
+
+  // Fetch filesystem floor list on mount
+  useEffect(() => {
+    fetch("/api/dev/list-floors")
+      .then(r => r.json())
+      .then((d: { floors?: string[] }) => setAvailableFloors(d.floors ?? []))
+      .catch(() => {});
+  }, []);
+
+  // All selectable options: known floors + any extras from filesystem
+  const knownDirs = new Set(knownFloorOptions.map(o => o.dir));
+  const extraFloors = availableFloors.filter(f => !knownDirs.has(f) && f !== "new-floor");
+
+  // ── Load an existing floor layout ─────────────────────────────────────────
+  const loadFloor = useCallback(async (dir: string) => {
+    if (dir === "new-floor") {
+      setTiles(Array.from({ length: MAP_ROWS }, () => Array(MAP_COLS).fill("void") as TileType[]));
+      setObjects([]);
+      setSeats([]);
+      setZones([]);
+      setFloorId("new-floor");
+      setFloorLabel("신규 층");
+      setSaved(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch(`/floors/${dir}/layout.json`);
+      if (!res.ok) throw new Error("no layout");
+      const layout = await res.json() as {
+        label?: string;
+        tilemap?: TileType[][];
+        objects?: Array<{ type: string; srcFloor?: string; x: number; y: number; flipH?: boolean; southFacing?: boolean }>;
+        seats?: Array<{ type?: string; x: number; y: number }>;
+        zones?: Array<{ type: ZoneType; label?: string; x1: number; y1: number; x2: number; y2: number }>;
+      };
+
+      if (layout.tilemap) setTiles(layout.tilemap);
+      setFloorLabel(layout.label ?? dir);
+      setFloorId(dir);
+
+      setObjects((layout.objects ?? []).map((o, i) => ({
+        id: `${o.type}-loaded-${i}`,
+        type: o.type,
+        src: o.srcFloor ?? "3f-engineering",
+        x: o.x * FULL_W,
+        y: o.y * FULL_H,
+        flipH: o.flipH ?? false,
+        north: o.southFacing === false,
+      })));
+
+      setSeats((layout.seats ?? []).map((s, i) => ({
+        id: `seat-loaded-${i}`,
+        x: s.x * FULL_W,
+        y: s.y * FULL_H,
+        type: (s.type ?? "desk_seat") as Seat["type"],
+      })));
+
+      setZones((layout.zones ?? []).map((z, i) => ({
+        id: `zone-loaded-${i}`,
+        type: z.type,
+        label: z.label ?? ZONE_LABELS[z.type] ?? z.type,
+        x1: z.x1, y1: z.y1, x2: z.x2, y2: z.y2,
+      })));
+
+      setSaved(true);
+    } catch {
+      // No layout.json yet — just switch floor ID, keep empty canvas
+      setFloorId(dir);
+      const known = knownFloorOptions.find(o => o.dir === dir);
+      setFloorLabel(known?.label ?? dir);
+      setTiles(Array.from({ length: MAP_ROWS }, () => Array(MAP_COLS).fill("void") as TileType[]));
+      setObjects([]);
+      setSeats([]);
+      setZones([]);
+      setSaved(false);
+    } finally {
+      setLoading(false);
+    }
+  }, [knownFloorOptions]);
 
   // ── Redraw on change ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -505,14 +595,29 @@ export default function MapEditor() {
           <a href="/world" style={{ fontSize: 10, color: "#778", textDecoration: "none", border: "1px solid #333", borderRadius: 3, padding: "2px 7px" }}>← 월드</a>
         </div>
 
-        {/* Floor info */}
-        <div style={sectionLabel}>층 정보:</div>
-        <input
+        {/* Floor selector */}
+        <div style={sectionLabel}>층 선택:</div>
+        <select
           value={floorId}
-          onChange={e => setFloorId(e.target.value.replace(/[^a-z0-9-]/g, ""))}
-          style={inputStyle}
-          placeholder="예: 9f-server-room"
-        />
+          onChange={e => loadFloor(e.target.value)}
+          style={{ ...inputStyle, cursor: "pointer" }}
+          disabled={loading}
+        >
+          <option value="new-floor">── 신규 층 만들기 ──</option>
+          <optgroup label="기본 8개 층">
+            {knownFloorOptions.map(o => (
+              <option key={o.dir} value={o.dir}>{o.label} ({o.dir})</option>
+            ))}
+          </optgroup>
+          {extraFloors.length > 0 && (
+            <optgroup label="직접 만든 층">
+              {extraFloors.map(f => (
+                <option key={f} value={f}>{f}</option>
+              ))}
+            </optgroup>
+          )}
+        </select>
+        {loading && <div style={{ fontSize: 9, color: "#6af" }}>불러오는 중...</div>}
         <input
           value={floorLabel}
           onChange={e => { setFloorLabel(e.target.value); setSaved(false); }}
