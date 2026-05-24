@@ -13,8 +13,9 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const SEEDS_DIR = join(dirname(new URL(import.meta.url).pathname), "seeds");
+const SEEDS_DIR = join(dirname(fileURLToPath(import.meta.url)), "seeds");
 
 function loadSeed(filename: string): Row[] {
   try {
