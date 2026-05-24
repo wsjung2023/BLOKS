@@ -46,6 +46,8 @@ pnpm-debug.log*
 *.png
 *.pptx
 *.zip
+# Game assets (PNG) — these must be committed
+!apps/web/public/**/*.png
 char-b64.txt
 chars-b64-batch*.txt
 zoom-chars.txt
