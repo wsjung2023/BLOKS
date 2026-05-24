@@ -1,3 +1,6 @@
+import { readFileSync, existsSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { type Job, Worker } from "bullmq";
 import { EventType, QUEUE_NAMES } from "@bloks/shared";
 import { getSupabase, getRuntimeProfile } from "@bloks/db";
@@ -6,6 +9,18 @@ import { globalExecutionBus } from "@bloks/agent-runtime";
 import { runQueueHandler, type WorkerJobPayload } from "./handlers.js";
 import { WorldTickEngine } from "./tick-engine.js";
 import "./tools.js";
+
+// Load .env from repo root if present — works without --env-file flag
+{
+  const __dir = dirname(fileURLToPath(import.meta.url));
+  const envPath = resolve(__dir, "../../../.env");
+  if (existsSync(envPath)) {
+    for (const line of readFileSync(envPath, "utf-8").split(/\r?\n/)) {
+      const m = line.match(/^([^#\s][^=]*)=(.*)/);
+      if (m) process.env[m[1]!.trim()] ??= m[2]!.trim();
+    }
+  }
+}
 
 const redisConnection = {
   host: process.env.REDIS_HOST ?? "127.0.0.1",

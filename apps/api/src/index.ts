@@ -1,4 +1,7 @@
 // API server entry — Express /api/v1 router with CORS, logging, Supabase init
+import { readFileSync, existsSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import express from "express";
 import cors from "cors";
 import { authenticateRequest } from "./middleware/auth.js";
@@ -21,6 +24,18 @@ import { runtimeRouter } from "./routes/runtime.js";
 import { runtimeApprovalsRouter } from "./routes/runtime-approvals.js";
 import { runtimeAuditRouter } from "./routes/runtime-audit.js";
 import { getSupabase } from "@bloks/db";
+
+// Load .env from repo root if present — works without --env-file flag
+{
+  const __dir = dirname(fileURLToPath(import.meta.url));
+  const envPath = resolve(__dir, "../../../.env");
+  if (existsSync(envPath)) {
+    for (const line of readFileSync(envPath, "utf-8").split(/\r?\n/)) {
+      const m = line.match(/^([^#\s][^=]*)=(.*)/);
+      if (m) process.env[m[1]!.trim()] ??= m[2]!.trim();
+    }
+  }
+}
 
 const PORT = process.env["PORT"] ?? process.env["API_PORT"] ?? "4000";
 const ALLOWED_ORIGINS = (process.env["ALLOWED_ORIGINS"] ?? "http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003").split(",");

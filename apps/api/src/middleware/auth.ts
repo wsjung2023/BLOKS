@@ -48,8 +48,9 @@ export function authenticateRequest(
   const IS_PRODUCTION = process.env["NODE_ENV"] === "production";
   const ENABLE_DEV_BYPASS_AUTH = !IS_PRODUCTION && process.env["ENABLE_DEV_BYPASS_AUTH"] === "true";
 
-  // Dev bypass — only when ENABLE_DEV_BYPASS_AUTH=true AND not production (double-guarded above)
-  if (token === DEV_BYPASS_TOKEN && ENABLE_DEV_BYPASS_AUTH) {
+  // Dev bypass — when ENABLE_DEV_BYPASS_AUTH=true OR when no JWT_SECRET configured (local install, no .env)
+  const noJwtConfigured = !JWT_SECRET && !IS_PRODUCTION;
+  if (token === DEV_BYPASS_TOKEN && (ENABLE_DEV_BYPASS_AUTH || noJwtConfigured)) {
     req.auth = { sub: "founder-dev", role: "founder" };
     next();
     return;
