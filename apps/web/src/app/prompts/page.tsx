@@ -5,6 +5,7 @@ import AppShell from "@/components/layout/AppShell";
 import LoadStateBlock from "@/components/common/LoadStateBlock";
 import { ContextPanelContext } from "@/components/layout/AppShell-nav";
 import { apiGet, apiPatch } from "@/lib/apiClient";
+import { PromptsHelp } from "@/components/layout/AppHelp";
 
 interface PromptTemplate {
   id: string;
@@ -87,7 +88,7 @@ export default function PromptsPage() {
   const taskTypes = [...new Set(templates.map((t) => t.task_type))].sort();
 
   return (
-    <AppShell activeNav="prompts">
+    <AppShell activeNav="prompts" helpContent={<PromptsHelp />}>
       <section style={{ padding: "1rem", height: "100%", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
           <h1 style={{ margin: 0, fontSize: "1.05rem" }}>Prompt Console</h1>

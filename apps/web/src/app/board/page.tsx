@@ -6,6 +6,7 @@ import LoadStateBlock from "@/components/common/LoadStateBlock";
 import { ContextPanelContext } from "@/components/layout/AppShell-nav";
 import { useWorldStream } from "@/lib/useWorldStream";
 import { apiGet, apiPatch, apiPost } from "@/lib/apiClient";
+import { BoardHelp } from "@/components/layout/AppHelp";
 
 // ── State machine (실제 사용 상태만) ─────────────────────────────────────────
 
@@ -156,7 +157,7 @@ export default function BoardPage() {
   );
 
   return (
-    <AppShell activeNav="board">
+    <AppShell activeNav="board" helpContent={<BoardHelp />}>
       {loading ? (
         <LoadStateBlock message="보드 로딩 중..." />
       ) : error ? (

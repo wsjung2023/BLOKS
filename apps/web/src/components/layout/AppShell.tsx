@@ -22,6 +22,7 @@ import type { NavItem } from "./AppShell-nav";
 interface AppShellProps {
   children: React.ReactNode;
   activeNav?: NavItem;
+  helpContent?: React.ReactNode;
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -32,7 +33,7 @@ const PENDING_APPROVAL_STATES = new Set([
 
 // ── TopGlobalNav ──────────────────────────────────────────────────────────────
 
-function TopGlobalNav() {
+function TopGlobalNav({ onHelpClick }: { onHelpClick?: () => void }) {
   const [time, setTime] = useState("--:--:--");
   const [pendingCount, setPendingCount] = useState(0);
 
@@ -80,6 +81,30 @@ function TopGlobalNav() {
       </span>
 
       <div style={{ display: "flex", gap: "1.5rem", alignItems: "center", fontSize: "0.8rem" }}>
+        {onHelpClick && (
+          <button
+            onClick={onHelpClick}
+            title="도움말"
+            style={{
+              background: "rgba(255,255,255,0.15)",
+              border: "1px solid rgba(255,255,255,0.3)",
+              color: "#fff",
+              borderRadius: "50%",
+              width: 22,
+              height: 22,
+              fontSize: "0.72rem",
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              lineHeight: 1,
+              flexShrink: 0,
+            }}
+          >
+            ?
+          </button>
+        )}
         <span title="일일 API 비용">💰 $0.00 / $20.00</span>
 
         <span title="미처리 결재">
@@ -109,7 +134,7 @@ function TopGlobalNav() {
 
 // ── AppShell ──────────────────────────────────────────────────────────────────
 
-export default function AppShell({ children, activeNav }: AppShellProps) {
+export default function AppShell({ children, activeNav, helpContent }: AppShellProps) {
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelTitle, setPanelTitle] = useState("");
   const [panelContent, setPanelContent] = useState<React.ReactNode>(null);
@@ -134,7 +159,7 @@ export default function AppShell({ children, activeNav }: AppShellProps) {
     <ToastContext.Provider value={{ pushToast }}>
       <ContextPanelContext.Provider value={{ openPanel, closePanel }}>
         <div style={{ height: "100vh", overflow: "hidden" }}>
-          <TopGlobalNav />
+          <TopGlobalNav {...(helpContent ? { onHelpClick: () => openPanel("도움말", helpContent) } : {})} />
           <LeftSidebarNav {...(activeNav ? { active: activeNav } : {})} />
 
           <main

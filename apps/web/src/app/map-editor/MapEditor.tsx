@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { FLOORS, FLOOR_DIR } from "../../components/world/world-sprites";
+import { MapEditorHelp } from "../../components/layout/AppHelp";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const MAP_COLS = 48;
@@ -265,6 +266,7 @@ export default function MapEditor() {
   const [saved, setSaved] = useState(false);
   const [availableFloors, setAvailableFloors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   // ── Known floors from world-sprites (dir name → label) ───────────────────
   const knownFloorOptions = FLOORS.map(f => ({
@@ -592,7 +594,10 @@ export default function MapEditor() {
       <div style={{ width: 200, padding: 10, borderRight: "1px solid #222", display: "flex", flexDirection: "column", gap: 5, overflowY: "auto", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
           <span style={{ fontWeight: 700, fontSize: 14 }}>🗺️ 맵 에디터</span>
-          <a href="/world" style={{ fontSize: 10, color: "#778", textDecoration: "none", border: "1px solid #333", borderRadius: 3, padding: "2px 7px" }}>← 월드</a>
+          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+            <button onClick={() => setShowHelp(v => !v)} style={{ fontSize: 10, color: "#aaa", background: "rgba(255,255,255,0.08)", border: "1px solid #333", borderRadius: "50%", width: 18, height: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, padding: 0 }}>?</button>
+            <a href="/world" style={{ fontSize: 10, color: "#778", textDecoration: "none", border: "1px solid #333", borderRadius: 3, padding: "2px 7px" }}>← 월드</a>
+          </div>
         </div>
 
         {/* Floor selector */}
@@ -922,6 +927,19 @@ export default function MapEditor() {
           저장 후 world-sprites.ts에<br />새 층을 추가하세요
         </div>
       </div>
+
+      {/* ── Help overlay ─────────────────────────────────────────────────────── */}
+      {showHelp && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "flex-start", justifyContent: "flex-end", pointerEvents: "none" }}>
+          <div style={{ margin: "40px 16px 0 0", width: 280, background: "#141420", border: "1px solid #333", borderRadius: 10, boxShadow: "0 8px 32px rgba(0,0,0,0.5)", padding: "0.85rem 1rem", pointerEvents: "auto", maxHeight: "80vh", overflowY: "auto" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+              <span style={{ fontWeight: 700, fontSize: "0.85rem" }}>도움말</span>
+              <button onClick={() => setShowHelp(false)} style={{ background: "none", border: "none", color: "#778", fontSize: "1rem", cursor: "pointer", lineHeight: 1 }}>✕</button>
+            </div>
+            <MapEditorHelp />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import AppShell from "@/components/layout/AppShell";
 import LoadStateBlock from "@/components/common/LoadStateBlock";
 import { ContextPanelContext } from "@/components/layout/AppShell-nav";
 import { apiGet, apiPatch, apiPost } from "@/lib/apiClient";
+import { ProjectsHelp } from "@/components/layout/AppHelp";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -493,7 +494,7 @@ export default function ProjectsPage() {
   const filterOptions = ["all", "Active", "Draft", "OnHold", "Completed", "Released", "Cancelled"];
 
   return (
-    <AppShell activeNav="projects">
+    <AppShell activeNav="projects" helpContent={<ProjectsHelp />}>
       {loading ? (
         <LoadStateBlock message="프로젝트 로딩 중..." />
       ) : error ? (

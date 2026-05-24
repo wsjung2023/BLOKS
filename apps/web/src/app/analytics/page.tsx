@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
 import LoadStateBlock from "@/components/common/LoadStateBlock";
 import { apiGet } from "@/lib/apiClient";
+import { AnalyticsHelp } from "@/components/layout/AppHelp";
 
 interface RuntimeState {
   character_id?: string;
@@ -176,7 +177,7 @@ export default function AnalyticsPage() {
   }, [tasks]);
 
   return (
-    <AppShell activeNav="analytics">
+    <AppShell activeNav="analytics" helpContent={<AnalyticsHelp />}>
       {loading ? (
         <LoadStateBlock message="분석 데이터 로딩 중..." />
       ) : error ? (

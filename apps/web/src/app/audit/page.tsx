@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
 import { apiGet, apiPost } from "@/lib/apiClient";
 import { useWorldStream } from "@/lib/useWorldStream";
+import { AuditHelp } from "@/components/layout/AppHelp";
 
 // ── 타입 ──────────────────────────────────────────────────────────────────────
 
@@ -221,7 +222,7 @@ export default function AuditPage() {
   const uniqueTools = [...new Set(entries.map((e) => e.execution.tool_name))].sort();
 
   return (
-    <AppShell>
+    <AppShell helpContent={<AuditHelp />}>
       <div style={{ padding: "1.5rem", maxWidth: 960, margin: "0 auto" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
           <div>

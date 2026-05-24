@@ -6,6 +6,7 @@ import AppShell, { ToastContext } from "@/components/layout/AppShell";
 import LoadStateBlock from "@/components/common/LoadStateBlock";
 import { apiGet, apiPost } from "@/lib/apiClient";
 import { useWorldStream } from "@/lib/useWorldStream";
+import { ApprovalsHelp } from "@/components/layout/AppHelp";
 
 // ── 런타임 툴 실행 승인 ──────────────────────────────────────────────────────
 
@@ -452,7 +453,7 @@ export default function ApprovalsPage() {
   }
 
   return (
-    <AppShell activeNav="approval">
+    <AppShell activeNav="approval" helpContent={<ApprovalsHelp />}>
       <section style={{ padding: "1rem", height: "100%", overflow: "auto" }}>
         <ToolApprovalSection />
         <div style={{ border: "1px solid var(--color-border)", borderRadius: 12, overflow: "hidden", background: "var(--color-panel)" }}>

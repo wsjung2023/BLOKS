@@ -5,6 +5,7 @@ import AppShell from "@/components/layout/AppShell";
 import LoadStateBlock from "@/components/common/LoadStateBlock";
 import { ContextPanelContext } from "@/components/layout/AppShell-nav";
 import { apiGet } from "@/lib/apiClient";
+import { CharactersHelp } from "@/components/layout/AppHelp";
 
 interface TaskCount {
   assignee_character_id: string;
@@ -116,7 +117,7 @@ export default function CharacterDirectoryPage() {
   }
 
   return (
-    <AppShell activeNav="directory">
+    <AppShell activeNav="directory" helpContent={<CharactersHelp />}>
       <section style={{ padding: "1rem", height: "100%", overflow: "auto" }}>
         <header style={{ marginBottom: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>

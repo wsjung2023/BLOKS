@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import AppShell from "@/components/layout/AppShell";
 import { apiGet } from "@/lib/apiClient";
+import { SpriteEditorHelp } from "@/components/layout/AppHelp";
 import { compositeCharacter, LPC_COLS, LPC_DOWN_START, type LpcLayer } from "@/lib/lpc-compositor";
 
 // ── Option definitions ─────────────────────────────────────────────────────────
@@ -370,7 +371,7 @@ export default function CharacterEditorPage() {
   const selectedChar = characters.find((c) => c.id === selectedId);
 
   return (
-    <AppShell>
+    <AppShell helpContent={<SpriteEditorHelp />}>
       <div style={{ padding: "1.5rem", maxWidth: 1100, margin: "0 auto" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.25rem" }}>
           <a href="/world" style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", fontSize: "0.82rem", color: "var(--color-muted)", textDecoration: "none", padding: "0.3rem 0.7rem", border: "1px solid var(--color-border)", borderRadius: 6 }}>
