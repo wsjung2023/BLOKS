@@ -183,6 +183,25 @@ cd ~/BLOKS
 pnpm dev
 ```
 
+**Q. PC 켤 때마다 자동으로 시작되게 하고 싶어요.**
+
+BLOKS 폴더에서 한 번만 실행하세요:
+```
+pnpm bloks-os autostart enable
+```
+
+이후 PC를 재시작하면 백그라운드에서 자동으로 실행됩니다. 브라우저에서 `http://localhost:3000` 으로 접속하면 됩니다.
+
+해제하려면:
+```
+pnpm bloks-os autostart disable
+```
+
+현재 상태 확인:
+```
+pnpm bloks-os autostart status
+```
+
 **Q. 최신 버전으로 업데이트하려면?**
 ```
 git pull
