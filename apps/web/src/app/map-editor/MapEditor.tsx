@@ -209,7 +209,7 @@ function drawTiles(
 
   // Grid
   if (showGrid) {
-    ctx.strokeStyle = "rgba(255,255,255,0.05)";
+    ctx.strokeStyle = "rgba(255,255,255,0.18)";
     ctx.lineWidth = 0.5;
     for (let c = 0; c <= MAP_COLS; c++) {
       ctx.beginPath(); ctx.moveTo(c * TILE_PX, 0); ctx.lineTo(c * TILE_PX, FULL_H); ctx.stroke();
@@ -603,12 +603,14 @@ export default function MapEditor() {
 
       {/* ── Canvas area ────────────────────────────────────────────────────── */}
       <div
-        style={{ flex: 1, overflow: "auto", position: "relative", cursor: dragging ? "grabbing" : tool === "erase" ? "crosshair" : "default" }}
+        style={{ flex: 1, overflow: "auto", cursor: dragging ? "grabbing" : tool === "erase" ? "crosshair" : "default" }}
         onMouseUp={stopInteraction}
         onMouseLeave={stopInteraction}
         onMouseMove={onContainerMouseMove}
       >
-        {/* scroll container sized to zoomed canvas */}
+        {/* centering wrapper — centers when canvas is smaller than viewport, scrolls when larger */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minWidth: "100%", minHeight: "100%", boxSizing: "border-box", padding: 24 }}>
+        {/* canvas container sized to zoomed canvas */}
         <div style={{ width: FULL_W * zoom, height: FULL_H * zoom, position: "relative", flexShrink: 0 }} ref={containerRef}>
           <canvas
             ref={canvasRef}
@@ -734,6 +736,7 @@ export default function MapEditor() {
             }} />
           )}
         </div>
+        </div>{/* /centering wrapper */}
       </div>
 
       {/* ── Right panel ────────────────────────────────────────────────────── */}
