@@ -203,11 +203,44 @@ pnpm bloks-os autostart status
 ```
 
 **Q. 최신 버전으로 업데이트하려면?**
+
+BLOKS 폴더에서 아래 순서대로 실행하세요:
+
 ```
 git pull
 pnpm install
 pnpm dev
 ```
+
+> `pnpm-lock.yaml` 충돌 오류가 나면 아래를 먼저 실행한 뒤 다시 시도하세요:
+> ```
+> git checkout pnpm-lock.yaml
+> git pull
+> pnpm install
+> ```
+
+업데이트 후 변경 사항을 확인하려면:
+```
+git log --oneline -10
+```
+
+**Q. 캐릭터 스프라이트(이미지)가 깨지거나 검은 박스로 보여요.**
+
+업데이트 도중 이미지 파일이 손실되는 경우가 있습니다. 아래 명령어 하나로 복원할 수 있습니다:
+
+Windows:
+```
+cd ~\BLOKS
+git checkout -- apps/web/public/sprites-v2/
+```
+
+Mac:
+```
+cd ~/BLOKS
+git checkout -- apps/web/public/sprites-v2/
+```
+
+> 이 명령어는 sprites-v2 폴더 안의 파일만 복원하며, 다른 데이터(.bloks-data 등)에는 영향을 주지 않습니다.
 
 **Q. AI 직원이 말을 안 해요.**  
 AI API 키를 아직 설정하지 않아서입니다. 위 5단계를 참고해 `.env`에 키를 입력해주세요.
@@ -224,6 +257,17 @@ pnpm bloks-os doctor
 ```
 
 이 명령어가 문제를 자동으로 찾아서 해결 방법을 알려줍니다.
+
+### 자주 겪는 문제 빠른 해결표
+
+| 증상 | 해결 방법 |
+|------|---------|
+| `git pull` 실패 (pnpm-lock.yaml 충돌) | `git checkout pnpm-lock.yaml` 후 다시 `git pull` |
+| 캐릭터가 한 명도 안 나와요 | `pnpm dev` 재시작, 안 되면 `.bloks-data/` 폴더 삭제 후 재시작 |
+| 스프라이트가 검은 박스로 보여요 | `git checkout -- apps/web/public/sprites-v2/` |
+| 로그인 화면이 뜨고 넘어가지 않아요 | 브라우저 주소창에 `http://localhost:3000` 직접 입력 |
+| 포트 4000 이미 사용 중 오류 | 이미 실행 중인 BLOKS를 먼저 종료 (`Ctrl+C`) 후 재시작 |
+| `pnpm: command not found` | `npm install -g pnpm` 실행 후 터미널 재시작 |
 
 ---
 
