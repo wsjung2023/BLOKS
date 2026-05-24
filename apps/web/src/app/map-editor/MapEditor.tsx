@@ -316,7 +316,7 @@ export default function MapEditor() {
       setObjects((layout.objects ?? []).map((o, i) => ({
         id: `${o.type}-loaded-${i}`,
         type: o.type,
-        src: o.srcFloor ?? "3f-engineering",
+        src: o.srcFloor ?? OBJECTS.find(ob => ob.type === o.type)?.src ?? dir,
         x: o.x * FULL_W,
         y: o.y * FULL_H,
         flipH: o.flipH ?? false,
