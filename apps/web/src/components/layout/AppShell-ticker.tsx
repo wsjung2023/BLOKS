@@ -1,7 +1,8 @@
-// AppShell-ticker — BottomLiveTicker polls /tasks + /approvals every 5 s
+// AppShell-ticker — BottomLiveTicker: 폴링(태스크/결재) + SSE 실시간 툴 이벤트
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { apiGet } from "../../lib/apiClient";
+import { useWorldStream, type WorldStreamEvent } from "../../lib/useWorldStream";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -21,6 +22,7 @@ function toTime(val: unknown): string {
     return new Date(String(val ?? "")).toLocaleTimeString("ko-KR", {
       hour: "2-digit",
       minute: "2-digit",
+      second: "2-digit",
     });
   } catch {
     return "--:--";
@@ -54,20 +56,55 @@ function approvalToEvent(a: ApiItem): TickerEvent {
   };
 }
 
-async function loadEvents(): Promise<TickerEvent[]> {
+// 툴 이벤트 → TickerEvent 변환
+const TOOL_LEVEL: Record<string, TickerEvent["level"]> = {
+  tool_requested: "info",
+  tool_policy_evaluated: "info",
+  tool_approval_requested: "critical",
+  tool_approved: "info",
+  tool_denied: "warn",
+  tool_executed: "info",
+  tool_failed: "warn",
+  tool_audit_persisted: "info",
+};
+
+const TOOL_LABEL: Record<string, string> = {
+  tool_requested: "요청",
+  tool_policy_evaluated: "정책검토",
+  tool_approval_requested: "⚠ 승인필요",
+  tool_approved: "승인됨",
+  tool_denied: "차단됨",
+  tool_executed: "실행완료",
+  tool_failed: "실패",
+  tool_audit_persisted: "감사기록",
+};
+
+function toolEventToTicker(event: WorldStreamEvent): TickerEvent | null {
+  if (!event.type.startsWith("tool_")) return null;
+  const execution = (event.payload as { execution?: Record<string, unknown> })?.execution;
+  if (!execution) return null;
+  const toolName = String(execution["tool_name"] ?? "?");
+  const label = TOOL_LABEL[event.type] ?? event.type;
+  return {
+    id: `tool-${String(execution["id"] ?? Date.now())}-${event.type}`,
+    text: `[툴/${label}] ${toolName}`,
+    ts: toTime(event.timestamp),
+    level: TOOL_LEVEL[event.type] ?? "info",
+  };
+}
+
+async function loadPolledEvents(): Promise<TickerEvent[]> {
   try {
     const [tr, ar] = await Promise.all([
       apiGet<{ data?: { items?: ApiItem[] } }>("/tasks?pageSize=8"),
       apiGet<{ data?: { items?: ApiItem[] } }>("/approvals?pageSize=4"),
     ]);
-    const tj = tr ?? null;
-    const aj = ar ?? null;
-    const tasks = tj?.data?.items ?? [];
-    const approvals = aj?.data?.items ?? [];
+    const tasks = tr?.data?.items ?? [];
+    const approvals = ar?.data?.items ?? [];
     return [
-      ...tasks.slice(0, 6).map(taskToEvent),
-      ...approvals.slice(0, 4).map(approvalToEvent),
-    ].slice(0, 10);
+      ...tasks.slice(0, 4).map(taskToEvent),
+      ...approvals.slice(0, 3).map(approvalToEvent),
+    ];
   } catch {
     return [];
   }
@@ -78,19 +115,35 @@ async function loadEvents(): Promise<TickerEvent[]> {
 const LEVEL_COLOR: Record<string, string> = {
   info:     "var(--color-muted)",
   warn:     "var(--color-toxic-orange)",
-  critical: "var(--color-toxic-red)",
+  critical: "#e05c5c",
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function BottomLiveTicker() {
-  const [events, setEvents] = useState<TickerEvent[]>([]);
+const MAX_TOOL_EVENTS = 5;
 
+export function BottomLiveTicker() {
+  const [polledEvents, setPolledEvents] = useState<TickerEvent[]>([]);
+  const [toolEvents, setToolEvents] = useState<TickerEvent[]>([]);
+  const toolEventsRef = useRef<TickerEvent[]>([]);
+
+  // 5초마다 태스크/결재 폴링
   useEffect(() => {
-    loadEvents().then(setEvents);
-    const id = setInterval(() => loadEvents().then(setEvents), 5_000);
+    loadPolledEvents().then(setPolledEvents);
+    const id = setInterval(() => loadPolledEvents().then(setPolledEvents), 5_000);
     return () => clearInterval(id);
   }, []);
+
+  // SSE 실시간 툴 이벤트
+  useWorldStream((event: WorldStreamEvent) => {
+    const ticker = toolEventToTicker(event);
+    if (!ticker) return;
+    const next = [ticker, ...toolEventsRef.current].slice(0, MAX_TOOL_EVENTS);
+    toolEventsRef.current = next;
+    setToolEvents([...next]);
+  });
+
+  const allEvents = [...toolEvents, ...polledEvents].slice(0, 12);
 
   return (
     <footer
@@ -104,24 +157,14 @@ export function BottomLiveTicker() {
         borderTop: "1px solid rgba(255,255,255,0.05)",
       }}
     >
-      <span
-        style={{
-          color: "var(--color-accent)", fontWeight: 700,
-          whiteSpace: "nowrap", flexShrink: 0,
-        }}
-      >
+      <span style={{ color: "var(--color-accent)", fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0 }}>
         ▶ LIVE
       </span>
-      <div
-        style={{
-          display: "flex", gap: "2.5rem",
-          overflow: "hidden", whiteSpace: "nowrap", flex: 1,
-        }}
-      >
-        {events.length === 0 ? (
-          <span style={{ color: "var(--color-muted)" }}>이벤트 로딩 중...</span>
+      <div style={{ display: "flex", gap: "2.5rem", overflow: "hidden", whiteSpace: "nowrap", flex: 1 }}>
+        {allEvents.length === 0 ? (
+          <span style={{ color: "var(--color-muted)" }}>대기 중...</span>
         ) : (
-          events.map((evt) => (
+          allEvents.map((evt) => (
             <span key={evt.id} style={{ color: LEVEL_COLOR[evt.level], flexShrink: 0 }}>
               [{evt.ts}] {evt.text}
             </span>

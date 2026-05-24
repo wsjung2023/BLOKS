@@ -140,3 +140,18 @@ model Artifact {
 
   @@map("artifacts")
 }
+
+model OutboxEvent {
+  id                      String    @id
+  idempotencyKey          String?   @unique @map("idempotency_key")
+  queueName               String    @map("queue_name")
+  payload                 Json      @default("{}")
+  requestedByCharacterId  String?   @map("requested_by_character_id")
+  traceId                 String?   @map("trace_id")
+  publishedAt             DateTime? @map("published_at")
+  createdAt               DateTime  @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("outbox_events")
+}
+

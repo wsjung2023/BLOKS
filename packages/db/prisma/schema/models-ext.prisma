@@ -1,0 +1,93 @@
+// BLOKS extended models — PromptTemplate, Relationship, EventLog, Delegation, RiskRegister
+
+model PromptTemplate {
+  id           String       @id @default(cuid())
+  roleId       String?
+  characterId  String?
+  templateType TemplateType
+  name         String
+  content      String
+  activeFlag   Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  role      Role?      @relation(fields: [roleId], references: [id])
+  character Character? @relation(fields: [characterId], references: [id])
+
+  @@map("prompt_templates")
+}
+
+model Relationship {
+  id             String   @id @default(cuid())
+  fromCharId     String
+  toCharId       String
+  relationKind   String   @default("peer")
+  trustScore     Float    @default(50)
+  influenceScore Float    @default(50)
+  activeFlag     Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  fromChar Character @relation("RelFrom", fields: [fromCharId], references: [id])
+  toChar   Character @relation("RelTo", fields: [toCharId], references: [id])
+
+  @@unique([fromCharId, toCharId])
+  @@map("relationships")
+}
+
+model EventLog {
+  id          String     @id @default(cuid())
+  entityType  EntityType
+  entityId    String
+  characterId String?
+  projectId   String?
+  taskId      String?
+  eventKind   String
+  payload     Json       @default("{}")
+  createdAt   DateTime   @default(now())
+
+  character Character? @relation(fields: [characterId], references: [id])
+  project   Project?   @relation(fields: [projectId], references: [id])
+  task      Task?      @relation(fields: [taskId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([characterId])
+  @@map("event_logs")
+}
+
+model Delegation {
+  id          String    @id @default(cuid())
+  delegatorId String
+  delegateeId String
+  scope       String
+  activeFlag  Boolean   @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  delegator Character @relation("DelegatorChar", fields: [delegatorId], references: [id])
+  delegatee Character @relation("DelegateeChar", fields: [delegateeId], references: [id])
+
+  @@map("delegations")
+}
+
+model RiskRegister {
+  id               String    @id @default(cuid())
+  projectId        String?
+  taskId           String?
+  riskType         RiskType
+  state            RiskState @default(Stable)
+  title            String
+  description      String?
+  probability      Float     @default(0.5)
+  impact           Float     @default(0.5)
+  mitigationPlan   String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  project Project? @relation(fields: [projectId], references: [id])
+  task    Task?    @relation(fields: [taskId], references: [id])
+
+  @@index([projectId, state])
+  @@map("risk_register")
+}

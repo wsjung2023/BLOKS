@@ -25,6 +25,7 @@ describe("queue registry helpers", () => {
       requestedByCharacterId: null,
       queuedAt,
       traceId: null,
+      idempotencyKey: null,
     });
   });
 });

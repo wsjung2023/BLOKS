@@ -1,0 +1,32 @@
+{
+  "scenario": "homepage",
+  "projectId": "93029896-c9d1-4803-9b2e-cb8562a7096e",
+  "projectTitle": "BLOKS 공식 홈페이지 제작",
+  "characters": [
+    {
+      "name": "픽셀스",
+      "codeName": "pixels"
+    },
+    {
+      "name": "디버그",
+      "codeName": "debug"
+    },
+    {
+      "name": "나비",
+      "codeName": "nabi"
+    },
+    {
+      "name": "글리치",
+      "codeName": "glitch"
+    },
+    {
+      "name": "스프린트",
+      "codeName": "sprint"
+    },
+    {
+      "name": "아크",
+      "codeName": "arch"
+    }
+  ],
+  "startedAt": "2026-05-20T17:33:17.004Z"
+}

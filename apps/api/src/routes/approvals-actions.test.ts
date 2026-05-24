@@ -49,18 +49,17 @@ describe("approvals action routes", () => {
         if (table === "approvals") {
           approvalsCall += 1;
           if (approvalsCall === 1) {
+            // First call: fetch the approval record for validation
             return {
               select: () => ({
                 eq: () => ({
                   single: async () => ({
                     data: {
                       id: "approval_1",
-                      state: "WaitingL1",
-                      entity_type: "task",
-                      entity_id: "task_1",
-                      approval_level: "L1",
-                      project_id: "proj_1",
-                      task_id: "task_1",
+                      state: "Pending",         // current DB state value
+                      target_type: "task",       // actual column name
+                      target_id: "task_1",       // actual column name
+                      required_level: "L1",      // actual column name
                     },
                     error: null,
                   }),
@@ -68,6 +67,7 @@ describe("approvals action routes", () => {
               }),
             };
           }
+          // Second call: update the approval to Approved
           return {
             update: () => ({
               eq: () => ({
@@ -80,7 +80,16 @@ describe("approvals action routes", () => {
         }
 
         if (table === "tasks") {
+          // Handles both select (for chain logic) and update (mark Done)
           return {
+            select: () => ({
+              eq: () => ({
+                single: async () => ({
+                  data: { priority: "P4", ai_output: null, assignee_character_id: "char_1" },
+                  error: null,
+                }),
+              }),
+            }),
             update: () => ({
               eq: async () => ({ data: null, error: null }),
             }),

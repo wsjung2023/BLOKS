@@ -12,6 +12,22 @@ export interface RuntimePatch {
   current_task_count?: number;
 }
 
+export interface ToolExecutionPayload {
+  execution: {
+    id: string;
+    tool_name: string;
+    risk_level: "L0" | "L1" | "L2" | "L3";
+    status: string;
+    input: Record<string, unknown>;
+    requested_by_character_id: string;
+    task_id?: string | null;
+    policy_decision?: string | null;
+    error_message?: string | null;
+    requested_at: string;
+    resolved_at?: string | null;
+  };
+}
+
 export interface WorldStreamEvent {
   type:
     | "connected"
@@ -23,7 +39,22 @@ export interface WorldStreamEvent {
     | "character_status"
     | "character_moved"
     | "character_bubble"
-    | "world_tick";
+    | "character_flags_updated"
+    | "character_message"
+    | "founder_override"
+    | "world_tick"
+    | "agent_message"
+    | "workflow_stage"
+    | "character_levelup"
+    // ── BLOKS OS 런타임 툴 실행 생명주기 ──
+    | "tool_requested"
+    | "tool_policy_evaluated"
+    | "tool_approval_requested"
+    | "tool_approved"
+    | "tool_denied"
+    | "tool_executed"
+    | "tool_failed"
+    | "tool_audit_persisted";
   payload: Record<string, unknown>;
   timestamp: string;
 }

@@ -1,4 +1,4 @@
-// Prompt templates routes — GET/PATCH for /api/v1/prompts
+// Prompt templates routes — GET/PATCH/history/rollback for /api/v1/prompts
 import { Router } from "express";
 import { z } from "zod";
 import { getSupabase } from "@bloks/db";
@@ -115,6 +115,12 @@ promptsRouter.patch("/:id", async (req, res) => {
     };
     if (activeFlag !== undefined) updates["active_flag"] = activeFlag;
 
+    const { data: prevFull } = await sb
+      .from("prompt_templates")
+      .select("template_body")
+      .eq("id", id)
+      .single();
+
     const { data, error } = await sb
       .from("prompt_templates")
       .update(updates)
@@ -127,9 +133,125 @@ promptsRouter.patch("/:id", async (req, res) => {
       return;
     }
 
+    // 거버넌스 감사 기록 — 이전 버전 내용을 comment에 저장
+    const changedBy = (req as unknown as { auth?: { sub?: string } }).auth?.sub ?? "system";
+    void sb.from("event_logs").insert({
+      entity_type: "prompt_template",
+      entity_id: id,
+      event_type: "prompt.template.updated",
+      previous_state: String(existing.version ?? 1),
+      next_state: String(updates["version"]),
+      changed_by: changedBy,
+      changed_at: new Date().toISOString(),
+      comment: JSON.stringify({
+        previousBody: prevFull?.template_body ?? null,
+        activeFlag: updates["active_flag"] ?? null,
+      }),
+    });
+
     res.json({ ok: true, data });
   } catch (err) {
     console.error("[prompts] patch exception", err);
+    res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다." } });
+  }
+});
+
+// GET /prompts/:id/history — 변경 이력 (감사 로그)
+
+promptsRouter.get("/:id/history", async (req, res) => {
+  const id = req.params["id"];
+  const limit = Math.min(parseInt((req.query["limit"] as string) ?? "20", 10) || 20, 100);
+
+  try {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from("event_logs")
+      .select("id, event_type, previous_state, next_state, changed_by, changed_at, comment")
+      .eq("entity_type", "prompt_template")
+      .eq("entity_id", id)
+      .order("changed_at", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      res.status(500).json({ ok: false, error: { code: "DB_ERROR", message: error.message } });
+      return;
+    }
+
+    res.json({ ok: true, data: { items: data ?? [], total: data?.length ?? 0 } });
+  } catch (err) {
+    console.error("[prompts] history exception", err);
+    res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다." } });
+  }
+});
+
+// POST /prompts/:id/rollback — 이전 버전으로 롤백
+
+promptsRouter.post("/:id/rollback", async (req, res) => {
+  const id = req.params["id"];
+
+  try {
+    const sb = getSupabase();
+
+    // 마지막 변경 이력에서 이전 버전 내용 복원
+    const { data: history } = await sb
+      .from("event_logs")
+      .select("comment, previous_state")
+      .eq("entity_type", "prompt_template")
+      .eq("entity_id", id)
+      .eq("event_type", "prompt.template.updated")
+      .order("changed_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (!history?.comment) {
+      res.status(404).json({ ok: false, error: { code: "NO_HISTORY", message: "롤백 가능한 이전 버전이 없습니다." } });
+      return;
+    }
+
+    let previousBody: string | null = null;
+    try {
+      const parsed = JSON.parse(history.comment as string) as { previousBody?: string | null };
+      previousBody = parsed.previousBody ?? null;
+    } catch { /* ignore */ }
+
+    if (!previousBody) {
+      res.status(404).json({ ok: false, error: { code: "NO_HISTORY", message: "이전 버전 내용을 복원할 수 없습니다." } });
+      return;
+    }
+
+    const { data: current } = await sb
+      .from("prompt_templates")
+      .select("version")
+      .eq("id", id)
+      .single();
+
+    const { data, error } = await sb
+      .from("prompt_templates")
+      .update({ template_body: previousBody, version: (current?.version ?? 1) + 1 })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error || !data) {
+      res.status(500).json({ ok: false, error: { code: "DB_ERROR", message: "롤백에 실패했습니다." } });
+      return;
+    }
+
+    const changedBy = (req as unknown as { auth?: { sub?: string } }).auth?.sub ?? "system";
+    void sb.from("event_logs").insert({
+      entity_type: "prompt_template",
+      entity_id: id,
+      event_type: "prompt.template.rolledback",
+      previous_state: String(current?.version ?? "?"),
+      next_state: String((current?.version ?? 1) + 1),
+      changed_by: changedBy,
+      changed_at: new Date().toISOString(),
+      comment: `롤백: v${history.previous_state ?? "?"}로 복원`,
+    });
+
+    res.json({ ok: true, data });
+  } catch (err) {
+    console.error("[prompts] rollback exception", err);
     res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다." } });
   }
 });

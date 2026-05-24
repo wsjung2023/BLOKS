@@ -18,4 +18,7 @@ export const QUEUE_NAMES = {
   artifactPostprocess: "artifact-postprocess",
   analyticsRollups: "analytics-rollups",
   notifications: "notifications",
+  founderMessage: "founder-message",
+  orchestrate: "orchestrate",
+  monthlyReport: "monthly-report",
 } as const;

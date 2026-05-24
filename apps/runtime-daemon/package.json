@@ -1,0 +1,24 @@
+{
+  "name": "runtime-daemon",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file ../../.env src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc -p tsconfig.json",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@bloks/agent-runtime": "workspace:*",
+    "@bloks/audit": "workspace:*",
+    "@bloks/db": "workspace:*",
+    "@bloks/policy-engine": "workspace:*",
+    "@bloks/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0"
+  }
+}

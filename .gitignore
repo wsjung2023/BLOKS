@@ -38,3 +38,26 @@ pnpm-debug.log*
 
 # Local DB data (migrated from Supabase)
 .bloks-data/
+
+# Playwright browser automation screenshots
+.playwright-mcp/
+
+# Screenshots / demo images (not source code)
+*.png
+*.pptx
+*.zip
+char-b64.txt
+chars-b64-batch*.txt
+zoom-chars.txt
+
+# Compiled JS output from shared packages (generated, not source)
+packages/shared/src/**/*.js
+packages/shared/src/**/*.d.ts
+packages/shared/src/**/*.map
+
+# Claude Code internal
+.claude/scheduled_tasks.lock
+.claude/settings.local.json
+
+# tsbuildinfo
+*.tsbuildinfo

@@ -26,18 +26,16 @@ function getAuthHeaders(): HeadersInit {
     return { Authorization: `Bearer ${storedToken}` };
   }
 
-  if (process.env["NODE_ENV"] === "production") {
-    return {};
+  // Dev bypass: only in non-production with explicit opt-in
+  if (
+    process.env["NODE_ENV"] !== "production" &&
+    process.env["NEXT_PUBLIC_ENABLE_DEV_BYPASS_AUTH"] === "true"
+  ) {
+    const token = process.env["NEXT_PUBLIC_DEV_BYPASS_TOKEN"] ?? "dev-bypass";
+    return { Authorization: `Bearer ${token}` };
   }
 
-  const allowBypass = process.env["NEXT_PUBLIC_ENABLE_DEV_BYPASS_AUTH"] === "true";
-  if (!allowBypass) return {};
-
-  const token = process.env["NEXT_PUBLIC_DEV_BYPASS_TOKEN"] ?? "dev-bypass";
-  return {
-    Authorization: `Bearer ${token}`,
-    "x-dev-bypass-auth": "1",
-  };
+  return {};
 }
 
 function shouldRetry(status: number): boolean {
@@ -46,6 +44,13 @@ function shouldRetry(status: number): boolean {
 
 async function sleep(ms: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function handleUnauthenticated(): void {
+  clearAuthToken();
+  if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+    window.location.href = "/login";
+  }
 }
 
 async function requestWithRetry<T>(path: string, init: RequestInit = {}, retries = DEFAULT_RETRY_COUNT): Promise<T> {
@@ -63,6 +68,11 @@ async function requestWithRetry<T>(path: string, init: RequestInit = {}, retries
         cache: "no-store",
       });
 
+      if (res.status === 401) {
+        handleUnauthenticated();
+        throw new Error("UNAUTHORIZED");
+      }
+
       if (!res.ok) {
         if (attempt < retries && shouldRetry(res.status)) {
           await sleep(200 * (attempt + 1));
@@ -76,6 +86,7 @@ async function requestWithRetry<T>(path: string, init: RequestInit = {}, retries
       return (await res.json()) as T;
     } catch (error) {
       lastError = error as Error;
+      if ((error as Error).message === "UNAUTHORIZED") throw error;
       if (attempt < retries) {
         await sleep(200 * (attempt + 1));
         attempt += 1;

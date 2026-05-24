@@ -5,25 +5,128 @@ on:
     branches: ["**"]
   pull_request:
 
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+
 jobs:
-  verify:
+  lint-test-web:
+    name: Web (lint + test)
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 9
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
 
-      - name: Verify CI checks
-        run: pnpm verify:ci
+      - run: pnpm install --frozen-lockfile
+
+      - name: Turbo cache restore
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-web-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-web-
+
+      - run: pnpm --filter web lint
+      - run: pnpm --filter web test
+
+  lint-test-api:
+    name: API (lint + test + smoke)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Turbo cache restore
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-api-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-api-
+
+      - run: pnpm --filter api lint
+      - run: pnpm --filter api test
+      - run: pnpm smoke:board:fixture
+
+  lint-test-worker:
+    name: Worker (lint + test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Turbo cache restore
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-worker-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-worker-
+
+      - run: pnpm --filter worker lint
+      - run: pnpm --filter worker test
+
+  lint-packages:
+    name: Packages (lint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Turbo cache restore
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-pkgs-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-pkgs-
+
+      - run: pnpm --filter @bloks/shared lint
+      - run: pnpm --filter @bloks/db lint
+      - run: pnpm --filter @bloks/ai-router lint
+      - run: pnpm --filter @bloks/agent-runtime lint
+      - run: pnpm --filter @bloks/policy-engine lint
+      - run: pnpm --filter @bloks/audit lint
+      - run: pnpm --filter @bloks/simulation lint
+      - run: pnpm --filter @bloks/world lint
+      - run: pnpm --filter @bloks/memory lint
+      - run: pnpm --filter @bloks/cli lint

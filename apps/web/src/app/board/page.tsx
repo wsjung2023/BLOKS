@@ -1,211 +1,305 @@
 "use client";
 
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
 import LoadStateBlock from "@/components/common/LoadStateBlock";
 import { ContextPanelContext } from "@/components/layout/AppShell-nav";
+import { useWorldStream } from "@/lib/useWorldStream";
 import { apiGet, apiPatch, apiPost } from "@/lib/apiClient";
 
-const ALL_STATES = ["Draft", "Created", "Assigned", "Accepted", "InProgress", "PendingReview", "Rejected", "Rework", "Approved", "Done", "Blocked", "Cancelled"] as const;
-const COLUMNS = ["Created", "Assigned", "InProgress", "PendingReview", "Blocked", "Done"] as const;
-type TaskState = (typeof ALL_STATES)[number];
+// ── State machine (실제 사용 상태만) ─────────────────────────────────────────
+
+const COLUMNS = ["Todo", "InProgress", "InReview", "Blocked", "Done"] as const;
 type ColumnState = (typeof COLUMNS)[number];
 
-// Next allowed transitions per state (mirrors server TASK_TRANSITIONS)
-const NEXT_STATES: Partial<Record<TaskState, TaskState[]>> = {
-  Created: ["Assigned"],
-  Assigned: ["Accepted", "Cancelled"],
-  Accepted: ["InProgress"],
-  InProgress: ["PendingReview", "Blocked"],
-  PendingReview: ["Approved", "Rejected"],
-  Rejected: ["Rework"],
-  Rework: ["PendingReview"],
-  Approved: ["Done"],
-  Blocked: ["InProgress", "Cancelled"],
+const NEXT_STATES: Partial<Record<string, string[]>> = {
+  Todo:       ["InProgress", "Blocked", "Cancelled"],
+  InProgress: ["InReview",   "Blocked", "Cancelled"],
+  InReview:   ["Done",       "InProgress"],
+  Blocked:    ["Todo",       "Cancelled"],
+  Done:       [],
+  // legacy states still in DB
+  Created:    ["Todo"],
+  Assigned:   ["InProgress", "Cancelled"],
+  Accepted:   ["InProgress"],
+  PendingReview: ["Done", "InProgress"],
+  Approved:   ["Done"],
+  Rejected:   ["InProgress"],
 };
 
-const STATE_LABELS: Record<string, string> = {
-  Created: "Created", Assigned: "Assigned", Accepted: "Accepted",
-  InProgress: "In Progress", PendingReview: "Review", Rejected: "Rejected",
-  Rework: "Rework", Approved: "Approved", Done: "Done",
-  Blocked: "Blocked", Cancelled: "Cancelled", Draft: "Draft",
+const STATE_LABEL: Record<string, string> = {
+  Todo: "할 일", InProgress: "진행 중", InReview: "검토 중", Done: "완료",
+  Blocked: "블록", Cancelled: "취소", Created: "생성됨", Assigned: "배정됨",
+  Accepted: "수락됨", PendingReview: "검토 대기", Approved: "승인됨", Rejected: "반려됨",
 };
+
+const COLUMN_LABEL: Record<ColumnState, string> = {
+  Todo: "할 일", InProgress: "진행 중", InReview: "검토 중", Blocked: "블록", Done: "완료",
+};
+
+const STATE_TO_COLUMN: Record<string, ColumnState> = {
+  Todo: "Todo", InProgress: "InProgress", InReview: "InReview",
+  Blocked: "Blocked", Done: "Done",
+  // legacy mapping
+  Created: "Todo", Assigned: "InProgress", Accepted: "InProgress",
+  PendingReview: "InReview", Approved: "Done", Rejected: "InProgress",
+};
+
+const COLUMN_COLOR: Record<ColumnState, string> = {
+  Todo: "rgba(156,163,175,0.15)", InProgress: "rgba(96,165,250,0.12)",
+  InReview: "rgba(251,191,36,0.12)", Blocked: "rgba(248,113,113,0.12)",
+  Done: "rgba(74,222,128,0.12)",
+};
+
+const PRIORITY_COLOR: Record<string, string> = {
+  P0: "#ff6b6b", P1: "#ffa94d", P2: "#ffd43b", P3: "#4dabf7", P4: "#adb5bd",
+  Critical: "#ff6b6b", High: "#ffa94d", Medium: "#ffd43b", Low: "#adb5bd",
+};
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface TaskItem {
   id: string;
   title: string;
   description?: string;
-  state: TaskState;
-  priority: "P0" | "P1" | "P2" | "P3" | "P4";
+  state: string;
+  priority: string;
   assignee_character_id?: string;
-  reviewer_character_id?: string;
   project_id?: string;
-  due_at?: string;
   created_at?: string;
+  ai_output?: { text?: string; modelUsed?: string; tokensUsed?: number; costUsd?: number } | null;
 }
 
-interface TaskListResponse {
-  data?: { items?: TaskItem[] };
-}
+interface Character { id: string; name: string }
+interface Project   { id: string; title: string }
 
-const COLUMN_META: Array<{ key: ColumnState; label: string }> = [
-  { key: "Created", label: "Created" },
-  { key: "Assigned", label: "Assigned" },
-  { key: "InProgress", label: "In Progress" },
-  { key: "PendingReview", label: "Review" },
-  { key: "Blocked", label: "Blocked" },
-  { key: "Done", label: "Done" },
-];
-
-const PRIORITY_COLOR: Record<TaskItem["priority"], string> = {
-  P0: "#ff6b6b", P1: "#ffa94d", P2: "#ffd43b", P3: "#4dabf7", P4: "#adb5bd",
-};
-
-const STATE_BADGE_COLOR: Partial<Record<TaskState, string>> = {
-  Done: "rgba(74,222,128,0.2)", Blocked: "rgba(255,107,107,0.2)",
-  PendingReview: "rgba(255,212,59,0.2)", Approved: "rgba(74,222,128,0.2)",
-  Cancelled: "rgba(200,200,200,0.15)", Rejected: "rgba(255,107,107,0.2)",
-};
+// ── Board Page ────────────────────────────────────────────────────────────────
 
 export default function BoardPage() {
   const { openPanel } = useContext(ContextPanelContext);
-  const [tasks, setTasks] = useState<TaskItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [tasks,      setTasks]      = useState<TaskItem[]>([]);
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [projects,   setProjects]   = useState<Project[]>([]);
+  const [loading,    setLoading]    = useState(true);
+  const [error,      setError]      = useState<string | null>(null);
+  const [filterProject, setFilterProject] = useState<string>("all");
 
-  function loadTasks() {
+  function loadAll() {
     setLoading(true);
-    apiGet<TaskListResponse>("/tasks?pageSize=100")
-      .then((body) => {
-        const next = body.data?.items ?? [];
-        setTasks(Array.isArray(next) ? next : []);
+    Promise.all([
+      apiGet<{ data?: { items?: TaskItem[] } }>("/tasks?pageSize=100"),
+      apiGet<{ data?: { items?: Character[] } }>("/characters?pageSize=100"),
+      apiGet<{ data?: { items?: Project[] } }>("/projects?limit=50"),
+    ])
+      .then(([t, c, p]) => {
+        setTasks(t.data?.items ?? []);
+        setCharacters(c.data?.items ?? []);
+        setProjects(p.data?.items ?? []);
         setError(null);
       })
-      .catch(() => {
-        setTasks([]);
-        setError("보드 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
-      })
+      .catch(() => setError("보드 데이터를 불러오지 못했습니다."))
       .finally(() => setLoading(false));
   }
 
-  useEffect(() => { loadTasks(); }, []);
+  useEffect(() => { loadAll(); }, []);
+
+  // SSE: 태스크 상태 변경 시 해당 태스크만 갱신
+  useWorldStream(useCallback((event) => {
+    if (event.type === "task_state_changed") {
+      const { taskId, to } = event.payload as { taskId?: string; to?: string };
+      if (taskId && to) {
+        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, state: to } : t));
+      }
+    }
+  }, []));
+
+  const charMap = useMemo(() => new Map(characters.map(c => [c.id, c.name])), [characters]);
+  const projMap = useMemo(() => new Map(projects.map(p => [p.id, p.title])), [projects]);
+
+  const filteredTasks = useMemo(() =>
+    filterProject === "all" ? tasks : tasks.filter(t => t.project_id === filterProject),
+    [tasks, filterProject],
+  );
 
   const grouped = useMemo(() => {
-    const map = new Map<ColumnState, TaskItem[]>();
-    for (const col of COLUMNS) map.set(col, []);
-    for (const task of tasks) {
-      const col = COLUMNS.find((c) => c === task.state);
+    const map = new Map<ColumnState, TaskItem[]>(COLUMNS.map(c => [c, []]));
+    for (const task of filteredTasks) {
+      const col = STATE_TO_COLUMN[task.state];
       if (col) map.get(col)?.push(task);
     }
     return map;
-  }, [tasks]);
+  }, [filteredTasks]);
 
-  const openTaskPanel = useCallback((task: TaskItem) => {
-    openPanel(
-      task.title,
-      <TaskDetailPanel
+  const openTask = useCallback((task: TaskItem) => {
+    openPanel(task.title, (
+      <TaskPanel
         task={task}
-        onTransition={async (nextState) => {
-          await apiPatch(`/tasks/${task.id}/state`, { nextState });
-          loadTasks();
+        charMap={charMap}
+        projMap={projMap}
+        onTransition={async (next) => {
+          await apiPatch(`/tasks/${task.id}/state`, { nextState: next });
+          setTasks(prev => prev.map(t => t.id === task.id ? { ...t, state: next } : t));
         }}
         onTriggerAI={async () => {
-          await apiPost(`/jobs`, {
+          await apiPost("/jobs", {
             queueName: "ai-actions",
-            payload: { input: { taskId: task.id } },
+            payload: { input: { taskId: task.id, characterId: task.assignee_character_id } },
           });
         }}
       />
-    );
-  }, [openPanel]);
+    ));
+  }, [openPanel, charMap, projMap]);
+
+  const activeProjects = useMemo(() =>
+    projects.filter(p => tasks.some(t => t.project_id === p.id)),
+    [projects, tasks],
+  );
 
   return (
     <AppShell activeNav="board">
       {loading ? (
         <LoadStateBlock message="보드 로딩 중..." />
       ) : error ? (
-        <LoadStateBlock message={error} tone="error" actionLabel="다시 시도" onAction={loadTasks} />
+        <LoadStateBlock message={error} tone="error" actionLabel="다시 시도" onAction={loadAll} />
       ) : (
-        <div style={{ display: "flex", gap: "0.75rem", height: "100%", overflowX: "auto", padding: "1rem" }}>
-          {COLUMN_META.map((col) => {
-            const items = grouped.get(col.key) ?? [];
-            return (
-              <div key={col.key} style={{ display: "flex", flexDirection: "column", minWidth: 220, width: 240, flexShrink: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                  <span style={{ fontSize: "0.82rem", fontWeight: 600 }}>{col.label}</span>
-                  <span style={{ fontSize: "0.72rem", background: "rgba(255,255,255,0.06)", color: "var(--color-muted)", borderRadius: 999, padding: "0.1rem 0.5rem" }}>
-                    {items.length}
-                  </span>
-                </div>
+        <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+          {/* 프로젝트 필터 */}
+          {activeProjects.length > 1 && (
+            <div style={{
+              display: "flex", gap: "0.35rem", padding: "0.5rem 1rem",
+              borderBottom: "1px solid var(--color-border)", overflowX: "auto", flexShrink: 0,
+            }}>
+              <button onClick={() => setFilterProject("all")} style={chipStyle(filterProject === "all")}>
+                전체 {tasks.length}
+              </button>
+              {activeProjects.map(p => (
+                <button key={p.id} onClick={() => setFilterProject(p.id)} style={chipStyle(filterProject === p.id)}>
+                  {p.title.slice(0, 20)} {tasks.filter(t => t.project_id === p.id).length}
+                </button>
+              ))}
+            </div>
+          )}
 
-                {items.length === 0 ? (
-                  <div style={{ fontSize: "0.75rem", color: "var(--color-muted)", textAlign: "center", padding: "0.8rem", border: "1px dashed var(--color-border)", borderRadius: 10 }}>
-                    비어 있음
+          {/* 칸반 보드 */}
+          <div style={{ display: "flex", gap: "0.75rem", flex: 1, overflowX: "auto", overflowY: "hidden", padding: "1rem" }}>
+            {COLUMNS.map(col => {
+              const items = grouped.get(col) ?? [];
+              return (
+                <div key={col} style={{ display: "flex", flexDirection: "column", minWidth: 230, width: 250, flexShrink: 0 }}>
+                  <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    marginBottom: "0.5rem", padding: "0.4rem 0.6rem", borderRadius: 7,
+                    background: COLUMN_COLOR[col],
+                  }}>
+                    <span style={{ fontSize: "0.82rem", fontWeight: 700 }}>{COLUMN_LABEL[col]}</span>
+                    <span style={{
+                      fontSize: "0.7rem", background: "rgba(255,255,255,0.12)",
+                      borderRadius: 999, padding: "0.1rem 0.5rem",
+                      color: "var(--color-muted)",
+                    }}>{items.length}</span>
                   </div>
-                ) : (
-                  <div style={{ display: "grid", gap: "0.5rem" }}>
-                    {items.map((task) => (
-                      <article
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.45rem", overflowY: "auto", flex: 1 }}>
+                    {items.length === 0 ? (
+                      <div style={{
+                        fontSize: "0.72rem", color: "var(--color-muted)", textAlign: "center",
+                        padding: "1rem 0.5rem", border: "1px dashed var(--color-border)", borderRadius: 8,
+                      }}>비어 있음</div>
+                    ) : items.map(task => (
+                      <TaskCard
                         key={task.id}
-                        onClick={() => openTaskPanel(task)}
-                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openTaskPanel(task); } }}
-                        role="button"
-                        tabIndex={0}
-                        aria-label={`${task.title} 상세 보기`}
-                        style={{ border: "1px solid var(--color-border)", borderRadius: 10, padding: "0.6rem", background: "var(--color-panel)", cursor: "pointer" }}
-                      >
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem" }}>
-                          <strong style={{ fontSize: "0.8rem" }}>{task.title}</strong>
-                          <span style={{ width: 8, height: 8, borderRadius: 999, background: PRIORITY_COLOR[task.priority], flexShrink: 0 }} />
-                        </div>
-                        {task.description && (
-                          <div style={{ marginTop: "0.35rem", fontSize: "0.72rem", color: "var(--color-muted)", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
-                            {task.description}
-                          </div>
-                        )}
-                        <div style={{ marginTop: "0.45rem", fontSize: "0.72rem", color: "var(--color-muted)" }}>
-                          {task.assignee_character_id ? `담당: ${task.assignee_character_id.slice(0, 8)}…` : "담당자 없음"}
-                        </div>
-                      </article>
+                        task={task}
+                        charMap={charMap}
+                        projMap={projMap}
+                        onClick={() => openTask(task)}
+                      />
                     ))}
                   </div>
-                )}
-              </div>
-            );
-          })}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </AppShell>
   );
 }
 
-// ── Task detail panel ─────────────────────────────────────────────────────────
+// ── TaskCard ──────────────────────────────────────────────────────────────────
 
-function TaskDetailPanel({
-  task,
-  onTransition,
-  onTriggerAI,
-}: {
+function TaskCard({ task, charMap, projMap, onClick }: {
   task: TaskItem;
-  onTransition: (nextState: TaskState) => Promise<void>;
+  charMap: Map<string, string>;
+  projMap: Map<string, string>;
+  onClick: () => void;
+}) {
+  const assigneeName = task.assignee_character_id
+    ? (charMap.get(task.assignee_character_id) ?? task.assignee_character_id.slice(0, 8))
+    : null;
+  const projTitle = task.project_id ? projMap.get(task.project_id) : null;
+  const priorityColor = PRIORITY_COLOR[task.priority] ?? "#adb5bd";
+  const hasAI = !!task.ai_output?.text;
+
+  return (
+    <article
+      onClick={onClick}
+      onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
+      role="button" tabIndex={0}
+      style={{
+        border: "1px solid var(--color-border)", borderRadius: 8,
+        padding: "0.6rem 0.7rem", background: "var(--color-panel)", cursor: "pointer",
+        display: "flex", flexDirection: "column", gap: "0.3rem",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "flex-start", gap: "0.4rem" }}>
+        <span style={{ flex: 1, fontSize: "0.8rem", fontWeight: 600, lineHeight: 1.35 }}>{task.title}</span>
+        <span style={{ width: 8, height: 8, borderRadius: "50%", background: priorityColor, flexShrink: 0, marginTop: 3 }} />
+      </div>
+      {projTitle && (
+        <div style={{ fontSize: "0.65rem", color: "rgba(100,180,255,0.7)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          📁 {projTitle}
+        </div>
+      )}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 2 }}>
+        <span style={{ fontSize: "0.68rem", color: "var(--color-muted)" }}>
+          {assigneeName ? `👤 ${assigneeName}` : "미배정"}
+        </span>
+        {hasAI && <span style={{ fontSize: "0.62rem", color: "#4ade80" }}>✓ AI</span>}
+      </div>
+    </article>
+  );
+}
+
+// ── TaskPanel (우측 상세 패널) ──────────────────────────────────────────────
+
+function TaskPanel({ task, charMap, projMap, onTransition, onTriggerAI }: {
+  task: TaskItem;
+  charMap: Map<string, string>;
+  projMap: Map<string, string>;
+  onTransition: (next: string) => Promise<void>;
   onTriggerAI: () => Promise<void>;
 }) {
-  const [transitioning, setTransitioning] = useState<TaskState | null>(null);
-  const [triggeringAI, setTriggeringAI] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [transitioning, setTransitioning] = useState<string | null>(null);
+  const [triggeringAI,  setTriggeringAI]  = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [currentState, setCurrentState] = useState(task.state);
 
-  const nextStates = NEXT_STATES[task.state] ?? [];
+  const nextStates = NEXT_STATES[currentState] ?? [];
+  const assigneeName = task.assignee_character_id
+    ? (charMap.get(task.assignee_character_id) ?? task.assignee_character_id.slice(0, 8))
+    : "미배정";
+  const projTitle = task.project_id ? (projMap.get(task.project_id) ?? task.project_id.slice(0, 12)) : null;
+  const priorityColor = PRIORITY_COLOR[task.priority] ?? "#adb5bd";
 
-  const handleTransition = async (nextState: TaskState) => {
-    setTransitioning(nextState);
-    setActionError(null);
-    setActionSuccess(null);
+  const handleTransition = async (next: string) => {
+    setTransitioning(next);
+    setMsg(null);
     try {
-      await onTransition(nextState);
-      setActionSuccess(`→ ${STATE_LABELS[nextState]} 전환 완료`);
+      await onTransition(next);
+      setCurrentState(next);
+      setMsg(`→ ${STATE_LABEL[next] ?? next} 전환 완료`);
     } catch {
-      setActionError("상태 전환에 실패했습니다.");
+      setMsg("상태 전환에 실패했습니다.");
     } finally {
       setTransitioning(null);
     }
@@ -213,109 +307,122 @@ function TaskDetailPanel({
 
   const handleTriggerAI = async () => {
     setTriggeringAI(true);
-    setActionError(null);
-    setActionSuccess(null);
+    setMsg(null);
     try {
       await onTriggerAI();
-      setActionSuccess("AI 작업이 큐에 등록되었습니다.");
+      setMsg("AI 작업 큐에 등록됨");
     } catch {
-      setActionError("AI 작업 실행에 실패했습니다.");
+      setMsg("AI 실행에 실패했습니다.");
     } finally {
       setTriggeringAI(false);
     }
   };
 
   return (
-    <div style={{ display: "grid", gap: "1rem", fontSize: "0.82rem" }}>
-      {/* Status badge */}
-      <div style={{
-        display: "inline-flex",
-        alignSelf: "start",
-        padding: "0.2rem 0.6rem",
-        borderRadius: 999,
-        fontSize: "0.75rem",
-        fontWeight: 600,
-        background: STATE_BADGE_COLOR[task.state] ?? "rgba(255,255,255,0.08)",
-        color: "var(--color-text)",
-      }}>
-        {STATE_LABELS[task.state]}
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem", fontSize: "0.8rem" }}>
+      {/* 상태 + 우선순위 */}
+      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+        <span style={{
+          padding: "0.2rem 0.65rem", borderRadius: 999, fontSize: "0.72rem", fontWeight: 600,
+          background: "rgba(255,255,255,0.07)", color: "var(--color-text)",
+        }}>{STATE_LABEL[currentState] ?? currentState}</span>
+        <span style={{ width: 8, height: 8, borderRadius: "50%", background: priorityColor }} />
+        <span style={{ fontSize: "0.7rem", color: "var(--color-muted)" }}>{task.priority}</span>
       </div>
 
-      {/* Meta */}
-      <div style={{ display: "grid", gap: "0.35rem", color: "var(--color-muted)", fontSize: "0.78rem" }}>
-        <div>우선순위: <strong style={{ color: PRIORITY_COLOR[task.priority] }}>{task.priority}</strong></div>
-        {task.assignee_character_id && <div>담당자 ID: {task.assignee_character_id}</div>}
-        {task.reviewer_character_id && <div>리뷰어 ID: {task.reviewer_character_id}</div>}
-        {task.project_id && <div>프로젝트: {task.project_id.slice(0, 12)}…</div>}
-        {task.due_at && <div>마감: {new Date(task.due_at).toLocaleDateString("ko-KR")}</div>}
-        <div style={{ fontSize: "0.72rem" }}>ID: {task.id}</div>
+      {/* 메타 */}
+      <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "0.3rem 0.75rem", fontSize: "0.75rem" }}>
+        <span style={{ color: "var(--color-muted)" }}>담당자</span>
+        <span>{assigneeName}</span>
+        {projTitle && <>
+          <span style={{ color: "var(--color-muted)" }}>프로젝트</span>
+          <span style={{ color: "rgba(100,180,255,0.8)" }}>{projTitle}</span>
+        </>}
+        {task.created_at && <>
+          <span style={{ color: "var(--color-muted)" }}>생성일</span>
+          <span>{new Date(task.created_at).toLocaleDateString("ko-KR")}</span>
+        </>}
       </div>
 
-      {/* Description */}
+      {/* 설명 */}
       {task.description && (
-        <div>
-          <div style={{ fontSize: "0.72rem", color: "var(--color-muted)", marginBottom: "0.35rem" }}>설명</div>
-          <p style={{ margin: 0, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{task.description}</p>
-        </div>
+        <div style={{
+          fontSize: "0.75rem", lineHeight: 1.6, whiteSpace: "pre-wrap",
+          background: "rgba(0,0,0,0.03)", border: "1px solid var(--color-border)",
+          borderRadius: 6, padding: "0.5rem 0.65rem",
+        }}>{task.description}</div>
       )}
 
-      {/* State transitions */}
+      {/* 상태 전환 */}
       {nextStates.length > 0 && (
         <div>
-          <div style={{ fontSize: "0.72rem", color: "var(--color-muted)", marginBottom: "0.5rem" }}>상태 전환</div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
-            {nextStates.map((next) => (
-              <button
-                key={next}
-                onClick={() => handleTransition(next)}
-                disabled={transitioning !== null}
-                style={{
-                  background: next === "Cancelled" || next === "Rejected" ? "rgba(255,107,107,0.15)" : "rgba(255,255,255,0.08)",
-                  border: `1px solid ${next === "Cancelled" || next === "Rejected" ? "rgba(255,107,107,0.3)" : "var(--color-border)"}`,
-                  color: transitioning === next ? "var(--color-muted)" : "var(--color-text)",
-                  borderRadius: 6,
-                  padding: "0.35rem 0.7rem",
-                  fontSize: "0.78rem",
-                  cursor: transitioning !== null ? "default" : "pointer",
-                }}
-              >
-                {transitioning === next ? "처리 중…" : `→ ${STATE_LABELS[next]}`}
+          <div style={{ fontSize: "0.68rem", color: "var(--color-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>상태 전환</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
+            {nextStates.map(next => (
+              <button key={next} onClick={() => void handleTransition(next)} disabled={!!transitioning} style={{
+                padding: "0.3rem 0.65rem", borderRadius: 6, fontSize: "0.75rem", cursor: transitioning ? "default" : "pointer",
+                background: next === "Cancelled" ? "rgba(248,113,113,0.1)" : "rgba(255,255,255,0.06)",
+                border: `1px solid ${next === "Cancelled" ? "rgba(248,113,113,0.3)" : "var(--color-border)"}`,
+                color: transitioning === next ? "var(--color-muted)" : "var(--color-text)",
+              }}>
+                {transitioning === next ? "…" : `→ ${STATE_LABEL[next] ?? next}`}
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* AI trigger — only for InProgress tasks with assignee */}
-      {task.state === "InProgress" && task.assignee_character_id && (
+      {/* AI 실행 */}
+      {task.assignee_character_id && (currentState === "InProgress" || currentState === "Todo" || currentState === "Assigned") && (
+        <button onClick={() => void handleTriggerAI()} disabled={triggeringAI} style={{
+          alignSelf: "flex-start", padding: "0.35rem 0.9rem", borderRadius: 6, fontSize: "0.78rem",
+          fontWeight: 600, cursor: triggeringAI ? "default" : "pointer",
+          background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.3)",
+          color: triggeringAI ? "var(--color-muted)" : "#4ade80",
+        }}>
+          {triggeringAI ? "실행 중…" : "⚡ AI 즉시 실행"}
+        </button>
+      )}
+
+      {/* AI 산출물 */}
+      {task.ai_output?.text && (
         <div>
-          <div style={{ fontSize: "0.72rem", color: "var(--color-muted)", marginBottom: "0.5rem" }}>AI 작업</div>
-          <button
-            onClick={handleTriggerAI}
-            disabled={triggeringAI}
-            style={{
-              background: "rgba(74,222,128,0.12)",
-              border: "1px solid rgba(74,222,128,0.3)",
-              color: triggeringAI ? "var(--color-muted)" : "#4ade80",
-              borderRadius: 6,
-              padding: "0.35rem 0.9rem",
-              fontSize: "0.78rem",
-              cursor: triggeringAI ? "default" : "pointer",
-              fontWeight: 600,
-            }}
-          >
-            {triggeringAI ? "실행 중…" : "⚡ AI 실행"}
-          </button>
+          <div style={{ fontSize: "0.68rem", color: "var(--color-muted)", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            AI 산출물 {task.ai_output.modelUsed ? `· ${task.ai_output.modelUsed}` : ""}
+          </div>
+          <div style={{
+            fontSize: "0.72rem", lineHeight: 1.6, whiteSpace: "pre-wrap",
+            background: "rgba(74,222,128,0.04)", border: "1px solid rgba(74,222,128,0.15)",
+            borderRadius: 6, padding: "0.5rem 0.65rem", maxHeight: 220, overflowY: "auto",
+          }}>
+            {task.ai_output.text}
+          </div>
+          {(task.ai_output.tokensUsed || task.ai_output.costUsd) && (
+            <div style={{ fontSize: "0.62rem", color: "var(--color-muted)", marginTop: "0.3rem" }}>
+              {task.ai_output.tokensUsed} tokens {task.ai_output.costUsd ? `· $${task.ai_output.costUsd.toFixed(4)}` : ""}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Feedback messages */}
-      {actionSuccess && (
-        <p style={{ margin: 0, fontSize: "0.78rem", color: "#4ade80" }}>{actionSuccess}</p>
-      )}
-      {actionError && (
-        <p style={{ margin: 0, fontSize: "0.78rem", color: "var(--color-toxic-red)" }}>{actionError}</p>
+      {/* 피드백 */}
+      {msg && (
+        <div style={{ fontSize: "0.75rem", color: msg.includes("실패") ? "#f87171" : "#4ade80" }}>
+          {msg}
+        </div>
       )}
     </div>
   );
+}
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+
+function chipStyle(active: boolean): React.CSSProperties {
+  return {
+    padding: "0.25rem 0.7rem", borderRadius: 999, fontSize: "0.72rem",
+    border: active ? "1px solid rgba(100,180,255,0.5)" : "1px solid rgba(255,255,255,0.1)",
+    background: active ? "rgba(100,180,255,0.12)" : "transparent",
+    color: active ? "#64b4ff" : "var(--color-muted)",
+    cursor: "pointer", whiteSpace: "nowrap", fontWeight: active ? 600 : 400,
+  };
 }

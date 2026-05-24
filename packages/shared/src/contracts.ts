@@ -31,3 +31,31 @@ export interface JobExecutionRecord {
   created_at: string;
   updated_at: string;
 }
+
+/**
+ * Canonical record for a single tool execution lifecycle.
+ * Emitted at each stage: ToolRequested → PolicyEvaluated → Approved/Denied → Executed/Failed → AuditPersisted
+ */
+export interface ToolExecutionRecord {
+  id: string;                          // idempotency key, unique per tool call
+  trace_id: string;                    // links to parent job/task trace
+  tool_name: string;                   // e.g. "file.write", "shell.exec", "git.commit"
+  risk_level: "L0" | "L1" | "L2" | "L3";
+  status: "requested" | "policy_evaluated" | "approval_requested" | "approved" | "denied" | "executed" | "failed" | "audit_persisted";
+  input: Record<string, unknown>;      // tool arguments
+  output?: Record<string, unknown>;   // tool result (present after execution)
+  policy_decision?: "allow" | "deny" | "require_approval";
+  approver_id?: string | null;         // character or user who approved
+  error_message?: string | null;
+  requested_by_character_id: string;
+  task_id?: string | null;
+  requested_at: string;
+  resolved_at?: string | null;
+}
+
+/**
+ * Payload shape for Tool* events emitted on the Execution Bus / SSE stream.
+ */
+export interface ToolEventPayload {
+  execution: ToolExecutionRecord;
+}

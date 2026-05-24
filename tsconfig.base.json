@@ -24,7 +24,13 @@
       "@bloks/world": ["./packages/world/src/index.ts"],
       "@bloks/world/*": ["./packages/world/src/*"],
       "@bloks/simulation": ["./packages/simulation/src/index.ts"],
-      "@bloks/simulation/*": ["./packages/simulation/src/*"]
+      "@bloks/simulation/*": ["./packages/simulation/src/*"],
+      "@bloks/policy-engine": ["./packages/policy-engine/src/index.ts"],
+      "@bloks/policy-engine/*": ["./packages/policy-engine/src/*"],
+      "@bloks/audit": ["./packages/audit/src/index.ts"],
+      "@bloks/audit/*": ["./packages/audit/src/*"],
+      "@bloks/agent-runtime": ["./packages/agent-runtime/src/index.ts"],
+      "@bloks/agent-runtime/*": ["./packages/agent-runtime/src/*"]
     }
   },
   "exclude": ["node_modules", "dist", ".next"]

@@ -1,8 +1,10 @@
+> ⚠️ **[ARCHIVED 2026-05-21]** 구현 완료 — 더 이상 업데이트하지 않습니다.
+
 ---
 title: P0 Worker - BullMQ 기반 큐 소비자 부트스트랩
 priority: HIGH
 owner: TBD
-status: TODO
+status: DONE
 ---
 
 ## 목적

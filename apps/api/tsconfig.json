@@ -8,7 +8,13 @@
       "@bloks/shared": ["../../packages/shared/src/index.ts"],
       "@bloks/shared/*": ["../../packages/shared/src/*"],
       "@bloks/db": ["../../packages/db/src/index.ts"],
-      "@bloks/db/*": ["../../packages/db/src/*"]
+      "@bloks/db/*": ["../../packages/db/src/*"],
+      "@bloks/agent-runtime": ["../../packages/agent-runtime/src/index.ts"],
+      "@bloks/agent-runtime/*": ["../../packages/agent-runtime/src/*"],
+      "@bloks/policy-engine": ["../../packages/policy-engine/src/index.ts"],
+      "@bloks/policy-engine/*": ["../../packages/policy-engine/src/*"],
+      "@bloks/audit": ["../../packages/audit/src/index.ts"],
+      "@bloks/audit/*": ["../../packages/audit/src/*"]
     }
   },
   "include": ["src/**/*"],

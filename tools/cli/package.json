@@ -1,0 +1,20 @@
+{
+  "name": "@bloks/cli",
+  "version": "0.1.0",
+  "description": "BLOKS OS — one-command install and run",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "bloks-os": "./bin/bloks-os.mjs"
+  },
+  "scripts": {
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@bloks/db": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0"
+  }
+}

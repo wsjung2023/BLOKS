@@ -1,8 +1,10 @@
+> ⚠️ **[ARCHIVED 2026-05-21]** 구현 완료 — 더 이상 업데이트하지 않습니다.
+
 ---
 title: P1 World - /world/snapshot + SSE 이벤트 스트림 구현
 priority: MEDIUM
 owner: TBD
-status: TODO
+status: DONE
 ---
 
 ## 목적

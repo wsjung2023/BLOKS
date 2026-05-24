@@ -1,0 +1,113 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/wsjung2023/bloks
+  pullPolicy: IfNotPresent
+  tag: ""  # defaults to Chart.appVersion
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: false
+  name: ""
+
+# ── API ───────────────────────────────────────────────────────────────────────
+api:
+  enabled: true
+  image:
+    repository: ghcr.io/wsjung2023/bloks-api
+    tag: ""
+  replicaCount: 1
+  port: 4000
+  env:
+    BLOKS_PROFILE: "connected"
+    PORT: "4000"
+    DAEMON_PORT: "4001"
+  secrets:
+    # Reference an existing Kubernetes Secret
+    # keys: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY, REDIS_URL
+    name: bloks-secrets
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  service:
+    type: ClusterIP
+
+# ── Web ───────────────────────────────────────────────────────────────────────
+web:
+  enabled: true
+  image:
+    repository: ghcr.io/wsjung2023/bloks-web
+    tag: ""
+  replicaCount: 1
+  port: 3000
+  env:
+    NEXT_PUBLIC_API_URL: ""  # set to your API ingress URL
+    NEXT_PUBLIC_ENABLE_DEV_BYPASS_AUTH: "false"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  service:
+    type: ClusterIP
+
+# ── Worker ────────────────────────────────────────────────────────────────────
+worker:
+  enabled: true
+  image:
+    repository: ghcr.io/wsjung2023/bloks-worker
+    tag: ""
+  replicaCount: 1
+  env:
+    WORKER_CONCURRENCY: "5"
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+# ── Ingress ───────────────────────────────────────────────────────────────────
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+  hosts:
+    - host: bloks.example.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: api
+        - path: /
+          pathType: Prefix
+          service: web
+  tls: []
+
+# ── PostgreSQL (optional — use external Supabase instead) ────────────────────
+postgresql:
+  enabled: false
+  auth:
+    postgresPassword: "changeme"
+    database: "bloks"
+  primary:
+    persistence:
+      size: 10Gi
+
+# ── Redis (optional — use external Redis instead) ────────────────────────────
+redis:
+  enabled: false
+  auth:
+    enabled: false
+  master:
+    persistence:
+      size: 2Gi

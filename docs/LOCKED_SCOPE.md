@@ -1,3 +1,5 @@
+> ⚠️ **[ARCHIVED 2026-05-21]** 구현 완료 — 더 이상 업데이트하지 않습니다.
+
 # BLOKS Locked Scope (to avoid scope creep)
 
 기준일: 2026-03-29

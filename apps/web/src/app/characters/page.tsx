@@ -6,6 +6,11 @@ import LoadStateBlock from "@/components/common/LoadStateBlock";
 import { ContextPanelContext } from "@/components/layout/AppShell-nav";
 import { apiGet } from "@/lib/apiClient";
 
+interface TaskCount {
+  assignee_character_id: string;
+  state: string;
+}
+
 interface RuntimeState {
   activity_status?: string;
   workload_score?: number;
@@ -19,6 +24,10 @@ interface Character {
   code_name: string;
   active_mode?: string;
   persona_summary?: string;
+  current_level?: number;
+  total_experience?: number;
+  level_experience?: number;
+  total_tasks_done?: number;
   character_runtime_states?: RuntimeState | RuntimeState[];
 }
 
@@ -44,21 +53,33 @@ function getInitials(name: string): string {
 export default function CharacterDirectoryPage() {
   const { openPanel } = useContext(ContextPanelContext);
   const [characters, setCharacters] = useState<Character[]>([]);
+  const [taskCounts, setTaskCounts] = useState<Map<string, { active: number; done: number }>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   function loadCharacters() {
     setLoading(true);
-    apiGet<{ data?: { items?: Character[] } }>("/characters?pageSize=40")
-      .then((body: { data?: { items?: Character[] } }) => {
-        setCharacters(body.data?.items ?? []);
-        setError(null);
-      })
-      .catch(() => {
-        setCharacters([]);
-        setError("캐릭터 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
-      })
-      .finally(() => setLoading(false));
+    Promise.all([
+      apiGet<{ data?: { items?: Character[] } }>("/characters?pageSize=40&includeLevel=true")
+        .then((b) => b.data?.items ?? []),
+      apiGet<{ data?: { items?: TaskCount[] } }>("/tasks?pageSize=100")
+        .then((b) => b.data?.items ?? []).catch(() => [] as TaskCount[]),
+    ]).then(([chars, tasks]) => {
+      setCharacters(chars);
+      const m = new Map<string, { active: number; done: number }>();
+      for (const t of tasks) {
+        if (!t.assignee_character_id) continue;
+        const cur = m.get(t.assignee_character_id) ?? { active: 0, done: 0 };
+        if (t.state === "Done" || t.state === "Approved") cur.done++;
+        else if (t.state !== "Cancelled") cur.active++;
+        m.set(t.assignee_character_id, cur);
+      }
+      setTaskCounts(m);
+      setError(null);
+    }).catch(() => {
+      setCharacters([]);
+      setError("캐릭터 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
+    }).finally(() => setLoading(false));
   }
 
   useEffect(() => {
@@ -72,14 +93,24 @@ export default function CharacterDirectoryPage() {
 
   function openCharacterPanel(character: Character) {
     const runtime = getRuntime(character);
+    const lv = character.current_level ?? 1;
+    const totalExp = character.total_experience ?? 0;
+    const tasksDone = character.total_tasks_done ?? 0;
     openPanel(
       character.name,
-      <div style={{ display: "grid", gap: "0.5rem", fontSize: "0.82rem" }}>
+      <div style={{ display: "grid", gap: "0.6rem", fontSize: "0.82rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <span style={{ background: "rgba(255,215,0,0.15)", color: "#ffd700", padding: "0.2rem 0.6rem", borderRadius: 999, fontWeight: 700 }}>
+            Lv.{lv}
+          </span>
+          <span style={{ color: "var(--color-muted)", fontSize: "0.75rem" }}>{totalExp} exp 누적 · 완료 {tasksDone}개</span>
+        </div>
         <div>Code: {character.code_name}</div>
         <div>Mode: {character.active_mode ?? "N/A"}</div>
-        <div>Workload: {runtime?.workload_score ?? 0}</div>
-        <div>Fatigue: {runtime?.fatigue_score ?? 0}</div>
-        <div>Burnout: {runtime?.burnout_triggered ? "YES" : "NO"}</div>
+        <div style={{ color: runtime?.burnout_triggered ? "#e05c5c" : "var(--color-muted)" }}>
+          Workload: {runtime?.workload_score ?? 0} · Fatigue: {runtime?.fatigue_score ?? 0}
+          {runtime?.burnout_triggered ? " 🔥 번아웃" : ""}
+        </div>
       </div>
     );
   }
@@ -195,18 +226,46 @@ export default function CharacterDirectoryPage() {
                     {(character.persona_summary ?? "persona 미등록").split(" ")[0]}
                   </div>
 
-                  <div style={{ marginTop: "0.7rem", display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
-                    <span style={{ border: "1px solid var(--color-border)", borderRadius: 999, padding: "0.15rem 0.45rem", fontSize: "0.68rem" }}>mod_gpt4o</span>
-                    <span style={{ border: "1px solid var(--color-border)", borderRadius: 999, padding: "0.15rem 0.45rem", fontSize: "0.68rem" }}>mod_claude3</span>
-                  </div>
-
-                  <div style={{ marginTop: "0.8rem", fontSize: "0.72rem", color: "var(--color-muted)", display: "grid", gap: "0.15rem" }}>
-                    <span>Workload: {runtime?.workload_score ?? 0}</span>
-                    <span>Fatigue: {runtime?.fatigue_score ?? 0}</span>
-                    <span style={{ color: runtime?.burnout_triggered ? "var(--color-toxic-red)" : "var(--color-muted)" }}>
-                      Burnout: {runtime?.burnout_triggered ? "YES" : "NO"}
-                    </span>
-                  </div>
+                  {(() => {
+                    const tc = taskCounts.get(character.id);
+                    const lv = character.current_level ?? 1;
+                    const wl = runtime?.workload_score ?? 0;
+                    const fa = runtime?.fatigue_score ?? 0;
+                    const isBurnout = runtime?.burnout_triggered ?? false;
+                    const barColor = isBurnout ? "#e05c5c" : wl > 70 ? "#f0a500" : "#4caf7d";
+                    return (
+                      <div style={{ marginTop: "0.8rem", display: "grid", gap: "0.45rem" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ background: "rgba(255,215,0,0.12)", color: "#ffd700", padding: "0.1rem 0.45rem", borderRadius: 999, fontSize: "0.7rem", fontWeight: 700 }}>
+                            Lv.{lv}
+                          </span>
+                        </div>
+                        {tc && (
+                          <div style={{ display: "flex", gap: "0.5rem", fontSize: "0.72rem" }}>
+                            {tc.active > 0 && (
+                              <span style={{ background: "rgba(240,165,0,0.12)", color: "#f0a500", padding: "0.1rem 0.4rem", borderRadius: 999 }}>
+                                진행 {tc.active}
+                              </span>
+                            )}
+                            {tc.done > 0 && (
+                              <span style={{ background: "rgba(76,175,125,0.12)", color: "#4caf7d", padding: "0.1rem 0.4rem", borderRadius: 999 }}>
+                                완료 {tc.done}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        <div>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.68rem", color: "var(--color-muted)", marginBottom: 3 }}>
+                            <span>{isBurnout ? "🔥 번아웃" : "워크로드"}</span>
+                            <span>{wl} / fa:{fa}</span>
+                          </div>
+                          <div style={{ height: 5, background: "rgba(255,255,255,0.08)", borderRadius: 3 }}>
+                            <div style={{ width: `${wl}%`, height: "100%", background: barColor, borderRadius: 3, transition: "width 0.3s" }} />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </article>
               );
             })}

@@ -11,6 +11,8 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@bloks/agent-runtime": "workspace:*",
+    "@bloks/audit": "workspace:*",
     "@bloks/db": "workspace:*",
     "@bloks/memory": "workspace:*",
     "@bloks/shared": "workspace:*",

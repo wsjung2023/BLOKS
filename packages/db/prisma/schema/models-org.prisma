@@ -100,6 +100,10 @@ model Character {
   activeMode          ActiveMode    @default(OnCall)
   avatarUri           String?
   activeFlag          Boolean       @default(true)
+  totalExperience     Int           @default(0)
+  currentLevel        Int           @default(1)
+  levelExperience     Int           @default(0)
+  totalTasksDone      Int           @default(0)
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
 

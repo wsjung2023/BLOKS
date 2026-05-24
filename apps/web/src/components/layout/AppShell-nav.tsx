@@ -6,7 +6,7 @@ import type { Route } from "next";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type NavItem = "world" | "board" | "directory" | "approval" | "analytics" | "prompts" | "floor-editor";
+export type NavItem = "world" | "projects" | "board" | "directory" | "char-editor" | "approval" | "analytics" | "prompts" | "map-editor" | "demo";
 
 export interface ContextPanelCtx {
   openPanel: (title: string, content: React.ReactNode) => void;
@@ -22,12 +22,20 @@ export const ContextPanelContext = React.createContext<ContextPanelCtx>({
 
 const NAV_ITEMS: { key: NavItem; label: string; href: Route; icon: string; dividerBefore?: boolean }[] = [
   { key: "world",        label: "월드",          href: "/world",            icon: "🏢" },
-  { key: "board",        label: "프로젝트 보드", href: "/board",            icon: "📋" },
-  { key: "directory",    label: "캐릭터 목록",   href: "/characters",       icon: "👥" },
+  { key: "projects",     label: "프로젝트",      href: "/projects",         icon: "🗂️" },
+  { key: "board",        label: "태스크 보드",   href: "/board",            icon: "📋" },
+  { key: "directory",    label: "캐릭터 목록",     href: "/characters",         icon: "👥" },
+  { key: "char-editor", label: "스프라이트 에디터", href: "/characters/editor",  icon: "🎨" },
   { key: "approval",     label: "결재 센터",     href: "/approvals",        icon: "✅" },
   { key: "analytics",    label: "분석",          href: "/analytics",        icon: "📊" },
   { key: "prompts",      label: "프롬프트 콘솔", href: "/prompts",          icon: "⚡" },
-  { key: "floor-editor", label: "층 에디터",     href: "/dev/floor-editor", icon: "🗺️", dividerBefore: true },
+  { key: "map-editor",   label: "맵 에디터",     href: "/map-editor",       icon: "🗺️", dividerBefore: true },
+  { key: "demo",         label: "데모 결과",     href: "/demo",             icon: "🎬" },
+];
+
+// Standalone action links (not part of active nav tracking)
+const ACTION_LINKS: { label: string; href: Route; icon: string }[] = [
+  { label: "새 프로젝트", href: "/projects/new", icon: "+" },
 ];
 
 // ── LeftSidebarNav ────────────────────────────────────────────────────────────
@@ -68,6 +76,27 @@ export function LeftSidebarNav({ active }: { active?: NavItem }) {
             <span className="sidebar-label">{item.label}</span>
           </Link>
         </React.Fragment>
+      ))}
+      <div style={{ borderTop: "1px solid var(--color-border)", margin: "0.5rem 0" }} />
+      {ACTION_LINKS.map((link) => (
+        <Link
+          key={link.href}
+          href={link.href}
+          style={{
+            display: "flex", alignItems: "center", gap: "0.625rem",
+            padding: "0.5rem 1rem",
+            color: "rgba(100,180,255,0.85)",
+            background: "rgba(100,180,255,0.07)",
+            borderLeft: "3px solid rgba(100,180,255,0.35)",
+            textDecoration: "none",
+            fontSize: "0.82rem",
+            fontWeight: 600,
+            transition: "background 0.15s",
+          }}
+        >
+          <span style={{ fontSize: "1rem", lineHeight: 1 }}>{link.icon}</span>
+          <span className="sidebar-label">{link.label}</span>
+        </Link>
       ))}
     </nav>
   );

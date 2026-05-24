@@ -1,8 +1,10 @@
+> ⚠️ **[ARCHIVED 2026-05-21]** 구현 완료 — 더 이상 업데이트하지 않습니다.
+
 ---
 title: P0 Contract Lock - SSOT(상태/이벤트/런타임필드) 정본화
 priority: HIGH
 owner: TBD
-status: IN_PROGRESS
+status: DONE
 ---
 
 ## 목적

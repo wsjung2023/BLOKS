@@ -1,3 +1,5 @@
+> ⚠️ **[ARCHIVED 2026-05-21]** 구현 완료 — 더 이상 업데이트하지 않습니다.
+
 ---
 title: P0 Security - dev-bypass 제거 및 MVP 인증/세션 완성
 priority: HIGH

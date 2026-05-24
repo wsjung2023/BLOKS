@@ -1,8 +1,10 @@
+> ⚠️ **[ARCHIVED 2026-05-21]** 구현 완료 — 더 이상 업데이트하지 않습니다.
+
 ---
 title: P0 Reliability - JobExecution + Outbox + 멱등성(Idempotency) 도입
 priority: HIGH
 owner: TBD
-status: TODO
+status: DONE
 ---
 
 ## 목적

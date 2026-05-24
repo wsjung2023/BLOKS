@@ -1,8 +1,10 @@
+> ⚠️ **[ARCHIVED 2026-05-21]** 구현 완료 — 더 이상 업데이트하지 않습니다.
+
 ---
 title: P2 CI - pnpm/turbo 모노레포 CI 파이프라인
 priority: LOW
 owner: TBD
-status: TODO
+status: DONE
 ---
 
 ## 목적

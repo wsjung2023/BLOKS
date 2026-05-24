@@ -1,8 +1,10 @@
+> ⚠️ **[ARCHIVED 2026-05-21]** 구현 완료 — 더 이상 업데이트하지 않습니다.
+
 ---
 title: P2 Cost - AI 비용 측정/쿼터/경보(예산 폭주 방지)
 priority: LOW
 owner: TBD
-status: TODO
+status: DONE
 ---
 
 ## 목적

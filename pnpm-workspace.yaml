@@ -1,4 +1,4 @@
-# pnpm workspace config — declares all monorepo packages and apps
 packages:
   - "apps/*"
   - "packages/*"
+  - "tools/cli"

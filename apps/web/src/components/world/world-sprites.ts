@@ -114,8 +114,12 @@ export const FLOORS: FloorConfig[] = [
     stageCleanUrl: "/floors/8f-executive/background/stage-clean.png",
     divisionCodes: ["executive", "exec", "div_exec", "management"],
     slots: [
-      { x: 0.26, y: 0.52 }, { x: 0.40, y: 0.60 },
-      { x: 0.60, y: 0.52 }, { x: 0.74, y: 0.60 },
+      // executive desk & visitor chairs (indices 0-3)
+      { x: 0.18, y: 0.16 }, { x: 0.32, y: 0.09 },
+      { x: 0.62, y: 0.12 }, { x: 0.78, y: 0.12 },
+      // main conference table seats (indices 4-9) — used by meeting guests
+      { x: 0.12, y: 0.37 }, { x: 0.24, y: 0.36 }, { x: 0.36, y: 0.37 },
+      { x: 0.12, y: 0.62 }, { x: 0.24, y: 0.64 }, { x: 0.36, y: 0.62 },
     ],
   },
 ];
@@ -180,6 +184,39 @@ export const FLOOR_DIR: Record<string, string> = {
 // before transitioning between floors. Derived from layout.json elevator objects.
 export const ELEVATOR_ZONE: { x: number; y: number } = { x: 0.88, y: 0.25 };
 
+// Meeting zone positions per floor — clustered around a central conference table.
+// Characters move here during workflow_stage: meeting_called events.
+export const MEETING_ZONES: Record<string, Array<{ x: number; y: number }>> = {
+  executive:   [
+    { x: 0.12, y: 0.37 }, { x: 0.24, y: 0.36 }, { x: 0.36, y: 0.37 },
+    { x: 0.12, y: 0.62 }, { x: 0.24, y: 0.64 }, { x: 0.36, y: 0.62 },
+  ],
+  engineering: [
+    { x: 0.36, y: 0.38 }, { x: 0.50, y: 0.35 }, { x: 0.64, y: 0.38 },
+    { x: 0.36, y: 0.50 }, { x: 0.50, y: 0.53 }, { x: 0.64, y: 0.50 },
+  ],
+  ops:         [
+    { x: 0.35, y: 0.40 }, { x: 0.50, y: 0.37 }, { x: 0.65, y: 0.40 },
+    { x: 0.35, y: 0.52 }, { x: 0.50, y: 0.55 }, { x: 0.65, y: 0.52 },
+  ],
+  research:    [
+    { x: 0.36, y: 0.42 }, { x: 0.50, y: 0.39 }, { x: 0.64, y: 0.42 },
+    { x: 0.36, y: 0.54 }, { x: 0.50, y: 0.57 }, { x: 0.64, y: 0.54 },
+  ],
+  marketing:   [
+    { x: 0.37, y: 0.41 }, { x: 0.50, y: 0.38 }, { x: 0.63, y: 0.41 },
+    { x: 0.37, y: 0.53 }, { x: 0.50, y: 0.56 }, { x: 0.63, y: 0.53 },
+  ],
+  finance:     [
+    { x: 0.38, y: 0.42 }, { x: 0.52, y: 0.39 }, { x: 0.62, y: 0.42 },
+    { x: 0.45, y: 0.54 }, { x: 0.55, y: 0.54 },
+  ],
+  cafe:        [
+    { x: 0.36, y: 0.46 }, { x: 0.50, y: 0.43 }, { x: 0.64, y: 0.46 },
+    { x: 0.42, y: 0.58 }, { x: 0.58, y: 0.58 },
+  ],
+};
+
 
 export const ZONE_FLOOR_URLS: Record<string, string> = {
   engineering: "/sprites-v2/floor-engineering-3f.png",
@@ -204,6 +241,20 @@ export const ZONE_MAP: string[][] = Array.from({ length: GRID_ROWS }, (_, row) =
     return "management";
   })
 );
+
+// Tile size for the 1536×1024 top-down grid (48×32 tiles)
+const MEETING_TILE_SIZE = 32;
+
+// Convert MEETING_ZONES normalized positions to tile coordinates.
+// Used by WorldScene for A*-pathfinding destinations.
+export function getMeetingTilePositions(
+  floorId: string,
+): Array<{ col: number; row: number }> {
+  return (MEETING_ZONES[floorId] ?? []).map((pos) => ({
+    col: Math.floor(pos.x * 1536 / MEETING_TILE_SIZE),
+    row: Math.floor(pos.y * 1024 / MEETING_TILE_SIZE),
+  }));
+}
 
 export const ZONE_LABELS = [
   { col: 1, row: 4, label: "Engineering" },

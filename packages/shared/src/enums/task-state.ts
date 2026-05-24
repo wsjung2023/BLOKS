@@ -1,31 +1,21 @@
-// TaskState enum — all allowed states for a BLOKS Task entity (doc 03)
+// TaskState enum — matches actual DB task_state enum values
 export enum TaskState {
-  Draft = "Draft",
-  Created = "Created",
-  Assigned = "Assigned",
-  Accepted = "Accepted",
+  Backlog = "Backlog",
+  Todo = "Todo",
   InProgress = "InProgress",
-  PendingReview = "PendingReview",
-  Rejected = "Rejected",
-  Rework = "Rework",
-  Approved = "Approved",
-  Done = "Done",
+  InReview = "InReview",
   Blocked = "Blocked",
+  Done = "Done",
   Cancelled = "Cancelled",
 }
 
-/** Allowed forward transitions per state (doc 03 section 3.3) */
+/** Allowed forward transitions per state */
 export const TASK_TRANSITIONS: Record<TaskState, TaskState[]> = {
-  [TaskState.Draft]: [TaskState.Created],
-  [TaskState.Created]: [TaskState.Assigned],
-  [TaskState.Assigned]: [TaskState.Accepted, TaskState.Cancelled],
-  [TaskState.Accepted]: [TaskState.InProgress],
-  [TaskState.InProgress]: [TaskState.PendingReview, TaskState.Blocked],
-  [TaskState.PendingReview]: [TaskState.Approved, TaskState.Rejected],
-  [TaskState.Rejected]: [TaskState.Rework],
-  [TaskState.Rework]: [TaskState.PendingReview],
-  [TaskState.Approved]: [TaskState.Done],
+  [TaskState.Backlog]: [TaskState.Todo],
+  [TaskState.Todo]: [TaskState.InProgress, TaskState.Blocked, TaskState.Cancelled],
+  [TaskState.InProgress]: [TaskState.InReview, TaskState.Blocked],
+  [TaskState.InReview]: [TaskState.Done, TaskState.Todo],
+  [TaskState.Blocked]: [TaskState.Todo, TaskState.Cancelled],
   [TaskState.Done]: [],
-  [TaskState.Blocked]: [TaskState.InProgress, TaskState.Cancelled],
   [TaskState.Cancelled]: [],
 };
