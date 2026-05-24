@@ -51,20 +51,22 @@ pnpm bloks-os start
 
 ### AI 기능 활성화 (선택)
 
-AI 캐릭터가 실제로 응답하게 하려면 본인의 API 키가 필요합니다. 아래 중 하나 이상 입력하면 됩니다.
+AI 캐릭터가 실제로 응답하게 하려면 **본인의** AI API 키가 필요합니다.
 
 ```bash
 pnpm bloks-os init
 ```
 
-init 마법사가 단계별로 안내합니다. 또는 `.env` 파일을 직접 수정할 수도 있습니다.
+실행하면 아래를 순서대로 물어봅니다 — 없는 건 Enter로 건너뛰면 됩니다.
 
-```bash
-# .env — 사용하는 AI 서비스 키만 입력 (모두 선택사항)
-OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
-GOOGLE_AI_API_KEY=AIza...
 ```
+OpenAI API 키   (sk-proj-...)   → platform.openai.com
+Anthropic 키    (sk-ant-...)    → console.anthropic.com
+Google AI 키    (AIza...)       → aistudio.google.com
+```
+
+세 개 모두 선택사항이고, 입력한 키는 이 PC의 `.env` 파일에만 저장됩니다.  
+**다른 사람의 키와 공유되지 않습니다.**
 
 ---
 
