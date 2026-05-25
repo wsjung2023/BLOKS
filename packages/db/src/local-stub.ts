@@ -57,6 +57,7 @@ type Row = Record<string, unknown>;
 const _persisted = loadPersistedTables();
 
 const localTables: Record<string, Row[]> = {
+  model_profiles: _persisted["model_profiles"] ?? loadSeed("model_profiles.json"),
   characters: _persisted["characters"] ?? loadSeed("characters.json"),
   character_runtime_states: _persisted["character_runtime_states"] ?? loadSeed("character_runtime_states.json"),
   character_conversations: _persisted["character_conversations"] ?? [],

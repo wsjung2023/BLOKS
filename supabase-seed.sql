@@ -76,18 +76,41 @@ INSERT INTO roles (id, department_id, name, family, responsibility_summary, is_l
 ON CONFLICT DO NOTHING;
 
 -- ── 6. AI Model Profiles ──────────────────────────────────────────────────────
+-- 텍스트 / 이미지 / 영상 모델 전체 포함
 
 INSERT INTO model_profiles (id, profile_name, provider_name, primary_model, secondary_model, reasoning_depth, creativity_score, reliability_score, coding_score, analysis_score, max_budget_per_task, tool_access_level, active_flag) VALUES
-('mod_gpt4o',       'GPT-4o Standard',        'openai',     'gpt-4o',                         NULL,                             'high',   70, 85, 80, 85, 0.50, 'standard', true),
-('mod_gpt4o_full',  'GPT-4o Full Access',     'openai',     'gpt-4o',                         'gpt-4o-mini',                    'high',   75, 88, 82, 88, 0.50, 'full',     true),
-('mod_gpt4',        'GPT-4 Classic',          'openai',     'gpt-4',                          'gpt-4o-mini',                    'high',   65, 80, 75, 80, 0.50, 'standard', true),
-('mod_claude35',    'Claude 3.5 Sonnet',      'anthropic',  'claude-sonnet-4-6',              NULL,                             'high',   80, 90, 78, 90, 0.50, 'standard', true),
-('mod_claude35_adv','Claude 3.5 Advanced',    'anthropic',  'claude-sonnet-4-6',              'claude-haiku-4-5-20251001',      'deep',   82, 92, 80, 92, 0.50, 'full',     true),
-('mod_claude3opus', 'Claude 3 Opus',          'anthropic',  'claude-opus-4-7',                NULL,                             'deep',   85, 88, 72, 95, 0.50, 'full',     true),
-('mod_claude3',     'Claude 3 Sonnet',        'anthropic',  'claude-sonnet-4-6',              'claude-haiku-4-5-20251001',      'mid',    78, 86, 70, 86, 0.50, 'standard', true),
-('mod_claude_haiku','Claude Haiku Fast',      'anthropic',  'claude-haiku-4-5-20251001',      NULL,                             'low',    60, 80, 65, 75, 0.10, 'limited',  true),
-('mod_gemini15pro', 'Gemini 1.5 Pro',         'google',     'gemini-1.5-pro',                 NULL,                             'high',   82, 85, 70, 88, 0.50, 'standard', true),
-('mod_gpt4o_llama', 'GPT-4o + Llama Hybrid',  'openai',     'gpt-4o',                         'gpt-4o-mini',                    'high',   68, 83, 85, 82, 0.50, 'standard', true)
+-- 텍스트: OpenAI
+('mp_gpt4o',       'GPT-4o',                       'openai',        'gpt-4o',                     'gpt-4o-mini',               'high',  72, 88, 82, 88, 0.50, 'text',  true),
+('mp_gpt4o_mini',  'GPT-4o mini',                  'openai',        'gpt-4o-mini',                'gpt-4o',                    'mid',   62, 82, 68, 72, 0.10, 'text',  true),
+('mp_gpt4_1',      'GPT-4.1',                      'openai',        'gpt-4.1',                    'gpt-4o',                    'high',  75, 90, 90, 90, 0.80, 'text',  true),
+('mp_o3_mini',     'o3-mini (추론형)',              'openai',        'o3-mini',                    'gpt-4o',                    'ultra', 55, 93, 95, 96, 1.00, 'text',  true),
+-- 텍스트: Anthropic
+('mp_claude_sonnet','Claude Sonnet 4.6',            'anthropic',     'claude-sonnet-4-6',          'claude-haiku-4-5-20251001', 'high',  86, 90, 93, 92, 1.00, 'text',  true),
+('mp_claude_opus', 'Claude Opus 4.7',               'anthropic',     'claude-opus-4-7',            'claude-sonnet-4-6',         'ultra', 92, 93, 88, 97, 3.00, 'text',  true),
+('mp_claude_haiku','Claude Haiku 4.5',              'anthropic',     'claude-haiku-4-5-20251001',  'gpt-4o-mini',               'low',   60, 82, 65, 70, 0.10, 'text',  true),
+-- 텍스트: Google
+('mp_gemini_pro',  'Gemini 1.5 Pro',               'google',        'gemini-1.5-pro',             'gpt-4o',                    'high',  82, 85, 75, 88, 0.80, 'text',  true),
+('mp_gemini_flash','Gemini 2.0 Flash',             'google',        'gemini-2.0-flash',           'gpt-4o-mini',               'mid',   78, 82, 72, 80, 0.20, 'text',  true),
+-- 이미지
+('mp_dalle3',      'DALL-E 3 / gpt-image-1',       'openai-image',  'gpt-image-1',                NULL,                        'mid',   88, 85,  0,  0, 0.10, 'image', true),
+('mp_imagen3',     'Google Imagen 3',               'google-image',  'imagen-3.0-generate-002',    NULL,                        'mid',   86, 82,  0,  0, 0.08, 'image', true),
+('mp_sd35',        'Stability AI SD 3.5',           'stability',     'sd3.5-large',                NULL,                        'mid',   90, 78,  0,  0, 0.08, 'image', true),
+('mp_flux_pro',    'fal.ai FLUX Pro',               'fal',           'fal-ai/flux-pro',            NULL,                        'mid',   92, 80,  0,  0, 0.06, 'image', true),
+('mp_ideogram3',   'Ideogram v3',                   'ideogram',      'V_3',                        NULL,                        'mid',   95, 78,  0,  0, 0.08, 'image', true),
+-- 영상 (KIE.AI)
+('mp_kling_26',    'Kling 2.6 — 균형형 ($0.28/5s)', 'kie.ai',        'kling-2.6',                  NULL,                        'low',   88, 82,  0,  0, 0.30, 'video', true),
+('mp_seedance_20', 'Seedance 2.0 — 저가 ($0.25/5s)','kie.ai',        'seedance-2.0',               NULL,                        'low',   82, 80,  0,  0, 0.25, 'video', true),
+('mp_veo3',        'Veo 3 — 최고화질 ($0.50/5s)',    'kie.ai',        'veo3',                       NULL,                        'low',   95, 85,  0,  0, 0.50, 'video', true),
+-- 구버전 호환 (supabase-seed 내 chr_* 캐릭터용)
+('mod_gpt4o',      'GPT-4o (legacy)',               'openai',        'gpt-4o',                     'gpt-4o-mini',               'high',  72, 88, 82, 88, 0.50, 'text',  true),
+('mod_gpt4o_full', 'GPT-4o Full (legacy)',          'openai',        'gpt-4o',                     'gpt-4o-mini',               'high',  75, 88, 82, 88, 0.50, 'text',  true),
+('mod_gpt4o_llama','GPT-4o Llama (legacy)',         'openai',        'gpt-4o',                     'gpt-4o-mini',               'high',  68, 83, 85, 82, 0.50, 'text',  true),
+('mod_claude35',   'Claude Sonnet (legacy)',         'anthropic',     'claude-sonnet-4-6',          'claude-haiku-4-5-20251001', 'high',  82, 90, 80, 90, 0.50, 'text',  true),
+('mod_claude35_adv','Claude Sonnet Adv (legacy)',   'anthropic',     'claude-sonnet-4-6',          'claude-haiku-4-5-20251001', 'high',  82, 92, 80, 92, 0.50, 'text',  true),
+('mod_claude3opus','Claude Opus (legacy)',           'anthropic',     'claude-opus-4-7',            'claude-sonnet-4-6',         'ultra', 85, 88, 72, 95, 0.50, 'text',  true),
+('mod_claude3',    'Claude 3 (legacy)',              'anthropic',     'claude-sonnet-4-6',          'claude-haiku-4-5-20251001', 'mid',   78, 86, 70, 86, 0.50, 'text',  true),
+('mod_claude_haiku','Claude Haiku (legacy)',         'anthropic',     'claude-haiku-4-5-20251001',  NULL,                        'low',   60, 80, 65, 75, 0.10, 'text',  true),
+('mod_gemini15pro','Gemini 1.5 Pro (legacy)',       'google',        'gemini-1.5-pro',             NULL,                        'high',  82, 85, 70, 88, 0.50, 'text',  true)
 ON CONFLICT DO NOTHING;
 
 -- ── 7. Characters ─────────────────────────────────────────────────────────────

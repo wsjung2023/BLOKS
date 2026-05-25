@@ -332,18 +332,36 @@ function CharacterDetail({ char }: { char: Character }) {
                 }}
               >
                 <option value="">기본값 (태스크 타입별 자동 선택)</option>
-                {modelProfiles.map(p => (
-                  <option key={p.id} value={p.id}>{p.profile_name} — {p.primary_model}</option>
-                ))}
+                {(["text", "image", "video"] as const).map(cap => {
+                  const group = modelProfiles.filter(p =>
+                    cap === "video" ? p.provider_name === "kie.ai" :
+                    cap === "image" ? ["openai-image","google-image","stability","fal","ideogram"].includes(p.provider_name) :
+                    !["kie.ai","openai-image","google-image","stability","fal","ideogram"].includes(p.provider_name)
+                  );
+                  if (group.length === 0) return null;
+                  const label = cap === "text" ? "── 텍스트 AI ──" : cap === "image" ? "── 이미지 AI ──" : "── 영상 AI ──";
+                  return [
+                    <option key={`grp-${cap}`} disabled value="">{label}</option>,
+                    ...group.map(p => (
+                      <option key={p.id} value={p.id}>{p.profile_name}</option>
+                    ))
+                  ];
+                })}
               </select>
               {selectedProfileId && (() => {
                 const active = modelProfiles.find(p => p.id === selectedProfileId) ??
                   (char.model_profiles?.id === selectedProfileId ? char.model_profiles : null);
-                return active ? (
-                  <div style={{ fontSize: "0.68rem", color: "#2563eb", padding: "0.3rem 0.5rem", background: "rgba(37,99,235,0.06)", borderRadius: 4 }}>
+                if (!active) return null;
+                const isVideo = active.provider_name === "kie.ai";
+                const isImage = ["openai-image","google-image","stability","fal","ideogram"].includes(active.provider_name);
+                const capLabel = isVideo ? "영상" : isImage ? "이미지" : "텍스트";
+                const capColor = isVideo ? "#7c3aed" : isImage ? "#0891b2" : "#2563eb";
+                return (
+                  <div style={{ fontSize: "0.68rem", color: capColor, padding: "0.3rem 0.5rem", background: `${capColor}11`, borderRadius: 4, display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                    <span style={{ background: capColor, color: "#fff", borderRadius: 3, padding: "0 0.3rem", fontSize: "0.62rem", fontWeight: 700 }}>{capLabel}</span>
                     {active.primary_model} · {active.provider_name}
                   </div>
-                ) : null;
+                );
               })()}
               {!aiEnabled && (
                 <div style={{ fontSize: "0.68rem", color: "#f97316" }}>AI가 비활성화 상태입니다.</div>

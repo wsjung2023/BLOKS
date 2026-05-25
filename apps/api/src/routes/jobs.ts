@@ -135,6 +135,19 @@ async function runLocalAiAction(
 
   await sb.from("tasks").update({ state: "InProgress", updated_at: now }).eq("id", taskId);
 
+  // Resolve character's model profile for media tasks
+  type ModelProfile = { primary_model: string; provider_name: string; tool_access_level: string };
+  let charModelProfile: ModelProfile | null = null;
+  try {
+    const { data: charData } = await sb.from("characters").select("default_model_profile_id").eq("id", characterId).single();
+    if (charData?.default_model_profile_id) {
+      const { data: prof } = await sb.from("model_profiles")
+        .select("primary_model, provider_name, tool_access_level")
+        .eq("id", charData.default_model_profile_id as string).single();
+      if (prof) charModelProfile = prof as ModelProfile;
+    }
+  } catch { /* non-fatal */ }
+
   const taskType = String(task.task_type ?? "document").toLowerCase();
   const imagePrompt = [String(task.title ?? ""), String(task.description ?? "")].filter(Boolean).join(". ");
   const textPrompt = [
@@ -146,7 +159,18 @@ async function runLocalAiAction(
   let output = "";
   if (taskType === "image_production") {
     try {
-      const img = await generateImage({ prompt: imagePrompt });
+      // 캐릭터 프로필에서 이미지 프로바이더 결정
+      const imgProvider = charModelProfile?.provider_name;
+      const preferredProvider = (
+        imgProvider === "stability" ? "stability" :
+        imgProvider === "fal" ? "fal" :
+        imgProvider === "google-image" ? "google" :
+        imgProvider === "ideogram" ? "ideogram" :
+        undefined  // openai-image or text model → default (openai)
+      );
+      const img = await generateImage(preferredProvider
+        ? { prompt: imagePrompt, provider: preferredProvider }
+        : { prompt: imagePrompt });
       if (img.ok) {
         const src = img.imageUrl ?? `data:${img.mimeType};base64,${img.imageBase64}`;
         output = `![${String(task.title ?? "generated image")}](${src})\n\n> ${img.provider} / ${img.modelUsed}로 생성`;
@@ -159,7 +183,11 @@ async function runLocalAiAction(
   } else if (taskType === "video_production") {
     try {
       const aspectRatio = imagePrompt.includes("세로") || imagePrompt.includes("릴스") || imagePrompt.includes("reels") || imagePrompt.includes("쇼츠") ? "9:16" : "16:9";
-      const vid = await generateVideo({ prompt: imagePrompt, aspectRatio, duration: "5" });
+      // 캐릭터 프로필에서 영상 모델 결정 (kie.ai 프로바이더면 primary_model 사용)
+      const videoModel = (charModelProfile?.provider_name === "kie.ai" && charModelProfile.primary_model)
+        ? charModelProfile.primary_model as "kling-2.6" | "seedance-2.0" | "veo3"
+        : "kling-2.6";
+      const vid = await generateVideo({ prompt: imagePrompt, aspectRatio, duration: "5", model: videoModel });
       if (vid.ok && vid.videoUrl) {
         output = `[VIDEO](${vid.videoUrl})\n\n> ${vid.provider} / ${vid.modelUsed}로 생성`;
       } else {
