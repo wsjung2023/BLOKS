@@ -78,7 +78,7 @@ async function pollUntilDone(apiKey: string, taskId: string): Promise<string | n
   while (Date.now() < deadline) {
     await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
 
-    const res = await fetch(`${KIE_BASE}/runway/record-detail?taskId=${encodeURIComponent(taskId)}`, {
+    const res = await fetch(`${KIE_BASE}/jobs/recordInfo?taskId=${encodeURIComponent(taskId)}`, {
       headers: { "Authorization": `Bearer ${apiKey}` },
     });
 
@@ -87,18 +87,33 @@ async function pollUntilDone(apiKey: string, taskId: string): Promise<string | n
       continue;
     }
 
-    const data = await res.json() as {
+    const body = await res.json() as {
       code?: number;
       data?: {
         state?: string;
-        videoInfo?: { videoUrl?: string };
+        resultJson?: string;
+        failCode?: string | null;
+        failMsg?: string | null;
       };
     };
 
-    const state = data.data?.state;
-    if (state === "success") return data.data?.videoInfo?.videoUrl ?? null;
-    if (state === "fail") return null;
+    const d = body.data;
+    if (!d) continue;
+
+    if (d.state === "success") {
+      try {
+        const result = JSON.parse(d.resultJson ?? "{}") as { resultUrls?: string[] };
+        return result.resultUrls?.[0] ?? null;
+      } catch {
+        return null;
+      }
+    }
+    if (d.state === "fail") {
+      console.warn("[video-gen] task failed:", d.failCode, d.failMsg);
+      return null;
+    }
     // wait | queueing | generating → keep polling
+    console.log(`[video-gen] state=${d.state}, waiting...`);
   }
 
   console.warn("[video-gen] poll timeout");
