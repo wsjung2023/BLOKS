@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { QUEUE_NAMES } from "@bloks/shared";
 import type { JobExecutionRecord } from "@bloks/shared";
-import { getRuntimeProfile, getSupabase, writeEventLog } from "@bloks/db";
+import { getRuntimeProfile, getDb, writeEventLog } from "@bloks/db";
 import { routeAI, generateImage, generateVideo } from "@bloks/ai-router";
 import { enqueueJob } from "../queues/registry.js";
 
@@ -56,7 +56,7 @@ async function runLocalOrchestrate(
   actorId: string,
   traceId: string | null,
 ): Promise<void> {
-  const sb = getSupabase();
+  const sb = getDb();
   const input = (payload["input"] as Record<string, unknown> | undefined) ?? payload;
   const projectId = String(input["projectId"] ?? input["project_id"] ?? "");
   if (!projectId) return;
@@ -118,7 +118,7 @@ async function runLocalAiAction(
   actorId: string,
   traceId: string | null,
 ): Promise<void> {
-  const sb = getSupabase();
+  const sb = getDb();
   const input = (payload["input"] as Record<string, unknown> | undefined) ?? payload;
   const taskId = String(input["taskId"] ?? input["task_id"] ?? "");
   if (!taskId) return;
@@ -242,7 +242,7 @@ async function runLocalAiAction(
 
 jobsRouter.get("/", async (_req, res) => {
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     const { data, error } = await sb
       .from("event_logs")
       .select("id, entity_id, event_type, changed_by, changed_at, payload")
@@ -255,7 +255,7 @@ jobsRouter.get("/", async (_req, res) => {
       return;
     }
 
-    const items: JobExecutionRecord[] = (data ?? []).map((row) => {
+    const items: JobExecutionRecord[] = (data ?? []).map((row: Record<string, unknown>) => {
       const payload = (row.payload ?? {}) as JobQueuedPayload;
       return {
         id: row.entity_id ?? row.id,
@@ -286,7 +286,7 @@ jobsRouter.post("/", async (req, res) => {
   }
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     const now = new Date().toISOString();
     const actorId = parsed.data.requestedByCharacterId ?? req.auth?.sub ?? "system";
     const traceId = req.traceId ?? req.header("x-trace-id") ?? req.header("x-request-id") ?? null;
@@ -387,7 +387,7 @@ jobsRouter.post("/", async (req, res) => {
     void sb.from("outbox_events")
       .update({ published_at: now })
       .eq("id", outboxId)
-      .then(({ error }) => { if (error) console.warn("[jobs] outbox mark published failed:", error.message); });
+      .then(({ error }: { error: { message: string } | null }) => { if (error) console.warn("[jobs] outbox mark published failed:", error.message); });
 
     res.status(201).json({ ok: true, data: { jobId: queued.jobId, queueName: parsed.data.queueName } });
 

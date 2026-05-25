@@ -93,7 +93,7 @@ async function main() {
     const output = {
       generatedAt: new Date().toISOString(),
       baseUrl: BASE,
-      note: "Snapshot captured in local test mode; DB-backed routes may return 500 when Supabase credentials are absent.",
+      note: "Snapshot captured in local test mode; DB-backed routes use local-first JSON storage.",
       samples,
     };
 

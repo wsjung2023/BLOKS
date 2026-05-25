@@ -119,7 +119,7 @@ This is a **pnpm + Turborepo monorepo** modelling a "company-as-a-game" simulati
 
 | App | Port | Description |
 |-----|------|-------------|
-| `apps/api` | 4000 | Express REST API, all routes under `/api/v1`, JWT auth via Supabase |
+| `apps/api` | 4000 | Express REST API, all routes under `/api/v1`, JWT auth (dev bypass or JWT) |
 | `apps/web` | 3000 | Next.js 15 frontend; isometric world rendered with PixiJS |
 | `apps/worker` | — | BullMQ consumer; processes background jobs from Redis queues |
 
@@ -127,7 +127,7 @@ This is a **pnpm + Turborepo monorepo** modelling a "company-as-a-game" simulati
 
 | Package | Description |
 |---------|-------------|
-| `packages/db` | Supabase client (`getSupabase()`) + Prisma ORM. Schema is split across `prisma/schema/*.prisma` files (requires `prismaSchemaFolder` preview feature) |
+| `packages/db` | Local in-memory DB client (`getDb()`) + Prisma ORM. Schema is split across `prisma/schema/*.prisma` files (requires `prismaSchemaFolder` preview feature) |
 | `packages/shared` | Shared enums, state machines, ID utilities, and `ApiResponse<T>` envelope type used across all apps |
 | `packages/ai-router` | `routeAI()` function — resolves OpenAI model per character profile, enforces `$0.50` per-task budget, falls back to `gpt-4o-mini` on error. MVP is single-provider (OpenAI only) |
 | `packages/simulation` | `deriveRuntimeSignal()` — workload/fatigue → burnout flag computation |
@@ -138,31 +138,30 @@ This is a **pnpm + Turborepo monorepo** modelling a "company-as-a-game" simulati
 ```
 web (Next.js)
   └─ apiClient.ts → fetch /api/v1/* → apps/api (Express)
-                                          ├─ Supabase (primary DB)
+                                          ├─ @bloks/db (local in-memory DB)
                                           ├─ BullMQ (Redis) → apps/worker
                                           └─ @bloks/ai-router → OpenAI
 ```
 
 ### Auth
 
-- API uses JWT bearer tokens validated against Supabase in `apps/api/src/middleware/auth.ts`.
+- API uses JWT bearer tokens validated in `apps/api/src/middleware/auth.ts`.
 - Web stores tokens in `localStorage` under `BLOKS_AUTH_TOKEN`.
 - Dev bypass: set `NEXT_PUBLIC_ENABLE_DEV_BYPASS_AUTH=true` and `NEXT_PUBLIC_DEV_BYPASS_TOKEN` to skip login in development.
 
 ### Database
 
-- Primary runtime DB is **Supabase** (accessed via `@bloks/db`'s `getSupabase()`).
-- Prisma is used for schema management and migrations only; it points at the same Postgres via `DATABASE_URL`.
+- Primary runtime DB is a **local in-memory store** (accessed via `@bloks/db`'s `getDb()`). Data is persisted to `.bloks-data/local-db.json` on every mutation.
+- Prisma is used for schema management and migrations only; it points at a Postgres via `DATABASE_URL`.
 - Local dev uses `docker-compose.yml` which runs `pgvector/pgvector:pg16` + Redis 7.
 
 ### Queue / Worker
 
-Worker listens on all queue names defined in `@bloks/shared`'s `QUEUE_NAMES`. Each job logs `JobStarted` / `JobCompleted` / `JobFailed` events to the `event_logs` Supabase table. Concurrency is controlled by `WORKER_CONCURRENCY` (default 5).
+Worker listens on all queue names defined in `@bloks/shared`'s `QUEUE_NAMES`. Each job logs `JobStarted` / `JobCompleted` / `JobFailed` events to the `event_logs` table. Concurrency is controlled by `WORKER_CONCURRENCY` (default 5).
 
 ### Environment
 
 Copy `.env.example` to `.env`. Required keys:
-- `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — all server-side DB access
 - `DATABASE_URL` — Prisma migrations (`postgresql://postgres:postgres@localhost:5432/bloks` for local Docker)
 - `OPENAI_API_KEY` — AI tasks
 - `REDIS_URL` / `REDIS_HOST` + `REDIS_PORT` — BullMQ queues

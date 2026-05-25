@@ -1,7 +1,7 @@
 // GET /api/v1/world/snapshot — lightweight character world-state dump
 // Companion to the SSE stream: used for initial load and periodic reconciliation.
 import { Router, type Request, type Response } from "express";
-import { getSupabase } from "@bloks/db";
+import { getDb } from "@bloks/db";
 
 export const worldRouter = Router();
 
@@ -11,7 +11,7 @@ export const worldRouter = Router();
 
 worldRouter.get("/snapshot", async (_req: Request, res: Response) => {
   try {
-    const sb = getSupabase();
+    const sb = getDb();
 
     const { data, error } = await sb
       .from("characters")
@@ -35,7 +35,7 @@ worldRouter.get("/snapshot", async (_req: Request, res: Response) => {
       });
     }
 
-    const characters = (data ?? []).map((char) => {
+    const characters = (data ?? []).map((char: Record<string, unknown>) => {
       const rs = Array.isArray(char.character_runtime_states)
         ? char.character_runtime_states[0]
         : char.character_runtime_states;

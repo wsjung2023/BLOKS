@@ -390,7 +390,7 @@ Worker 처리:
   - 응답이 태스크 업데이트 또는 신규 태스크로 연결
 
 신규 파일:
-  - supabase/migrations/003-agent-messages.sql
+  - db/migrations/003-agent-messages.sql
   - apps/api/src/routes/agent-messages.ts
   - apps/worker/src/agent-communication.ts
 
@@ -525,7 +525,7 @@ SSE 이벤트 (신규):
 
 신규 파일:
   - apps/worker/src/meeting-engine.ts
-  - supabase/migrations/004-meetings.sql
+  - db/migrations/004-meetings.sql
   - apps/api/src/routes/meetings.ts
 
 완료 기준: 회의 소집 → 캐릭터들 모임 → 발언 → 결론 → 복귀 전 과정 작동
@@ -564,7 +564,7 @@ SSE 이벤트 (신규):
 
 신규 파일:
   - apps/worker/src/emotion-engine.ts
-  - supabase/migrations/005-relationships.sql
+  - db/migrations/005-relationships.sql
 
 완료 기준: 감정 상태가 캐릭터 행동에 실제로 영향을 줌
 ```

@@ -1,7 +1,7 @@
-// Characters routes — GET/PATCH/POST for /api/v1/characters with Supabase
+// Characters routes — GET/PATCH/POST for /api/v1/characters
 import { Router } from "express";
 import { z } from "zod";
-import { getSupabase, writeEventLog } from "@bloks/db";
+import { getDb, writeEventLog } from "@bloks/db";
 import type { CharacterRuntimeStateRecord } from "@bloks/shared";
 import { emitWorldEvent } from "./stream.js";
 import { enqueueJob } from "../queues/registry.js";
@@ -57,7 +57,7 @@ charactersRouter.get("/", async (req, res) => {
   const to = from + pageSize - 1;
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
 
     let query = sb
       .from("characters")
@@ -105,7 +105,7 @@ charactersRouter.get("/", async (req, res) => {
 
 charactersRouter.get("/model-profiles", async (_req, res) => {
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     const { data, error } = await sb
       .from("model_profiles")
       .select("id, profile_name, primary_model, provider_name")
@@ -131,7 +131,7 @@ charactersRouter.get("/:id", async (req, res) => {
   }
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
 
     const { data, error } = await sb
       .from("characters")
@@ -175,7 +175,7 @@ charactersRouter.patch("/:id", async (req, res) => {
   if (parsed.data.default_model_profile_id !== undefined) updates["default_model_profile_id"] = parsed.data.default_model_profile_id;
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
 
     const { data, error } = await sb
       .from("characters")
@@ -232,7 +232,7 @@ charactersRouter.patch("/:id/runtime", async (req, res) => {
   }
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
 
     const { data, error } = await sb
       .from("character_runtime_states")
@@ -282,7 +282,7 @@ charactersRouter.post("/:id/assign-task", async (req, res) => {
   const { taskId, assignedByCharacterId, reason } = parsed.data;
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
 
     // Verify character exists
     const { data: character, error: charError } = await sb
@@ -373,7 +373,7 @@ charactersRouter.post("/:id/message", async (req, res) => {
   const { message } = parsed.data;
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     const { data: char, error } = await sb
       .from("characters")
       .select("id, name, code_name, ai_enabled, persona_summary")
@@ -420,7 +420,7 @@ charactersRouter.post("/:id/message", async (req, res) => {
 charactersRouter.get("/:id/memories", async (req, res) => {
   const charId = req.params["id"];
   const limit = Math.min(Number(req.query["limit"] ?? 20), 50);
-  const sb = getSupabase();
+  const sb = getDb();
   const { data, error } = await sb
     .from("character_memory_links")
     .select("relevance_score, memory_nodes(id, summary, memory_type, importance_score, created_at)")
@@ -440,7 +440,7 @@ charactersRouter.get("/:id/memories", async (req, res) => {
       importance: node?.["importance_score"] as number,
       created_at: node?.["created_at"] as string,
     };
-  }).filter(m => m.id);
+  }).filter((m: { id: string | null }) => m.id);
   res.json({ ok: true, data: memories });
 });
 
@@ -454,7 +454,7 @@ charactersRouter.post("/:id/memories", async (req, res) => {
     res.status(400).json({ ok: false, error: { code: "BAD_REQUEST", message: "content is required" } });
     return;
   }
-  const sb = getSupabase();
+  const sb = getDb();
   const { data: node, error: e1 } = await sb.from("memory_nodes").insert({
     memory_scope: "character",
     scope_entity_id: charId,

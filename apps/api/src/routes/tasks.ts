@@ -1,7 +1,7 @@
-// Tasks routes — full state machine for /api/v1/tasks with Supabase
+// Tasks routes — full state machine for /api/v1/tasks
 import { Router } from "express";
 import { z } from "zod";
-import { getSupabase } from "@bloks/db";
+import { getDb } from "@bloks/db";
 import { TaskState } from "@bloks/shared";
 import { isAllowedTransition, writeEventLog, reduceAssigneeWorkload } from "./tasks-helpers.js";
 import { emitWorldEvent } from "./stream.js";
@@ -64,7 +64,7 @@ tasksRouter.get("/", async (req, res) => {
   const to = from + pageSize - 1;
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     let query = sb
       .from("tasks")
       .select("id, project_id, parent_task_id, title, description, task_type, priority, state, assignee_character_id, reviewer_character_id, due_at, ai_output, created_at, updated_at", { count: "exact" })
@@ -104,7 +104,7 @@ tasksRouter.post("/", async (req, res) => {
   }
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     const now = new Date().toISOString();
     const {
       projectId, parentTaskId, title, description, taskType,
@@ -181,7 +181,7 @@ tasksRouter.patch("/:id/state", async (req, res) => {
   const { nextState, changedByCharacterId, reasonCode, comment } = parsed.data;
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
 
     const { data: task, error: fetchError } = await sb
       .from("tasks")
@@ -247,7 +247,7 @@ tasksRouter.patch("/:id/state", async (req, res) => {
           .eq("successor_id", dep.successor_id)
           .eq("active_flag", true);
 
-        const allDone = (allPreds ?? []).every(p => {
+        const allDone = (allPreds ?? []).every((p: Record<string, unknown>) => {
           const t = p.tasks as { state: string } | Array<{ state: string }>;
           const state = Array.isArray(t) ? (t[0]?.state ?? "") : t.state;
           return state === "Done";
@@ -315,7 +315,7 @@ tasksRouter.post("/:id/ai-output", async (req, res) => {
   }
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
 
     const { data: task } = await sb.from("tasks").select("id").eq("id", taskId).single();
     if (!task) {
@@ -376,7 +376,7 @@ tasksRouter.post("/:id/founder-override", async (req, res) => {
   const { action, payload } = parsed.data;
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     const { data: task, error: fetchErr } = await sb
       .from("tasks")
       .select("id, title, state, priority, assignee_character_id, project_id")
@@ -464,7 +464,7 @@ tasksRouter.post("/:id/feedback", async (req, res) => {
   const { comment, requestRevision, changedByCharacterId } = parsed.data;
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     const { data: task } = await sb
       .from("tasks")
       .select("id, state, assignee_character_id, revision_count, feedback_history")

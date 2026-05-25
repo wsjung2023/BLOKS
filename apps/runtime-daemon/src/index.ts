@@ -1,7 +1,7 @@
 ﻿/**
  * BLOKS OS — Local Runtime Daemon
  *
- * Runs WITHOUT Supabase or Redis.
+ * Runs WITHOUT external DB or Redis.
  * Starts the RuntimeEngine with real tool adapters and serves HTTP APIs
  * for tool execution, approval, and audit queries.
  *

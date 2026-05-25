@@ -1,5 +1,5 @@
 -- Migration: Add character level/experience system
--- Run this in Supabase SQL Editor: https://supabase.com/dashboard/project/oslooevfngnopphducql/sql/new
+-- Run this in your local Postgres or DB SQL editor
 
 ALTER TABLE characters ADD COLUMN IF NOT EXISTS total_experience INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE characters ADD COLUMN IF NOT EXISTS current_level INTEGER NOT NULL DEFAULT 1;

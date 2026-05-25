@@ -1,5 +1,5 @@
 /**
- * Local-first Supabase stub — no Supabase account or Docker required.
+ * Local-first DB stub — no external DB or Docker required.
  *
  * Tables use a minimal in-memory query builder that supports
  * eq / in / neq / order / limit / update / upsert / insert.
@@ -347,16 +347,14 @@ function makeNoopTable() {
 
 // ── Public stub ───────────────────────────────────────────────────────────────
 
-/** Satisfies `SupabaseClient` at the call-sites used in this codebase. */
-export const localSupabaseStub = {
-  from: (tableName: string) => {
+/** Local DB client — satisfies all call-sites used in this codebase. */
+const _localDb = {
+  from(tableName: string): LocalQueryBuilder | ReturnType<typeof makeNoopTable> {
     const rows = localTables[tableName];
-    if (rows !== undefined) {
-      return new LocalQueryBuilder(tableName, rows);
-    }
+    if (rows !== undefined) return new LocalQueryBuilder(tableName, rows);
     return makeNoopTable();
   },
-  channel: (_name: string) => ({ on: () => ({ subscribe: () => {} }) }),
+  channel: (_name: string) => ({ on: () => ({ subscribe: () => ({}) }) }),
   removeChannel: () => {},
   storage: {
     from: (_bucket: string) => ({
@@ -372,4 +370,23 @@ export const localSupabaseStub = {
     signOut: async () => ({ error: null }),
   },
   rpc: (_fn: string, _args?: unknown) => makeChain({ data: null, error: null }),
-} as unknown;
+};
+
+// Explicit interface so callers get usable types (any on from/rpc for dynamic tables)
+export interface DbClient {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  from(tableName: string): any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rpc(fn: string, args?: unknown): any;
+  channel(name: string): { on: () => { subscribe: () => unknown } };
+  removeChannel(): void;
+  storage: { from(bucket: string): { upload(): Promise<{ data: null; error: null }>; download(): Promise<{ data: null; error: null }>; getPublicUrl(): { data: { publicUrl: string } } } };
+  auth: {
+    getUser(): Promise<{ data: { user: null }; error: null }>;
+    getSession(): Promise<{ data: { session: null }; error: null }>;
+    signInWithPassword(): Promise<{ data: null; error: null }>;
+    signOut(): Promise<{ error: null }>;
+  };
+}
+
+export function getDb(): DbClient { return _localDb as DbClient; }

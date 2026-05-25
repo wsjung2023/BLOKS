@@ -3,7 +3,7 @@
  * Local-first acceptance runner
  *
  * Goal:
- * - Prove first task end-to-end flow without Supabase/Redis signup
+ * - Prove first task end-to-end flow without external DB/Redis signup
  * - Produce reproducible evidence JSON
  *
  * Flow:
