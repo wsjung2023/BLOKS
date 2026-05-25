@@ -94,6 +94,8 @@ git clone https://github.com/wsjung2023/BLOKS.git
 cd BLOKS
 ```
 
+> ⚠️ **여기서부터 터미널을 닫지 마세요.** 이후 모든 명령어는 이 BLOKS 폴더 안에서 실행합니다.
+
 ```bash
 pnpm install
 ```
