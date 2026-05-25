@@ -2,8 +2,9 @@
 import { Router } from "express";
 import { z } from "zod";
 import { QUEUE_NAMES } from "@bloks/shared";
-import { getSupabase } from "@bloks/db";
+import { getSupabase, getRuntimeProfile } from "@bloks/db";
 import { enqueueJob } from "../queues/registry.js";
+import { runLocalInlineJob } from "./jobs.js";
 
 export const projectsRouter = Router();
 
@@ -105,10 +106,18 @@ projectsRouter.post("/", async (req, res) => {
       return;
     }
 
-    void enqueueJob({
-      queueName: QUEUE_NAMES.orchestrate,
-      payload: { projectId: inserted.id, title: inserted.title, brief: parsed.data.brief ?? "" },
-    });
+    const jobPayload = { projectId: inserted.id, title: inserted.title, brief: parsed.data.brief ?? "" };
+
+    if (getRuntimeProfile() === "local") {
+      void runLocalInlineJob({
+        queueName: QUEUE_NAMES.orchestrate,
+        payload: jobPayload,
+        actorId: "system",
+        traceId: null,
+      });
+    } else {
+      void enqueueJob({ queueName: QUEUE_NAMES.orchestrate, payload: jobPayload });
+    }
 
     res.status(201).json({ ok: true, data: inserted });
   } catch (err) {

@@ -27,7 +27,9 @@ function loadSeed(filename: string): Row[] {
 
 // ── Persistence ───────────────────────────────────────────────────────────────
 
-const DATA_DIR = join(process.cwd(), ".bloks-data");
+// Resolve to repo root regardless of CWD (packages/db/src → ../../.. = repo root)
+const DATA_DIR = process.env["BLOKS_DATA_DIR"]
+  ?? join(dirname(fileURLToPath(import.meta.url)), "../../../.bloks-data");
 const DB_FILE = join(DATA_DIR, "local-db.json");
 
 function loadPersistedTables(): Record<string, Row[]> {

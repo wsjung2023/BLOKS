@@ -39,7 +39,7 @@ type LocalInlineContext = {
   traceId: string | null;
 };
 
-async function runLocalInlineJob(ctx: LocalInlineContext): Promise<void> {
+export async function runLocalInlineJob(ctx: LocalInlineContext): Promise<void> {
   if (ctx.queueName === QUEUE_NAMES.aiActions) {
     await runLocalAiAction(ctx.payload, ctx.actorId, ctx.traceId);
     return;
