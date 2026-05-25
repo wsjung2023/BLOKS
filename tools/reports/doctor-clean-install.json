@@ -1,0 +1,72 @@
+{
+  "generatedAt": "2026-05-25T03:30:06.099Z",
+  "nodeVersion": "24.14.1",
+  "platform": "win32",
+  "arch": "x64",
+  "profile": "local",
+  "env": {
+    "NODE_ENV": "development",
+    "BLOKS_PROFILE": "local",
+    "APP_URL": "http://localhost:3000",
+    "API_URL": "http://localhost:4000",
+    "NEXT_PUBLIC_API_URL": "http://localhost:4000/api/v1",
+    "WORKER_CONCURRENCY": "4",
+    "ENABLE_DEV_BYPASS_AUTH": "true",
+    "NEXT_PUBLIC_ENABLE_DEV_BYPASS_AUTH": "true",
+    "NEXT_PUBLIC_DEV_BYPASS_TOKEN": "dev-bypass",
+    "OPENAI_API_KEY": "[REDACTED]",
+    "OPENAI_PROJECT_ID": "",
+    "OPENAI_ORG_ID": "",
+    "ANTHROPIC_API_KEY": "[REDACTED]",
+    "GOOGLE_AI_API_KEY": "AIzaSyB7QINKS2Sf8N88CY2qj_qr8lrpbmK07H8",
+    "AI_MAX_RETRIES": "2",
+    "AI_TASK_TIMEOUT_MS": "120000",
+    "AI_MAX_COST_PER_TASK_USD": "0.50",
+    "AI_DAILY_BUDGET_USD": "20.00",
+    "WORLD_TICK_INTERVAL_MS": "60000",
+    "WORLD_SNAPSHOT_INTERVAL_MS": "3000",
+    "LOG_LEVEL": "debug",
+    "ENABLE_EVENT_LOG": "true",
+    "ENABLE_AUDIT_LOG": "true",
+    "# ── 연결 모드 (BLOKS_PROFILE": "connected 일 때만 사용) ──────────────────────────",
+    "# DATABASE_URL": "postgresql://postgres:postgres@localhost:5432/bloks",
+    "# SUPABASE_URL": "https://oslooevfngnopphducql.supabase.co",
+    "# SUPABASE_SERVICE_ROLE_KEY": "...",
+    "# NEXT_PUBLIC_SUPABASE_URL": "...",
+    "# NEXT_PUBLIC_SUPABASE_ANON_KEY": "...",
+    "# REDIS_URL": "redis://localhost:6379",
+    "# REDIS_HOST": "127.0.0.1",
+    "# REDIS_PORT": "6379"
+  },
+  "checks": [
+    {
+      "check": "node_version",
+      "status": "ok",
+      "detail": "24.14.1"
+    },
+    {
+      "check": "env_file",
+      "status": "ok"
+    },
+    {
+      "check": "env_var:PORT",
+      "status": "warn",
+      "detail": "using default"
+    },
+    {
+      "check": "env_var:OPENAI_API_KEY",
+      "status": "ok"
+    },
+    {
+      "check": "port:api",
+      "status": "ok",
+      "port": 4000
+    },
+    {
+      "check": "port:web",
+      "status": "ok",
+      "port": 3000
+    }
+  ],
+  "issueCount": 0
+}

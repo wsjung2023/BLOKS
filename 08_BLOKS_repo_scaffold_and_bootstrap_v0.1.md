@@ -1,3 +1,5 @@
+> ⚠️ **[ARCHIVED 2026-05-21]** 구현 완료 — 더 이상 업데이트하지 않습니다.
+
 # 08_BLOKS_repo_scaffold_and_bootstrap_v0.1
 
 ## 문서 성격

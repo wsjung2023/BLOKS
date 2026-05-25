@@ -1,0 +1,11 @@
+{
+  "packId": "erp-project-ops",
+  "brief": "BLOKS capability pack execution",
+  "generatedAt": "2026-05-25T03:48:17.134Z",
+  "outDir": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\erp-project-ops",
+  "sourceReports": [
+    "D:\\Projects\\BLOKS\\tools\\demo\\reports\\homepage-result.json",
+    "D:\\Projects\\BLOKS\\tools\\demo\\reports\\ppt-result.json",
+    "D:\\Projects\\BLOKS\\tools\\demo\\reports\\program-result.json"
+  ]
+}

@@ -41,9 +41,11 @@ function hashEntry(fields: {
  * so this package has no storage dependency itself.
  */
 export class AuditWriter {
-  private lastHash = "genesis";
+  private lastHash: string;
 
-  constructor(private readonly persist: AuditPersistFn) {}
+  constructor(private readonly persist: AuditPersistFn, initialPrevHash = "genesis") {
+    this.lastHash = initialPrevHash;
+  }
 
   async record(eventType: EventType, execution: ToolExecutionRecord): Promise<void> {
     const id = `audit_${execution.id}_${eventType}`;

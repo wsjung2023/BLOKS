@@ -1,3 +1,5 @@
+> ⚠️ **[ARCHIVED 2026-05-21]** 구현 완료 — 더 이상 업데이트하지 않습니다.
+
 # 05_BLOKS_UI_screen_spec_v0.1 (Vibe Coding Ready)
 
 ## 문서 목적

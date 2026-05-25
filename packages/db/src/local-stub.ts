@@ -88,6 +88,7 @@ class LocalQueryBuilder {
   private _pendingUpsert: Row | Row[] | null = null;
   private _pendingInsert: Row | Row[] | null = null;
   private tableName: string;
+  private _selectRequested = false;
 
   constructor(tableName: string, rows: Row[]) {
     this.tableName = tableName;
@@ -95,6 +96,7 @@ class LocalQueryBuilder {
   }
 
   select(_cols?: string, opts?: { count?: string; head?: boolean }) {
+    this._selectRequested = true;
     if (opts?.count === "exact") this._countMode = true;
     if (opts?.head) this._head = true;
     return this;
@@ -234,28 +236,45 @@ class LocalQueryBuilder {
 
   private _execute(): { data: unknown; count?: number; error: null } {
     const table = localTables[this.tableName] ?? this.rows;
+    const nowIso = new Date().toISOString();
+    const makeId = () => `${this.tableName}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
     // INSERT
     if (this._pendingInsert !== null) {
       const toInsert = Array.isArray(this._pendingInsert) ? this._pendingInsert : [this._pendingInsert];
-      table.push(...toInsert);
+      const inserted = toInsert.map((incoming) => {
+        const row = { ...incoming };
+        if (row["id"] === undefined || row["id"] === null || row["id"] === "") row["id"] = makeId();
+        if (row["created_at"] === undefined) row["created_at"] = nowIso;
+        if (row["updated_at"] === undefined) row["updated_at"] = nowIso;
+        return row;
+      });
+      table.push(...inserted);
       persistTables();
-      return { data: null, error: null };
+      return { data: this._selectRequested ? inserted : null, error: null };
     }
 
     // UPSERT
     if (this._pendingUpsert !== null) {
       const toUpsert = Array.isArray(this._pendingUpsert) ? this._pendingUpsert : [this._pendingUpsert];
+      const affected: Row[] = [];
       for (const incoming of toUpsert) {
         const existing = table.find((r) => this.filters.every((f) => f(r)));
         if (existing) {
           Object.assign(existing, incoming);
+          if (existing["updated_at"] === undefined) existing["updated_at"] = nowIso;
+          affected.push(existing);
         } else {
-          table.push({ ...incoming });
+          const row = { ...incoming };
+          if (row["id"] === undefined || row["id"] === null || row["id"] === "") row["id"] = makeId();
+          if (row["created_at"] === undefined) row["created_at"] = nowIso;
+          if (row["updated_at"] === undefined) row["updated_at"] = nowIso;
+          table.push(row);
+          affected.push(row);
         }
       }
       persistTables();
-      return { data: null, error: null };
+      return { data: this._selectRequested ? affected : null, error: null };
     }
 
     // UPDATE
@@ -263,9 +282,10 @@ class LocalQueryBuilder {
       const matching = table.filter((r) => this.filters.every((f) => f(r)));
       for (const row of matching) {
         Object.assign(row, this._pendingUpdate);
+        if (row["updated_at"] === undefined) row["updated_at"] = nowIso;
       }
       persistTables();
-      return { data: null, error: null };
+      return { data: this._selectRequested ? matching : null, error: null };
     }
 
     // SELECT

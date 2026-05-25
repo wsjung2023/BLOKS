@@ -1,3 +1,5 @@
+> ⚠️ **[ARCHIVED 2026-05-21]** 구현 완료 — 더 이상 업데이트하지 않습니다.
+
 # 07_BLOKS_build_stack_and_repo_structure_v0.1
 
 ## 문서 성격

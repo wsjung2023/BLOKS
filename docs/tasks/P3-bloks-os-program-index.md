@@ -7,24 +7,28 @@ status: IN_PROGRESS
 
 ## Objective
 
-Track the full execution program for `BLOKS OS Complete` with local-first constraints:
+Track the execution program for a complete "Company RPG + OpenClerk" product with local-first constraints:
 
 1. No mandatory new paid tool
 2. No mandatory external signup for baseline mode
 3. One-command install and setup wizard for general users
 
-## Phase Tickets
+## Active Source Documents (Only These 5)
 
-1. [P3 Phase A - Architecture Freeze](./P3-bloks-os-phase-A-architecture-freeze.md)
-2. [P3 Phase B - Runtime Core](./P3-bloks-os-phase-B-runtime-core.md)
-3. [P3 Phase C - Multi-Agent Intelligence](./P3-bloks-os-phase-C-multi-agent-intelligence.md)
-4. [P3 Phase D - World UX Completion](./P3-bloks-os-phase-D-world-ux-completion.md)
-5. [P3 Phase E - Distribution And Operations](./P3-bloks-os-phase-E-distribution-operations.md)
-6. [P3 Phase F - Hardening And GA](./P3-bloks-os-phase-F-hardening-ga.md)
+1. [P3 Company RPG + OpenClerk Master Plan](./P3-company-rpg-openclerk-master-plan-2026-05-25.md)
+2. [P3 Implementation Truth Board](./P3-implementation-truth-board.md)
+3. [P3 Status Policy](./P3-status-policy.md)
+4. [P3 Claude Handoff Prompt](./P3-claude-handoff-prompt.md)
+5. [P3 BLOKS OS Program Index](./P3-bloks-os-program-index.md)
 
-## File-Level Execution Map
+## Program Tracks
 
-1. [P3 Local-First Profile - File-Level Priority Breakdown](./P3-local-first-profile-file-priority.md)
+1. Track A: Reality audit and truthful status control
+2. Track B: Local-first runtime completion (first task end-to-end)
+3. Track C: World UX completion as operational command center
+4. Track D: Capability packs (research/marketing/dev/pc/media/erp/abap)
+5. Track E: Distribution and clean-machine install proof
+6. Track F: Security hardening and GA gate closeout
 
 ## Global Program Gates
 
@@ -41,9 +45,18 @@ Track the full execution program for `BLOKS OS Complete` with local-first constr
 3. Canonical execution board: [P3 Implementation Truth Board](./P3-implementation-truth-board.md).
 4. Status governance rule: [P3 Status Policy](./P3-status-policy.md).
 
-## Source Skillset
+## Execution Update (2026-05-25)
 
-1. `docs/skillsets/BLOKS-OS-COMPLETE/SKILLSET.md`
-2. `docs/skillsets/BLOKS-OS-COMPLETE/04-delivery-roadmap.md`
-3. `docs/skillsets/BLOKS-OS-COMPLETE/09-local-first-methodology.md`
-4. `docs/skillsets/BLOKS-OS-COMPLETE/10-onboarding-playbook.md`
+1. Track B: local-first first-task acceptance automated and passing (`pnpm acceptance:local-first`).
+2. Track C: runtime-daemon audit persistence + replay/export/verify endpoints implemented and acceptance passing (`pnpm acceptance:runtime-daemon-audit`).
+3. Track D: required capability-pack contract registry added with acceptance checks (`pnpm acceptance:capability-packs`).
+4. Track D: runnable capability-pack generators added and executable (`pnpm capability-packs:run-all`), with demo-report-backed artifact generation.
+5. Track E: clean-install checker implemented (`tools/clean-install-check.mjs`) and passing in workspace mode (`--no-clone`).
+6. Track E: cross-OS clean-machine CI workflow added (`.github/workflows/clean-install-matrix.yml`) — run artifacts pending.
+7. Track E: CLI distribution smoke added (`pnpm distribution:cli-smoke`) and passing in current workspace.
+8. Track F: GA gate automation added (`pnpm gate:ga`, `.github/workflows/ga-gate.yml`) and passing in current workspace.
+
+## Control Rule
+
+1. If a document/link is missing, do not reference it as mandatory.
+2. If evidence is missing, status must remain `PARTIAL` or `BLOCKED`.

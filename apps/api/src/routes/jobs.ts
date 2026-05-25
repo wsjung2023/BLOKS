@@ -2,7 +2,8 @@ import { Router } from "express";
 import { z } from "zod";
 import { QUEUE_NAMES } from "@bloks/shared";
 import type { JobExecutionRecord } from "@bloks/shared";
-import { getSupabase, writeEventLog } from "@bloks/db";
+import { getRuntimeProfile, getSupabase, writeEventLog } from "@bloks/db";
+import { routeAI } from "@bloks/ai-router";
 import { enqueueJob } from "../queues/registry.js";
 
 export const jobsRouter = Router();
@@ -30,6 +31,141 @@ type JobQueuedPayload = {
   traceId?: string | null;
   payload?: Record<string, unknown>;
 };
+
+type LocalInlineContext = {
+  queueName: string;
+  payload: Record<string, unknown>;
+  actorId: string;
+  traceId: string | null;
+};
+
+async function runLocalInlineJob(ctx: LocalInlineContext): Promise<void> {
+  if (ctx.queueName === QUEUE_NAMES.aiActions) {
+    await runLocalAiAction(ctx.payload, ctx.actorId, ctx.traceId);
+    return;
+  }
+
+  if (ctx.queueName === QUEUE_NAMES.orchestrate) {
+    await runLocalOrchestrate(ctx.payload, ctx.actorId, ctx.traceId);
+    return;
+  }
+}
+
+async function runLocalOrchestrate(
+  payload: Record<string, unknown>,
+  actorId: string,
+  traceId: string | null,
+): Promise<void> {
+  const sb = getSupabase();
+  const input = (payload["input"] as Record<string, unknown> | undefined) ?? payload;
+  const projectId = String(input["projectId"] ?? input["project_id"] ?? "");
+  if (!projectId) return;
+
+  const projectTitle = String(input["title"] ?? "Local Project");
+  const brief = String(input["brief"] ?? projectTitle);
+  const now = new Date().toISOString();
+
+  const { data: assignees } = await sb
+    .from("characters")
+    .select("id")
+    .eq("active_flag", true)
+    .limit(1);
+
+  const assigneeId = String(assignees?.[0]?.id ?? actorId);
+
+  // Local-first baseline: create one real executable task then execute ai-actions inline.
+  const { data: createdTask } = await sb.from("tasks").insert({
+    project_id: projectId,
+    title: `${projectTitle} - execution draft`,
+    description: brief,
+    task_type: "project_plan",
+    state: "Todo",
+    priority: "High",
+    assignee_character_id: assigneeId,
+    created_at: now,
+    updated_at: now,
+  }).select("id").single();
+
+  await Promise.resolve(sb.from("projects").update({ state: "Active", updated_at: now }).eq("id", projectId)).catch(() => {});
+
+  if (createdTask?.id) {
+    await runLocalAiAction({
+      input: { taskId: createdTask.id, characterId: assigneeId },
+    }, actorId, traceId);
+  }
+}
+
+async function runLocalAiAction(
+  payload: Record<string, unknown>,
+  actorId: string,
+  traceId: string | null,
+): Promise<void> {
+  const sb = getSupabase();
+  const input = (payload["input"] as Record<string, unknown> | undefined) ?? payload;
+  const taskId = String(input["taskId"] ?? input["task_id"] ?? "");
+  if (!taskId) return;
+
+  const { data: task } = await sb
+    .from("tasks")
+    .select("id, title, description, task_type, assignee_character_id, project_id, priority")
+    .eq("id", taskId)
+    .single();
+  if (!task) return;
+
+  const characterId = String(input["characterId"] ?? task.assignee_character_id ?? actorId);
+  const now = new Date().toISOString();
+
+  await sb.from("tasks").update({ state: "InProgress", updated_at: now }).eq("id", taskId);
+
+  const taskType = String(task.task_type ?? "document").toLowerCase();
+  const prompt = [
+    `Task: ${String(task.title ?? "")}`,
+    task.description ? `Description: ${String(task.description)}` : "",
+    "Return practical, structured output with clear action items.",
+  ].filter(Boolean).join("\n");
+
+  let output = "";
+  try {
+    const ai = await routeAI({
+      characterId,
+      taskType,
+      prompt,
+      maxTokens: 1200,
+    });
+    output = ai.output;
+  } catch {
+    output = [
+      `# ${String(task.title ?? "Task Output")}`,
+      "",
+      "## Summary",
+      "Local fallback output generated because AI call was unavailable.",
+      "",
+      "## Next Actions",
+      "1. Validate scope",
+      "2. Implement first increment",
+      "3. Run review",
+    ].join("\n");
+  }
+
+  await sb.from("artifacts").insert({
+    project_id: task.project_id,
+    task_id: taskId,
+    artifact_type: task.task_type ?? "document",
+    title: `${String(task.title ?? "Task")} output`,
+    content_markdown: output,
+    author_character_id: characterId,
+    status: "Draft",
+    created_at: now,
+    updated_at: now,
+  });
+
+  await sb.from("tasks").update({
+    state: "Done",
+    completed_at: now,
+    updated_at: now,
+    ai_output: { text: output, traceId: traceId ?? `local-${taskId}` },
+  }).eq("id", taskId);
+}
 
 jobsRouter.get("/", async (_req, res) => {
   try {
@@ -164,6 +300,15 @@ jobsRouter.post("/", async (req, res) => {
       traceId,
       idempotencyKey,
     });
+
+    if (getRuntimeProfile() === "local") {
+      await runLocalInlineJob({
+        queueName: parsed.data.queueName,
+        payload: jobPayload,
+        actorId,
+        traceId,
+      });
+    }
 
     // Mark outbox row as published (fire-and-forget; relay will retry if this fails)
     void sb.from("outbox_events")

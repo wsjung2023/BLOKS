@@ -1,4 +1,4 @@
-// @bloks/ai-router — routeAI function with character model lookup and provider routing
+// @bloks/ai-router: routeAI with character model lookup and provider routing
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const IS_LOCAL = process.env["BLOKS_PROFILE"] !== "connected";
@@ -7,7 +7,7 @@ import { AnthropicProvider } from "./providers/anthropic.js";
 import { GoogleProvider } from "./providers/google.js";
 import { listCharacterMemories } from "@bloks/memory";
 
-// ── Core types ────────────────────────────────────────────────────────────────
+// section
 
 export interface AiRequest {
   taskType?: string;
@@ -38,7 +38,7 @@ export interface AiProvider {
   execute<T = unknown>(request: AiRequest): Promise<AiExecutionResult<T>>;
 }
 
-// ── routeAI public interface ──────────────────────────────────────────────────
+// section
 
 export interface RouteAIOptions {
   characterId: string;
@@ -59,7 +59,7 @@ export interface RouteAIResult {
   costUsd: number;
 }
 
-// ── Supabase singleton (lazy) ─────────────────────────────────────────────────
+// section
 
 let _sb: SupabaseClient | null = null;
 
@@ -73,7 +73,7 @@ function getSupabase(): SupabaseClient | null {
   return _sb;
 }
 
-// ── Character model profile lookup ───────────────────────────────────────────
+// section
 
 interface ModelProfile {
   model_id: string;
@@ -105,27 +105,33 @@ async function fetchCharacterModelProfile(characterId: string): Promise<ModelPro
   }
 }
 
-// ── Task type → system prompt template ───────────────────────────────────────
+// section
 // Used as fallback when the caller doesn't provide an explicit systemPrompt.
 
 export const TASK_TEMPLATES: Record<string, string> = {
-  planningDocument:   "계획 문서를 작성할 때는 목표, 범위, 일정, 리스크를 명확히 구분하여 포함하세요.",
-  prd_draft:          "PRD에는 사용자 스토리, 기능/비기능 요구사항, 완료 조건을 포함하세요.",
-  proposal_draft:     "제안서는 문제 정의, 해결책, 기대 효과, 예산 순서로 구성하세요.",
-  project_plan:       "프로젝트 계획에는 WBS, 마일스톤, 담당자, 리스크를 포함하세요.",
-  strategy_memo:      "전략 메모는 현황 분석, 목표, 실행 방안, 성과 지표 순으로 작성하세요.",
-  research_summary:   "리서치 요약은 핵심 인사이트, 데이터 출처, 실행 가능한 결론을 제시하세요.",
-  market_research:    "시장 분석에는 시장 규모, 경쟁사, 트렌드, 진입 기회를 포함하세요.",
-  data_analysis:      "데이터 분석은 수치 근거와 함께 비즈니스 의사결정에 활용 가능한 결론을 도출하세요.",
-  code_development:   "코드는 명확한 구조, 에러 처리, 가독성을 갖추고 한국어 주석을 포함하세요.",
-  web_development:    "웹 개발 결과물은 UI/UX, 성능, 접근성을 고려하여 작성하세요.",
-  marketing_copy:     "마케팅 콘텐츠는 타깃 독자를 명확히 하고 행동 유도(CTA)를 포함하세요.",
-  online_content:     "온라인 콘텐츠는 SEO를 고려하고 공유 가능하도록 구성하세요.",
-  document:           "문서는 결론을 먼저, 세부 근거를 뒤에 작성하는 두괄식 구조로 작성하세요.",
-  memo:               "메모는 요점을 간결하게, 5줄 이내로 작성하세요.",
+  planningDocument:   "Write a planning doc with goals, scope, timeline, and risks.",
+  prd_draft:          "Write a PRD with user stories, requirements, and done criteria.",
+  proposal_draft:     "Write a proposal with problem, solution, expected impact, and budget.",
+  project_plan:       "Write a project plan with WBS, milestones, owners, and risk controls.",
+  strategy_memo:      "Write a strategy memo with context, options, recommendation, and KPIs.",
+  research_summary:   "Summarize key insights, sources, and actionable conclusions.",
+  market_research:    "Include market size, competitors, trends, and entry opportunities.",
+  data_analysis:      "Provide numeric evidence, insights, and business implications.",
+  code_development:   "Provide maintainable code with error handling and testability.",
+  web_development:    "Produce web output with UX, performance, and accessibility in mind.",
+  marketing_copy:     "Write target-aware marketing copy with clear CTA.",
+  online_content:     "Produce shareable SEO-aware online content.",
+  erp_operation:      "Describe ERP flows, master data impact, access control, and validation scenarios.",
+  sap_abap_spec:      "Provide ABAP spec: purpose, IO schema, main FORM/CLASS design, and test points.",
+  sap_abap_review:    "Review ABAP for performance, SQL efficiency, exception handling, and transaction safety.",
+  image_production:   "Define image concept, ratio/resolution, style constraints, and export format.",
+  video_production:   "Define shot list, timeline, subtitle/voice plan, and output format.",
+  media_pipeline:     "Describe media pipeline inputs, transforms, QC checks, and final deliverables.",
+  document:           "Write documents with conclusion first, then supporting evidence.",
+  memo:               "Write concise memo in 5 lines when possible.",
 };
 
-// ── Structured Output schemas (json_schema strict) ────────────────────────────
+// section
 // Callers can pass these via routeAI({ jsonSchema: TASK_SCHEMAS.planningDocument })
 // to get schema-validated JSON back instead of free-form text.
 
@@ -165,10 +171,10 @@ export const TASK_SCHEMAS: Record<string, Record<string, unknown>> = {
   },
 };
 
-// ── Task type → default model mapping (doc 11: OpenAI primary in MVP) ────────
+// section
 
 const TASK_MODEL_MAP: Record<string, string> = {
-  // Planning / strategy — high-quality reasoning
+  // Planning / strategy
   planningDocument:     "gpt-4o",
   prd_draft:            "gpt-4o",
   proposal_draft:       "gpt-4o",
@@ -180,15 +186,20 @@ const TASK_MODEL_MAP: Record<string, string> = {
   market_research:      "gpt-4o",
   data_analysis:        "gpt-4o",
   analysis:             "gpt-4o",
-  // Development tasks — code quality matters
+  erp_operation:        "gpt-4o",
+  // Development
   code_development:     "gpt-4o",
   web_development:      "gpt-4o",
   abap_development:     "gpt-4o",
-  // Consulting / advisory
+  sap_abap_spec:        "gpt-4o",
+  sap_abap_review:      "gpt-4o",
   sap_consulting:       "gpt-4o",
-  // Marketing / content — fast generation OK
+  media_pipeline:       "gpt-4o",
+  // Fast generation
   marketing_copy:       "gpt-4o-mini",
   online_content:       "gpt-4o-mini",
+  image_production:     "gpt-4o-mini",
+  video_production:     "gpt-4o-mini",
   copy:                 "gpt-4o-mini",
   memo:                 "gpt-4o-mini",
   document:             "gpt-4o-mini",
@@ -205,7 +216,7 @@ function selectModel(taskType: string, profile: ModelProfile | null): string {
   return TASK_MODEL_MAP[taskType] ?? TASK_MODEL_MAP["default"]!;
 }
 
-// ── Provider resolution ───────────────────────────────────────────────────────
+// section
 
 let _openai: OpenAiProvider | null = null;
 let _anthropic: AnthropicProvider | null = null;
@@ -231,7 +242,7 @@ function resolveProvider(providerName: string | undefined): AiProvider {
   }
 }
 
-// ── Budget guard ──────────────────────────────────────────────────────────────
+// section
 
 const MAX_COST_USD = parseFloat(process.env["AI_MAX_COST_PER_TASK_USD"] ?? "0.5");
 
@@ -241,7 +252,7 @@ function estimatedInputCost(model: string, promptLength: number): number {
   return (inputTokens / 1_000_000) * ratePerM;
 }
 
-// ── routeAI — main export ─────────────────────────────────────────────────────
+// section
 
 export async function routeAI(options: RouteAIOptions): Promise<RouteAIResult> {
   const { characterId, taskType, prompt, context, systemPrompt, maxTokens, responseFormat, jsonSchema } = options;
@@ -251,7 +262,7 @@ export async function routeAI(options: RouteAIOptions): Promise<RouteAIResult> {
   const model = selectModel(taskType, profile);
   const provider = resolveProvider(profile?.provider_name);
 
-  // Inject long-term memories into system prompt (top 8, ≤400 tokens)
+  // Inject long-term memories into system prompt (top 8 entries).
   let memoryBlock = "";
   try {
     const memories = await listCharacterMemories(characterId, { limit: 8 });
@@ -259,13 +270,13 @@ export async function routeAI(options: RouteAIOptions): Promise<RouteAIResult> {
       const lines = memories
         .slice(0, 8)
         .map(m => `- [${m.memory_type}] ${m.summary.slice(0, 200)}`);
-      memoryBlock = `\n\n[장기 기억 - 최근 경험]\n${lines.join("\n")}`;
+      memoryBlock = `\n\n[Long-term Memory]\n${lines.join("\n")}`;
     }
   } catch {
     // Non-fatal: memory injection failure should not block task execution
   }
 
-  // Build contextual system prompt — fall back to task template if no explicit prompt given
+  // Build contextual system prompt, falling back to task template.
   const baseSystem = systemPrompt ?? TASK_TEMPLATES[taskType] ?? (context ? `Context: ${JSON.stringify(context)}` : undefined);
   const resolvedSystem = baseSystem ? baseSystem + memoryBlock : (memoryBlock || undefined);
 
@@ -317,7 +328,7 @@ export async function routeAI(options: RouteAIOptions): Promise<RouteAIResult> {
   };
 }
 
-// ── Legacy class API (backwards compat) ──────────────────────────────────────
+// section
 
 export interface CharacterModelConfig {
   characterId: string;
@@ -347,3 +358,5 @@ export function getAiRouter(): AiRouter {
 }
 
 export { OpenAiProvider };
+
+

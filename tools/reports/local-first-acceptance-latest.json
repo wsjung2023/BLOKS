@@ -1,0 +1,96 @@
+{
+  "date": "2026-05-25T03:48:07.657Z",
+  "apiBase": "http://127.0.0.1:4011",
+  "elapsedMs": 3193,
+  "under10Minutes": true,
+  "pass": true,
+  "checks": [
+    {
+      "name": "api_health",
+      "pass": true,
+      "detail": "API responded /health",
+      "at": "2026-05-25T03:48:10.769Z"
+    },
+    {
+      "name": "project_create",
+      "pass": true,
+      "detail": "status=201",
+      "at": "2026-05-25T03:48:10.797Z"
+    },
+    {
+      "name": "task_create",
+      "pass": true,
+      "detail": "status=201",
+      "at": "2026-05-25T03:48:10.806Z"
+    },
+    {
+      "name": "task_state_Todo",
+      "pass": true,
+      "detail": "status=200",
+      "at": "2026-05-25T03:48:10.814Z"
+    },
+    {
+      "name": "task_state_InProgress",
+      "pass": true,
+      "detail": "status=200",
+      "at": "2026-05-25T03:48:10.822Z"
+    },
+    {
+      "name": "task_state_InReview",
+      "pass": true,
+      "detail": "status=200",
+      "at": "2026-05-25T03:48:10.830Z"
+    },
+    {
+      "name": "task_state_Done",
+      "pass": true,
+      "detail": "status=200",
+      "at": "2026-05-25T03:48:10.839Z"
+    },
+    {
+      "name": "task_final_done",
+      "pass": true,
+      "detail": "finalState=Done",
+      "at": "2026-05-25T03:48:10.844Z"
+    },
+    {
+      "name": "audit_query",
+      "pass": true,
+      "detail": "status=200",
+      "at": "2026-05-25T03:48:10.846Z"
+    },
+    {
+      "name": "audit_verify",
+      "pass": true,
+      "detail": "status=200 valid=true",
+      "at": "2026-05-25T03:48:10.849Z"
+    },
+    {
+      "name": "audit_export_jsonl",
+      "pass": true,
+      "detail": "status=200",
+      "at": "2026-05-25T03:48:10.850Z"
+    },
+    {
+      "name": "local_db_file",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\.bloks-data\\local-db.json",
+      "at": "2026-05-25T03:48:10.850Z"
+    },
+    {
+      "name": "under_10_minutes",
+      "pass": true,
+      "detail": "elapsedMs=3193",
+      "at": "2026-05-25T03:48:10.850Z"
+    }
+  ],
+  "artifacts": {
+    "projectId": "projects_1779680890793_x6rpqv",
+    "taskId": "tasks_1779680890800_z6n701",
+    "localDbPath": "D:\\Projects\\BLOKS\\.bloks-data\\local-db.json",
+    "reportFile": "D:\\Projects\\BLOKS\\tools\\reports\\local-first-acceptance-latest.json",
+    "apiStdoutTail": "\n> api@0.1.0 dev D:\\Projects\\BLOKS\\apps\\api\n> tsx watch src/index.ts\n\n[BLOKS API] http://localhost:4011 (development)\n[BLOKS API] Supabase client initialized\n[API] GET /health 200 3ms\n[queue:local] enqueued execute => job_1779680890795_1mh19c\n[API] POST /api/v1/projects 201 5ms\n[API] POST /api/v1/tasks 201 6ms\n[API] PATCH /api/v1/tasks/tasks_1779680890800_z6n701/state 200 6ms\n[API] PATCH /api/v1/tasks/tasks_1779680890800_z6n701/state 200 5ms\n[API] PATCH /api/v1/tasks/tasks_1779680890800_z6n701/state 200 4ms\n[API] PATCH /api/v1/tasks/tasks_1779680890800_z6n701/state 200 6ms\n[API] GET /api/v1/tasks?ids=tasks_1779680890800_z6n701&pageSize=1 200 1ms\n[API] GET /api/v1/runtime/audit?limit=20 200 1ms\n[API] GET /api/v1/runtime/audit/verify 200 1ms\n",
+    "apiStderrTail": ""
+  },
+  "failure": null
+}

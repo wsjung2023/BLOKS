@@ -1,3 +1,5 @@
+> ⚠️ **[ARCHIVED 2026-05-21]** 구현 완료 — 더 이상 업데이트하지 않습니다.
+
 # 09_BLOKS_API_contracts_and_job_specs_v0.1
 
 ## 문서 성격

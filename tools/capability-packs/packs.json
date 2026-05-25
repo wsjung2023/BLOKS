@@ -1,0 +1,69 @@
+{
+  "version": "2026-05-25",
+  "packs": [
+    {
+      "id": "research-report",
+      "name": "Research & Report",
+      "required": true,
+      "artifacts": ["report.md", "report.json"],
+      "workflow": ["intake", "research", "synthesis", "export"],
+      "entryCommand": "node tools/capability-packs/run-pack.mjs --pack=research-report"
+    },
+    {
+      "id": "marketing-planning",
+      "name": "Marketing Planning",
+      "required": true,
+      "artifacts": ["campaign-plan.md", "copy-pack.md"],
+      "workflow": ["goal-setup", "audience-plan", "copy-draft", "approval"],
+      "entryCommand": "node tools/capability-packs/run-pack.mjs --pack=marketing-planning"
+    },
+    {
+      "id": "proposal-doc-output",
+      "name": "Proposal & Document Outputs",
+      "required": true,
+      "artifacts": ["proposal.md", "proposal.pptx"],
+      "workflow": ["brief", "outline", "draft", "review", "export"],
+      "entryCommand": "node tools/capability-packs/run-pack.mjs --pack=proposal-doc-output"
+    },
+    {
+      "id": "program-development",
+      "name": "Program Development (Web/App)",
+      "required": true,
+      "artifacts": ["source-code", "test-report.json"],
+      "workflow": ["spec", "implement", "test", "review"],
+      "entryCommand": "node tools/capability-packs/run-pack.mjs --pack=program-development"
+    },
+    {
+      "id": "pc-maintenance",
+      "name": "Personal PC Maintenance",
+      "required": true,
+      "artifacts": ["maintenance-log.json", "doctor-report.json"],
+      "workflow": ["diagnose", "approval", "apply", "verify"],
+      "entryCommand": "node tools/capability-packs/run-pack.mjs --pack=pc-maintenance"
+    },
+    {
+      "id": "media-production",
+      "name": "Image/Video Production",
+      "required": true,
+      "artifacts": ["image-brief.md", "video-storyboard.md"],
+      "workflow": ["brief", "asset-plan", "generation", "delivery"],
+      "entryCommand": "node tools/capability-packs/run-pack.mjs --pack=media-production"
+    },
+    {
+      "id": "erp-project-ops",
+      "name": "ERP & Project Operations",
+      "required": true,
+      "artifacts": ["kpi-report.md", "ops-board.json"],
+      "workflow": ["planning", "execution", "tracking", "closeout"],
+      "entryCommand": "node tools/capability-packs/run-pack.mjs --pack=erp-project-ops"
+    },
+    {
+      "id": "sap-abap",
+      "name": "SAP ABAP Vibe Coding",
+      "required": true,
+      "artifacts": ["abap-design.md", "abap-code.abap"],
+      "workflow": ["requirement", "design", "coding", "validation"],
+      "entryCommand": "node tools/capability-packs/run-pack.mjs --pack=sap-abap"
+    }
+  ]
+}

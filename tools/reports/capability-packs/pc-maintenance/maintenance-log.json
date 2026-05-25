@@ -1,0 +1,9 @@
+{
+  "generatedAt": "2026-05-25T03:48:16.871Z",
+  "brief": "BLOKS capability pack execution",
+  "command": "pnpm bloks-os doctor --export=D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\pc-maintenance\\doctor-report.json",
+  "ok": true,
+  "status": 0,
+  "stdoutTail": "\n\u001b[90m──────────────────────────────────────────────────\u001b[0m\n\u001b[32m✓\u001b[0m Node.js v24.14.1 (>= 20 ✓)\n\u001b[90m──────────────────────────────────────────────────\u001b[0m\n\u001b[32m✓\u001b[0m .env 파일 존재\n\u001b[36m→\u001b[0m 현재 프로파일: \u001b[1mlocal\u001b[0m\n\u001b[90m──────────────────────────────────────────────────\u001b[0m\n\u001b[1m환경 변수 확인\u001b[0m\n\u001b[33m⚠\u001b[0m PORT 미설정 (기본값 사용)\n\u001b[32m✓\u001b[0m OPENAI_API_KEY 설정됨 (AI 기능 활성화)\n\u001b[90m──────────────────────────────────────────────────\u001b[0m\n\u001b[1m서비스 포트 확인\u001b[0m\n\u001b[32m✓\u001b[0m API 서버 (4000) 응답 중\n\u001b[32m✓\u001b[0m 웹 서버 (3000) 응답 중\n\u001b[90m──────────────────────────────────────────────────\u001b[0m\n\n\u001b[32m\u001b[1m모든 진단 통과!\u001b[0m\n\n\u001b[32m✓\u001b[0m 진단 번들 저장됨: \u001b[36mD:\\\\Projects\\\\BLOKS\\\\tools\\\\reports\\\\capability-packs\\\\pc-maintenance\\\\doctor-report.json\u001b[0m\n",
+  "stderrTail": ""
+}

@@ -44,15 +44,14 @@ type QueueLike = {
   add: (name: string, data: QueueJobData, options: { jobId: string }) => Promise<{ id: string }>;
 };
 
-// In-memory queue for local profile — stores jobs in a Map; no Redis required.
-// Jobs are processed synchronously (fire-and-forget) within the same process.
+// In-memory queue for local profile — stores jobs in-memory; no Redis required.
 const inMemoryJobs = new Map<string, { name: string; data: QueueJobData }>();
 
 function makeInMemoryQueue(): QueueLike {
   return {
     add: async (name: string, data: QueueJobData, options: { jobId: string }) => {
       inMemoryJobs.set(options.jobId, { name, data });
-      console.log(`[queue:local] enqueued ${name} → ${options.jobId}`);
+      console.log(`[queue:local] enqueued ${name} => ${options.jobId}`);
       return { id: options.jobId };
     },
   };
@@ -123,3 +122,4 @@ export async function enqueueJob(params: EnqueueJobParams) {
     bullJobId: job.id,
   };
 }
+

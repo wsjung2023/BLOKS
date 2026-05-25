@@ -47,10 +47,12 @@ if (auditLog.length > 0) {
   console.info(`[audit] Loaded ${auditLog.length} entries from ${AUDIT_FILE}`);
 }
 
+const lastAuditHash = auditLog[auditLog.length - 1]?.hash ?? "genesis";
+
 const apiAuditWriter = new AuditWriter(async (entry) => {
   auditLog.push(entry);
   appendAuditFile(entry);
-});
+}, lastAuditHash);
 
 // API-local RuntimeEngine wired to the audit writer
 export const apiRuntimeEngine = new RuntimeEngine(apiAuditWriter);

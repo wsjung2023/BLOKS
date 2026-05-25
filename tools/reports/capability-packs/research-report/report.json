@@ -1,0 +1,11 @@
+{
+  "generatedAt": "2026-05-25T03:48:15.042Z",
+  "brief": "BLOKS capability pack execution",
+  "source": "homepage-result.json",
+  "projectId": "93029896-c9d1-4803-9b2e-cb8562a7096e",
+  "taskCount": 6,
+  "sections": {
+    "prd": true,
+    "architecture": true
+  }
+}

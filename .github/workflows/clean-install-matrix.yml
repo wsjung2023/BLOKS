@@ -1,0 +1,66 @@
+﻿name: Clean-Install-Matrix
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - "tools/local-first-acceptance.mjs"
+      - "tools/runtime-daemon-audit-acceptance.mjs"
+      - "tools/clean-install-check.mjs"
+      - "apps/runtime-daemon/**"
+      - "apps/api/**"
+      - "packages/db/**"
+      - "packages/audit/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+
+jobs:
+  clean-install-proof:
+    name: Clean install proof (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Local-first acceptance
+        run: pnpm acceptance:local-first
+
+      - name: Runtime-daemon audit acceptance
+        run: pnpm acceptance:runtime-daemon-audit
+
+      - name: Capability-packs acceptance
+        run: pnpm acceptance:capability-packs
+
+      - name: CLI distribution smoke
+        run: pnpm distribution:cli-smoke
+
+      - name: Doctor export
+        run: pnpm bloks-os doctor --export=tools/reports/doctor-${{ matrix.os }}.json
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: clean-install-reports-${{ matrix.os }}
+          path: |
+            tools/reports/local-first-acceptance-latest.json
+            tools/reports/runtime-daemon-audit-acceptance-latest.json
+            tools/reports/capability-packs-acceptance-latest.json
+            tools/reports/cli-distribution-smoke-latest.json
+            tools/reports/doctor-${{ matrix.os }}.json

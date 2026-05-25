@@ -1,0 +1,79 @@
+{
+  "date": "2026-05-25T03:47:35.909Z",
+  "pass": true,
+  "elapsedMs": 48162,
+  "checks": [
+    {
+      "command": "pnpm --filter @bloks/db lint",
+      "ok": true,
+      "exitCode": 0,
+      "elapsedMs": 1878,
+      "stdoutTail": "\n> @bloks/db@0.1.0 lint D:\\Projects\\BLOKS\\packages\\db\n> tsc --noEmit\n\n",
+      "stderrTail": ""
+    },
+    {
+      "command": "pnpm --filter api lint",
+      "ok": true,
+      "exitCode": 0,
+      "elapsedMs": 5450,
+      "stdoutTail": "\n> api@0.1.0 lint D:\\Projects\\BLOKS\\apps\\api\n> tsc --noEmit\n\n",
+      "stderrTail": ""
+    },
+    {
+      "command": "pnpm --filter runtime-daemon lint",
+      "ok": true,
+      "exitCode": 0,
+      "elapsedMs": 2057,
+      "stdoutTail": "\n> runtime-daemon@0.1.0 lint D:\\Projects\\BLOKS\\apps\\runtime-daemon\n> tsc --noEmit\n\n",
+      "stderrTail": ""
+    },
+    {
+      "command": "pnpm --filter api test -- runtime-audit",
+      "ok": true,
+      "exitCode": 0,
+      "elapsedMs": 4413,
+      "stdoutTail": "\n> api@0.1.0 test D:\\Projects\\BLOKS\\apps\\api\n> vitest run --passWithNoTests \"runtime-audit\"\n\n\n\u001b[1m\u001b[7m\u001b[36m RUN \u001b[39m\u001b[27m\u001b[22m \u001b[36mv2.1.9 \u001b[39m\u001b[90mD:/Projects/BLOKS/apps/api\u001b[39m\n\n \u001b[32m✓\u001b[39m src/routes/runtime-audit.test.ts \u001b[2m(\u001b[22m\u001b[2m20 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 346\u001b[2mms\u001b[22m\u001b[39m\n   \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m GET /runtime/audit\u001b[2m > \u001b[22m반환: 감사 로그 전체 \u001b[33m325\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m20 passed\u001b[39m\u001b[22m\u001b[90m (20)\u001b[39m\n\u001b[2m   Start at \u001b[22m 12:47:47\n\u001b[2m   Duration \u001b[22m 2.00s\u001b[2m (transform 338ms, setup 0ms, collect 347ms, tests 346ms, environment 0ms, prepare 403ms)\u001b[22m\n\n",
+      "stderrTail": ""
+    },
+    {
+      "command": "pnpm --filter web exec playwright test e2e/smoke.spec.ts",
+      "ok": true,
+      "exitCode": 0,
+      "elapsedMs": 17294,
+      "stdoutTail": "\nRunning 5 tests using 1 worker\n\n  ok 1 [chromium] › e2e\\smoke.spec.ts:6:5 › home page / redirects to /world (1.4s)\n  ok 2 [chromium] › e2e\\smoke.spec.ts:15:5 › /world page renders Phaser canvas (4.6s)\n  ok 3 [chromium] › e2e\\smoke.spec.ts:26:5 › /projects page loads with auth (1.6s)\n  ok 4 [chromium] › e2e\\smoke.spec.ts:37:5 › /approvals page loads with auth (1.5s)\n  ok 5 [chromium] › e2e\\smoke.spec.ts:48:5 › /audit page loads with auth (1.4s)\n\n  5 passed (12.9s)\n",
+      "stderrTail": ""
+    },
+    {
+      "command": "pnpm acceptance:local-first",
+      "ok": true,
+      "exitCode": 0,
+      "elapsedMs": 4332,
+      "stdoutTail": "\n> bloks-monorepo@0.1.0 acceptance:local-first D:\\Projects\\BLOKS\n> node tools/local-first-acceptance.mjs\n\n[local-first acceptance] PASS in 3s — report: D:\\Projects\\BLOKS\\tools\\reports\\local-first-acceptance-latest.json\n",
+      "stderrTail": ""
+    },
+    {
+      "command": "node tools/runtime-daemon-audit-acceptance.mjs",
+      "ok": true,
+      "exitCode": 0,
+      "elapsedMs": 2688,
+      "stdoutTail": "[runtime-daemon acceptance] PASS in 2s - report: D:\\Projects\\BLOKS\\tools\\reports\\runtime-daemon-audit-acceptance-latest.json\n",
+      "stderrTail": ""
+    },
+    {
+      "command": "pnpm acceptance:capability-packs",
+      "ok": true,
+      "exitCode": 0,
+      "elapsedMs": 3325,
+      "stdoutTail": "\n> bloks-monorepo@0.1.0 acceptance:capability-packs D:\\Projects\\BLOKS\n> node tools/capability-packs-acceptance.mjs\n\n[capability-packs acceptance] PASS - report: D:\\Projects\\BLOKS\\tools\\reports\\capability-packs-acceptance-latest.json\n",
+      "stderrTail": ""
+    },
+    {
+      "command": "pnpm distribution:cli-smoke",
+      "ok": true,
+      "exitCode": 0,
+      "elapsedMs": 6725,
+      "stdoutTail": "\n> bloks-monorepo@0.1.0 distribution:cli-smoke D:\\Projects\\BLOKS\n> node tools/cli-distribution-smoke.mjs\n\n[cli distribution smoke] PASS - report: D:\\Projects\\BLOKS\\tools\\reports\\cli-distribution-smoke-latest.json\n",
+      "stderrTail": ""
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+> ⚠️ **[ARCHIVED 2026-05-21]** 구현 완료 — 더 이상 업데이트하지 않습니다.
+
 # BLOKS Implementation Progress
 - overall: 40/40 (100.00%)
 - existence checks: 37/37 (100.00%)

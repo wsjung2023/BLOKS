@@ -21,9 +21,10 @@ Prevent false completion claims and force evidence-based progress reporting.
 
 1. `DONE` is forbidden without explicit evidence links in the same ticket.
 2. "Code exists" is not enough for `DONE`; behavior must be proven by tests or reproducible run logs.
-3. If any gate in `docs/skillsets/BLOKS-OS-COMPLETE/06-release-gates.md` is open, related phase cannot be `DONE`.
+3. If any global gate in `P3-bloks-os-program-index.md` is open, related phase cannot be `DONE`.
 4. "Deferred", "Untested", or "Pending sign-off" means the relevant phase is not `DONE`.
 5. Any ambiguity defaults to `PARTIAL`, not `DONE`.
+6. Do not require missing/deleted documents as completion criteria.
 
 ## Required Evidence Block Template (for DONE transition)
 

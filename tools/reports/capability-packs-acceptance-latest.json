@@ -1,0 +1,309 @@
+{
+  "date": "2026-05-25T03:48:14.807Z",
+  "pass": true,
+  "checks": [
+    {
+      "name": "packs_file",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\capability-packs\\packs.json"
+    },
+    {
+      "name": "required_pack_presence",
+      "pass": true,
+      "detail": "all present"
+    },
+    {
+      "name": "research-report:id",
+      "pass": true
+    },
+    {
+      "name": "research-report:name",
+      "pass": true
+    },
+    {
+      "name": "research-report:artifacts",
+      "pass": true
+    },
+    {
+      "name": "research-report:workflow",
+      "pass": true
+    },
+    {
+      "name": "research-report:entryCommand",
+      "pass": true
+    },
+    {
+      "name": "marketing-planning:id",
+      "pass": true
+    },
+    {
+      "name": "marketing-planning:name",
+      "pass": true
+    },
+    {
+      "name": "marketing-planning:artifacts",
+      "pass": true
+    },
+    {
+      "name": "marketing-planning:workflow",
+      "pass": true
+    },
+    {
+      "name": "marketing-planning:entryCommand",
+      "pass": true
+    },
+    {
+      "name": "proposal-doc-output:id",
+      "pass": true
+    },
+    {
+      "name": "proposal-doc-output:name",
+      "pass": true
+    },
+    {
+      "name": "proposal-doc-output:artifacts",
+      "pass": true
+    },
+    {
+      "name": "proposal-doc-output:workflow",
+      "pass": true
+    },
+    {
+      "name": "proposal-doc-output:entryCommand",
+      "pass": true
+    },
+    {
+      "name": "program-development:id",
+      "pass": true
+    },
+    {
+      "name": "program-development:name",
+      "pass": true
+    },
+    {
+      "name": "program-development:artifacts",
+      "pass": true
+    },
+    {
+      "name": "program-development:workflow",
+      "pass": true
+    },
+    {
+      "name": "program-development:entryCommand",
+      "pass": true
+    },
+    {
+      "name": "pc-maintenance:id",
+      "pass": true
+    },
+    {
+      "name": "pc-maintenance:name",
+      "pass": true
+    },
+    {
+      "name": "pc-maintenance:artifacts",
+      "pass": true
+    },
+    {
+      "name": "pc-maintenance:workflow",
+      "pass": true
+    },
+    {
+      "name": "pc-maintenance:entryCommand",
+      "pass": true
+    },
+    {
+      "name": "media-production:id",
+      "pass": true
+    },
+    {
+      "name": "media-production:name",
+      "pass": true
+    },
+    {
+      "name": "media-production:artifacts",
+      "pass": true
+    },
+    {
+      "name": "media-production:workflow",
+      "pass": true
+    },
+    {
+      "name": "media-production:entryCommand",
+      "pass": true
+    },
+    {
+      "name": "erp-project-ops:id",
+      "pass": true
+    },
+    {
+      "name": "erp-project-ops:name",
+      "pass": true
+    },
+    {
+      "name": "erp-project-ops:artifacts",
+      "pass": true
+    },
+    {
+      "name": "erp-project-ops:workflow",
+      "pass": true
+    },
+    {
+      "name": "erp-project-ops:entryCommand",
+      "pass": true
+    },
+    {
+      "name": "sap-abap:id",
+      "pass": true
+    },
+    {
+      "name": "sap-abap:name",
+      "pass": true
+    },
+    {
+      "name": "sap-abap:artifacts",
+      "pass": true
+    },
+    {
+      "name": "sap-abap:workflow",
+      "pass": true
+    },
+    {
+      "name": "sap-abap:entryCommand",
+      "pass": true
+    },
+    {
+      "name": "run_all_packs",
+      "pass": true,
+      "detail": "status=0"
+    },
+    {
+      "name": "research-report:artifact:report.md",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\research-report\\report.md"
+    },
+    {
+      "name": "research-report:artifact:report.json",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\research-report\\report.json"
+    },
+    {
+      "name": "research-report:manifest",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\research-report\\manifest.json"
+    },
+    {
+      "name": "marketing-planning:artifact:campaign-plan.md",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\marketing-planning\\campaign-plan.md"
+    },
+    {
+      "name": "marketing-planning:artifact:copy-pack.md",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\marketing-planning\\copy-pack.md"
+    },
+    {
+      "name": "marketing-planning:manifest",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\marketing-planning\\manifest.json"
+    },
+    {
+      "name": "proposal-doc-output:artifact:proposal.md",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\proposal-doc-output\\proposal.md"
+    },
+    {
+      "name": "proposal-doc-output:artifact:proposal.pptx",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\proposal-doc-output\\proposal.pptx"
+    },
+    {
+      "name": "proposal-doc-output:manifest",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\proposal-doc-output\\manifest.json"
+    },
+    {
+      "name": "program-development:artifact:source-code",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\program-development\\source-code"
+    },
+    {
+      "name": "program-development:artifact:test-report.json",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\program-development\\test-report.json"
+    },
+    {
+      "name": "program-development:manifest",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\program-development\\manifest.json"
+    },
+    {
+      "name": "pc-maintenance:artifact:maintenance-log.json",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\pc-maintenance\\maintenance-log.json"
+    },
+    {
+      "name": "pc-maintenance:artifact:doctor-report.json",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\pc-maintenance\\doctor-report.json"
+    },
+    {
+      "name": "pc-maintenance:manifest",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\pc-maintenance\\manifest.json"
+    },
+    {
+      "name": "media-production:artifact:image-brief.md",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\media-production\\image-brief.md"
+    },
+    {
+      "name": "media-production:artifact:video-storyboard.md",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\media-production\\video-storyboard.md"
+    },
+    {
+      "name": "media-production:manifest",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\media-production\\manifest.json"
+    },
+    {
+      "name": "erp-project-ops:artifact:kpi-report.md",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\erp-project-ops\\kpi-report.md"
+    },
+    {
+      "name": "erp-project-ops:artifact:ops-board.json",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\erp-project-ops\\ops-board.json"
+    },
+    {
+      "name": "erp-project-ops:manifest",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\erp-project-ops\\manifest.json"
+    },
+    {
+      "name": "sap-abap:artifact:abap-design.md",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\sap-abap\\abap-design.md"
+    },
+    {
+      "name": "sap-abap:artifact:abap-code.abap",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\sap-abap\\abap-code.abap"
+    },
+    {
+      "name": "sap-abap:manifest",
+      "pass": true,
+      "detail": "D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\sap-abap\\manifest.json"
+    }
+  ],
+  "missingRequiredPacks": [],
+  "execution": {
+    "command": "node tools/capability-packs/run-all-packs.mjs",
+    "ok": true,
+    "status": 0,
+    "stdoutTail": "[capability-pack] research-report generated -> D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\research-report\n[capability-pack] marketing-planning generated -> D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\marketing-planning\n[capability-pack] proposal-doc-output generated -> D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\proposal-doc-output\n[capability-pack] program-development generated -> D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\program-development\n[capability-pack] pc-maintenance generated -> D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\pc-maintenance\n[capability-pack] media-production generated -> D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\media-production\n[capability-pack] erp-project-ops generated -> D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\erp-project-ops\n[capability-pack] sap-abap generated -> D:\\Projects\\BLOKS\\tools\\reports\\capability-packs\\sap-abap\n[capability-packs run-all] PASS\n",
+    "stderrTail": ""
+  }
+}

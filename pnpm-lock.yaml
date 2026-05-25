@@ -350,10 +350,6 @@ importers:
         version: 5.9.3
 
   tools/cli:
-    dependencies:
-      '@bloks/db':
-        specifier: workspace:*
-        version: link:../../packages/db
     devDependencies:
       '@types/node':
         specifier: ^22.0.0

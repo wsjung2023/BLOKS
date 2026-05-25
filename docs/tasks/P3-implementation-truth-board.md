@@ -1,21 +1,16 @@
-> ⚠️ **[ARCHIVED 2026-05-21]** 구현 완료 — 더 이상 업데이트하지 않습니다.
-
 ---
 title: P3 Implementation Truth Board (Reality vs Plan)
 priority: HIGH
 owner: TBD
 status: ACTIVE
+snapshot_date: 2026-05-25
 ---
 
 ## Objective
 
 Single source of truth for what is actually implemented, what is missing, and what must be proven before claiming 100% completion.
 
-## Snapshot Date
-
-1. 2026-05-21 (updated by Claude Code batch)
-
-## Phase Status Matrix
+## Phase Status Matrix (Reality)
 
 1. Phase A Architecture Freeze: `PARTIAL`
 2. Phase B Runtime Core: `PARTIAL`
@@ -24,80 +19,75 @@ Single source of truth for what is actually implemented, what is missing, and wh
 5. Phase E Distribution And Operations: `PARTIAL`
 6. Phase F Hardening And GA: `BLOCKED`
 
-## Verified Implemented Areas
+## Verified Implemented (Code Exists)
 
-1. Runtime/policy/audit core packages exist and are wired.
-2. Worker runtime integration path exists (`ai.task.execute`).
-3. Runtime execution/approval/audit API routes exist.
-4. SSE stream includes tool lifecycle event types.
-5. CLI command skeleton (`init/start/doctor/upgrade`) exists.
-6. Helm templates, compose file, and runbooks exist.
-7. **[NEW 2026-05-21]** SHA-256 hash-linked audit chain (`packages/audit/src/audit-writer.ts`).
-8. **[NEW 2026-05-21]** Compliance export: `GET /api/v1/runtime/audit/export?format=jsonl|csv`.
-9. **[NEW 2026-05-21]** Emergency kill switch: `POST /runtime/execution/pause|resume` + audit page UI button.
-10. **[NEW 2026-05-21]** Secret masking: `maskSecrets()` / `maskSecretsInObject()` applied to audit input/output.
-11. **[NEW 2026-05-21]** Diagnostics export bundle: `bloks-os doctor --export` writes JSON bundle with secrets redacted.
-12. **[NEW 2026-05-21]** Local-first profile adapters: `getSupabase()` returns in-process stub when `BLOKS_PROFILE=local`. In-memory queue in `registry.ts`. BullMQ workers and Redis pub skipped in local mode.
-13. **[NEW 2026-05-21]** Browser auto-open: `bloks-os start` polls web server readiness then opens browser.
-14. **[NEW 2026-05-21]** Durable audit persistence: `apps/api/src/runtime-store.ts` writes audit entries to `$BLOKS_AUDIT_DIR/audit.jsonl` (JSONL, append-only). Survives server restart; loaded back into in-memory cache on startup.
+1. Local runtime daemon exists: `apps/runtime-daemon/src/index.ts`.
+2. Runtime tool adapters exist with risk-tiered tools (`file.read`, `file.write`, `shell.exec`, `git.push`).
+3. API runtime store has durable audit persistence (`apps/api/src/runtime-store.ts`: `audit.jsonl` append/load).
+4. API audit endpoints exist (`apps/api/src/routes/runtime-audit.ts`: `/runtime/audit`, `/export`, `/verify`, `/replay/:traceId`).
+5. Runtime daemon now has durable audit persistence (`apps/runtime-daemon/src/index.ts`: `audit.jsonl` append/load).
+6. Local-first DB stub exists with persistent local JSON store (`.bloks-data/local-db.json`).
+7. Queue local mode exists (in-memory queue path in API queue registry).
+8. CLI command surface exists (`init/start/doctor/upgrade/autostart`).
+9. Local-first acceptance runner exists (`tools/local-first-acceptance.mjs`, script: `pnpm acceptance:local-first`).
+10. Runtime-daemon audit endpoints exist (`/audit`, `/audit/export`, `/audit/verify`, `/audit/replay/:traceId`) with acceptance runner (`pnpm acceptance:runtime-daemon-audit`).
+11. Audit hash-chain continuity across restart is seeded from persisted last hash (`packages/audit/src/audit-writer.ts`, `apps/api/src/runtime-store.ts`, `apps/runtime-daemon/src/index.ts`).
+12. Capability-pack contract registry and acceptance checks exist (`tools/capability-packs/packs.json`, `pnpm acceptance:capability-packs`).
+13. Capability-pack runnable generators exist for all required packs (`tools/capability-packs/run-pack.mjs`, `tools/capability-packs/run-all-packs.mjs`) and consume real demo report sources (`tools/demo/reports/*.json`, `*-output/`).
+14. GA gate automation exists with evidence report (`pnpm gate:ga`, `tools/reports/ga-gate-latest.json`).
 
-## Batch 2026-05-21 — What Changed
+## Verified Evidence Quality
 
-### Files changed
-- `packages/audit/src/audit-writer.ts` — SHA-256 hash chain (prevHash linking)
-- `packages/audit/src/secret-masker.ts` — NEW: maskSecrets / maskSecretsInObject
-- `packages/audit/src/index.ts` — exports secret-masker
-- `packages/agent-runtime/src/runtime-engine.ts` — applies maskSecretsInObject to input/output/error before audit record
-- `apps/api/src/routes/runtime-audit.ts` — export (JSONL/CSV) + verify + replay endpoints
-- `apps/api/src/routes/runtime.ts` — kill switch: /execution/pause, /execution/resume, /execution/status
-- `apps/api/src/runtime-store.ts` — kill switch state: pauseExecution / resumeExecution / getExecutionPauseState
-- `apps/web/src/app/audit/page.tsx` — kill switch UI button (red/green toggle)
-- `tools/cli/src/commands/start.ts` — waitForWeb() + openBrowser() after pnpm dev
-- `tools/cli/src/commands/doctor.ts` — --export flag writes JSON diagnostics bundle
-- `packages/db/src/local-stub.ts` — NEW: Proxy-based Supabase no-op stub
-- `packages/db/src/supabase.ts` — returns localSupabaseStub when profile=local
-- `packages/db/src/index.ts` — exports localSupabaseStub
-- `apps/api/src/queues/registry.ts` — in-memory queue when profile=local
-- `apps/worker/src/index.ts` — skip BullMQ Workers and Redis pub when profile=local
+1. Evidence policy exists and is explicit (`P3-status-policy.md`).
+2. Current docs are reduced to 5 files; no broad reference set remains.
+3. Broken link risk was found and corrected in index/handoff/truth documents.
 
-### What passed
-- `pnpm -r exec tsc --noEmit` — zero errors across all packages
+## Critical Gaps Blocking 100%
 
-## Critical Gaps Blocking "100%"
+1. Public distribution path is not fully proven as one-command install for general users.
+2. Clean-machine pass matrix (Windows/macOS/Linux) CI workflow is added, but matrix run artifacts are not yet attached in this repo history.
+3. Clean-install verification and CLI distribution smoke are proven in workspace mode on Windows (`tools/clean-install-check.mjs`, `tools/cli-distribution-smoke.mjs`); cross-OS artifacts remain pending.
+4. Capability packs are uneven:
+5. Required pack taxonomy is declared and validated, and runnable generation pipelines now exist for all required packs with demo-result-backed artifact synthesis; domain-depth quality still needs iterative hardening.
+6. ABAP/SAP/ERP/media remain mostly contract-level until scenario-level executable flows are expanded.
+7. GA hardening evidence is still incomplete for deterministic conflict/deadlock suites and long-run incident gate.
 
-1. **[PARTIAL 2026-05-21]** Local-first profile: API/Worker start without crashing. Runtime/audit/kill-switch work fully. Characters/tasks/projects return empty (stub). Tick-engine is inactive in local mode (no characters). Full task automation needs connected mode. See `docs/runbooks/local-profile-quickstart.md`.
-2. **[RESOLVED 2026-05-21]** API runtime audit storage: now JSONL file-backed (`$BLOKS_AUDIT_DIR/audit.jsonl`). Survives restart.
-3. **[OPEN]** Multi-agent deterministic conflict/deadlock proof suite is incomplete.
-4. **[OPEN]** Full first-run setup wizard flow is not complete as a release-proof onboarding path.
-5. **[OPEN]** `npx bloks-os` distribution promise: not yet validated as clean-machine install path.
-6. **[OPEN]** Cross-platform clean-machine pass matrix (Windows/macOS/Linux) not recorded.
-7. **[OPEN]** GA gates: deferred/untested items remain in `docs/runbooks/ga-validation-report.md`.
-8. **[OPEN]** `apps/runtime-daemon` — referenced in Wave 4 spec but not yet created.
+## Reality Corrections Applied On 2026-05-25
 
-## Required Closeout Work (P0 order)
+1. Removed stale claim that `apps/runtime-daemon` is missing.
+2. Removed references to deleted/nonexistent docs as mandatory closeout criteria.
+3. Aligned this board to the actual 5-document operating set.
+4. Added API-vs-daemon audit scope separation to avoid false "implemented" interpretation.
 
-1. **[DONE 2026-05-21] P0 Durable audit persistence** — JSONL file-backed in `runtime-store.ts`.
-2. **[PARTIAL 2026-05-21] P0 Local-first first task proof** — runtime/audit path documented in `docs/runbooks/local-profile-quickstart.md`. Full task automation (tick-engine → character → task completion) still requires connected mode with seeded DB. Gap: no in-memory character/task store for local mode.
-3. **P0 Distribution** — validate `npx bloks-os init/start` on a clean machine; update install docs.
-4. **P1 Runtime daemon** — create `apps/runtime-daemon` as the process that owns the RuntimeEngine in production.
-5. **P1 Multi-agent hardening** — deterministic scenario tests for lock conflict, review loop, retries.
-6. **P1 UX completion** — first-run setup wizard integrated into first launch.
-7. **P1 GA proof** — close release gates in `06-release-gates.md` with dated evidence.
+## Evidence Snapshot (2026-05-25)
+
+1. Command: `pnpm acceptance:local-first`
+2. Command: `pnpm acceptance:runtime-daemon-audit`
+3. Command: `pnpm acceptance:capability-packs`
+4. Command: `node tools/clean-install-check.mjs --no-clone`
+5. Command: `pnpm gate:ga`
+6. Command: `pnpm capability-packs:run-all`
+7. Command: `pnpm distribution:cli-smoke`
+8. Result: all above commands passed in current Windows workspace.
+9. Evidence files:
+10. `tools/reports/local-first-acceptance-latest.json`
+11. `tools/reports/runtime-daemon-audit-acceptance-latest.json`
+12. `tools/reports/capability-packs-acceptance-latest.json`
+13. `tools/reports/clean-install-check-latest.json`
+14. `tools/reports/ga-gate-latest.json`
+15. `tools/reports/cli-distribution-smoke-latest.json`
+16. Known limit: cross-OS clean-machine matrix still requires CI run artifacts on Windows/macOS/Linux.
 
 ## Exit Criteria For 100% Claim
 
-1. Every P3 phase ticket has `status: DONE` plus evidence block (per `P3-status-policy.md`).
-2. Every gate in `docs/skillsets/BLOKS-OS-COMPLETE/06-release-gates.md` is explicitly marked passed with proof.
-3. `docs/runbooks/ga-validation-report.md` no longer contains deferred/untested critical items.
-4. Program index gate list is fully satisfied with dated evidence.
+1. All global gates in `P3-bloks-os-program-index.md` are passed with dated proof.
+2. Capability pack completion is demonstrated by runnable scenarios, not only enum/task labels.
+3. Distribution proof includes clean-machine install/start/doctor logs across target OS.
+4. Each status transition to `DONE` includes evidence block per `P3-status-policy.md`.
 
-## Claude Code Execution Contract
+## Required Reporting Format (Every Cycle)
 
-1. Never mark any P3 ticket `DONE` without adding evidence block.
-2. If evidence is missing, keep or downgrade status to `PARTIAL`.
-3. Always update this truth board after each major implementation batch.
-4. Report in this format every cycle:
-5. `What changed`
-6. `What passed (with proof)`
-7. `What is still blocking 100%`
-8. `Next exact files to edit`
+1. What changed (exact files)
+2. What passed (exact commands and result summary)
+3. What failed or is blocked
+4. Exact next files to edit

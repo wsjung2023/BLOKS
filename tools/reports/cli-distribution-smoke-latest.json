@@ -1,0 +1,52 @@
+{
+  "date": "2026-05-25T03:48:18.018Z",
+  "pass": true,
+  "workspace": "C:\\Users\\wjddn\\AppData\\Local\\Temp\\bloks-cli-smoke-93SFP2",
+  "steps": [
+    {
+      "command": "npm pack",
+      "cwd": "D:\\Projects\\BLOKS\\tools\\cli",
+      "ok": true,
+      "exitCode": 0,
+      "elapsedMs": 2580,
+      "stdout": "\n> @bloks/cli@0.1.0 prepack\n> npm run build\n\n\n> @bloks/cli@0.1.0 build\n> tsc -p tsconfig.json\n\nbloks-cli-0.1.0.tgz\n",
+      "stderr": "npm notice\nnpm notice package: @bloks/cli@0.1.0\nnpm notice Tarball Contents\nnpm notice 47B bin/bloks-os.mjs\nnpm notice 7.3kB dist/commands/autostart.js\nnpm notice 7.5kB dist/commands/doctor.js\nnpm notice 7.6kB dist/commands/init.js\nnpm notice 4.3kB dist/commands/start.js\nnpm notice 905B dist/commands/upgrade.js\nnpm notice 3.4kB dist/index.js\nnpm notice 511B package.json\nnpm notice Tarball Details\nnpm notice name: @bloks/cli\nnpm notice version: 0.1.0\nnpm notice filename: bloks-cli-0.1.0.tgz\nnpm notice package size: 8.9 kB\nnpm notice unpacked size: 31.6 kB\nnpm notice shasum: 7bdc7a5b7104db0e764029984e00b3b79823403c\nnpm notice integrity: sha512-vFz0AE8K1zD+6[...]uKFWK7gTtUOJw==\nnpm notice total files: 8\nnpm notice\n",
+      "stdoutTail": "\n> @bloks/cli@0.1.0 prepack\n> npm run build\n\n\n> @bloks/cli@0.1.0 build\n> tsc -p tsconfig.json\n\nbloks-cli-0.1.0.tgz\n",
+      "stderrTail": "npm notice Tarball Contents\nnpm notice 47B bin/bloks-os.mjs\nnpm notice 7.3kB dist/commands/autostart.js\nnpm notice 7.5kB dist/commands/doctor.js\nnpm notice 7.6kB dist/commands/init.js\nnpm notice 4.3kB dist/commands/start.js\nnpm notice 905B dist/commands/upgrade.js\nnpm notice 3.4kB dist/index.js\nnpm notice 511B package.json\nnpm notice Tarball Details\nnpm notice name: @bloks/cli\nnpm notice version: 0.1.0\nnpm notice filename: bloks-cli-0.1.0.tgz\nnpm notice package size: 8.9 kB\nnpm notice unpacked size: 31.6 kB\nnpm notice shasum: 7bdc7a5b7104db0e764029984e00b3b79823403c\nnpm notice integrity: sha512-vFz0AE8K1zD+6[...]uKFWK7gTtUOJw==\nnpm notice total files: 8\nnpm notice\n"
+    },
+    {
+      "command": "npm init -y",
+      "cwd": "C:\\Users\\wjddn\\AppData\\Local\\Temp\\bloks-cli-smoke-93SFP2",
+      "ok": true,
+      "exitCode": 0,
+      "elapsedMs": 1006,
+      "stdout": "Wrote to C:\\Users\\wjddn\\AppData\\Local\\Temp\\bloks-cli-smoke-93SFP2\\package.json:\n\n{\n  \"name\": \"bloks-cli-smoke-93sfp2\",\n  \"version\": \"1.0.0\",\n  \"description\": \"\",\n  \"main\": \"index.js\",\n  \"scripts\": {\n    \"test\": \"echo \\\"Error: no test specified\\\" && exit 1\"\n  },\n  \"keywords\": [],\n  \"author\": \"\",\n  \"license\": \"ISC\",\n  \"type\": \"commonjs\"\n}\n\n\n",
+      "stderr": "",
+      "stdoutTail": "Wrote to C:\\Users\\wjddn\\AppData\\Local\\Temp\\bloks-cli-smoke-93SFP2\\package.json:\n\n{\n  \"name\": \"bloks-cli-smoke-93sfp2\",\n  \"version\": \"1.0.0\",\n  \"description\": \"\",\n  \"main\": \"index.js\",\n  \"scripts\": {\n    \"test\": \"echo \\\"Error: no test specified\\\" && exit 1\"\n  },\n  \"keywords\": [],\n  \"author\": \"\",\n  \"license\": \"ISC\",\n  \"type\": \"commonjs\"\n}\n\n\n",
+      "stderrTail": ""
+    },
+    {
+      "command": "npm install D:\\Projects\\BLOKS\\tools\\cli\\bloks-cli-0.1.0.tgz",
+      "cwd": "C:\\Users\\wjddn\\AppData\\Local\\Temp\\bloks-cli-smoke-93SFP2",
+      "ok": true,
+      "exitCode": 0,
+      "elapsedMs": 1254,
+      "stdout": "\nadded 1 package, and audited 2 packages in 814ms\n\nfound 0 vulnerabilities\n",
+      "stderr": "",
+      "stdoutTail": "\nadded 1 package, and audited 2 packages in 814ms\n\nfound 0 vulnerabilities\n",
+      "stderrTail": ""
+    },
+    {
+      "command": "npx --yes bloks-os --help",
+      "cwd": "C:\\Users\\wjddn\\AppData\\Local\\Temp\\bloks-cli-smoke-93SFP2",
+      "ok": true,
+      "exitCode": 0,
+      "elapsedMs": 1163,
+      "stdout": "\n\u001b[1m\u001b[36mBLOKS OS\u001b[0m v0.1.0 — Local-First Agent OS\n\n\u001b[1m사용법:\u001b[0m\n  bloks-os \u001b[36minit\u001b[0m       최초 설정 마법사 실행\n  bloks-os \u001b[36mstart\u001b[0m      서비스 시작\n  bloks-os \u001b[36mdoctor\u001b[0m     환경 진단 및 수정 안내\n  bloks-os \u001b[36mupgrade\u001b[0m    업데이트 확인\n  bloks-os \u001b[36mautostart\u001b[0m  PC 켤 때 자동 시작 설정\n\n\u001b[1m옵션:\u001b[0m\n  --profile=local|connected   실행 프로파일 지정 (기본: local)\n  --port=N                    포트 지정\n  --help, -h                  도움말\n\n",
+      "stderr": "",
+      "stdoutTail": "\n\u001b[1m\u001b[36mBLOKS OS\u001b[0m v0.1.0 — Local-First Agent OS\n\n\u001b[1m사용법:\u001b[0m\n  bloks-os \u001b[36minit\u001b[0m       최초 설정 마법사 실행\n  bloks-os \u001b[36mstart\u001b[0m      서비스 시작\n  bloks-os \u001b[36mdoctor\u001b[0m     환경 진단 및 수정 안내\n  bloks-os \u001b[36mupgrade\u001b[0m    업데이트 확인\n  bloks-os \u001b[36mautostart\u001b[0m  PC 켤 때 자동 시작 설정\n\n\u001b[1m옵션:\u001b[0m\n  --profile=local|connected   실행 프로파일 지정 (기본: local)\n  --port=N                    포트 지정\n  --help, -h                  도움말\n\n",
+      "stderrTail": ""
+    }
+  ],
+  "failure": null
+}

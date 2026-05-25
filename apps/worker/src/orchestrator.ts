@@ -392,14 +392,23 @@ ${roster}
   for (const task of readyTasks ?? []) {
     await sb.from("tasks").update({ state: "InProgress", updated_at: now }).eq("id", task.id);
     void publishWorldEvent("task_state_changed", { taskId: task.id, characterId: task.assignee_character_id, taskTitle: task.title, from: "Todo", to: "InProgress" });
-    if (!aiQueue) continue;
-    await aiQueue.add("execute", {
+    const aiJob = {
       queueName: QUEUE_NAMES.aiActions,
       payload: { input: { taskId: task.id, characterId: task.assignee_character_id } },
       requestedByCharacterId: "system:orchestrate",
       queuedAt: now,
       traceId: `orch-${projectId}`,
-    }, { jobId: `orch_ai_${task.id}` });
+    };
+
+    if (!aiQueue) {
+      // Local-first profile: execute AI job inline so first-task completion
+      // does not depend on Redis/BullMQ workers.
+      const { runQueueHandler } = await import("./handlers.js");
+      await runQueueHandler(QUEUE_NAMES.aiActions, aiJob);
+      continue;
+    }
+
+    await aiQueue.add("execute", aiJob, { jobId: `orch_ai_${task.id}` });
   }
 
   return {

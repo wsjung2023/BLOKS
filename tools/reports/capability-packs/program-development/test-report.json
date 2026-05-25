@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2026-05-25T03:48:15.475Z",
+  "brief": "BLOKS capability pack execution",
+  "source": "program-result.json",
+  "copiedFiles": [
+    "fastapi-rest-서버-구현.py",
+    "공통-유틸리티-모듈-작성.py",
+    "웹-ui-구현.html",
+    "코드-리뷰-메모-1.py",
+    "코드-리뷰-메모-10.py",
+    "코드-리뷰-메모-11.py",
+    "코드-리뷰-메모-12.py",
+    "코드-리뷰-메모-13.py",
+    "코드-리뷰-메모-14.py",
+    "코드-리뷰-메모-15.py",
+    "코드-리뷰-메모-16.py",
+    "코드-리뷰-메모-2.py",
+    "코드-리뷰-메모-3.py",
+    "코드-리뷰-메모-4.py",
+    "코드-리뷰-메모-5.py",
+    "코드-리뷰-메모-6.py",
+    "코드-리뷰-메모-7.py",
+    "코드-리뷰-메모-8.py",
+    "코드-리뷰-메모-9.py",
+    "테스트-케이스-문서-작성.py"
+  ],
+  "copiedFileCount": 20,
+  "scenarioTaskCount": 6,
+  "doneLikeCount": 6
+}

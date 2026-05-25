@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-05-25T03:48:17.133Z",
+  "lanes": [
+    "Backlog",
+    "Todo",
+    "InProgress",
+    "InReview",
+    "Done"
+  ],
+  "metrics": {
+    "homepageTasks": 6,
+    "programTasks": 6,
+    "programDoneLike": 6
+  },
+  "sourceScenarios": [
+    "homepage-result.json",
+    "program-result.json"
+  ]
+}

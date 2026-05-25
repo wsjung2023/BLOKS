@@ -1,3 +1,5 @@
+> ⚠️ **[ARCHIVED 2026-05-21]** 구현 완료 — 더 이상 업데이트하지 않습니다.
+
 # 04-01_BLOKS_permissions_and_approval_matrix_v0.1
 
 ## 문서 목적
