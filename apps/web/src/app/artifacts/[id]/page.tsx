@@ -54,6 +54,29 @@ function ImageArtifactViewer({ content }: { content: string }) {
   );
 }
 
+function VideoArtifactViewer({ content }: { content: string }) {
+  // content_markdown 형식: "[VIDEO](url)\n\n> provider 정보"
+  const urlMatch = content.match(/\[VIDEO\]\(([^)]+)\)/);
+  const caption = content.split("\n").find((l) => l.startsWith(">"))?.replace(/^>\s*/, "") ?? "";
+  if (!urlMatch) {
+    return (
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-muted)", fontSize: "0.9rem" }}>
+        영상을 불러올 수 없습니다.
+      </div>
+    );
+  }
+  return (
+    <div style={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", gap: "1rem", background: "#111" }}>
+      <video
+        src={urlMatch[1]}
+        controls
+        style={{ maxWidth: "100%", maxHeight: "70vh", borderRadius: 8, boxShadow: "0 4px 32px rgba(0,0,0,0.6)" }}
+      />
+      {caption && <p style={{ color: "#888", fontSize: "0.78rem" }}>{caption}</p>}
+    </div>
+  );
+}
+
 export default function ArtifactDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -250,6 +273,8 @@ export default function ArtifactDetailPage() {
         <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
           {artifact.artifact_type === "image_production" ? (
             <ImageArtifactViewer content={content} />
+          ) : artifact.artifact_type === "video_production" ? (
+            <VideoArtifactViewer content={content} />
           ) : (
             <MonacoEditor
               height="100%"

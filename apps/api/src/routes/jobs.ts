@@ -3,7 +3,7 @@ import { z } from "zod";
 import { QUEUE_NAMES } from "@bloks/shared";
 import type { JobExecutionRecord } from "@bloks/shared";
 import { getRuntimeProfile, getSupabase, writeEventLog } from "@bloks/db";
-import { routeAI, generateImage } from "@bloks/ai-router";
+import { routeAI, generateImage, generateVideo } from "@bloks/ai-router";
 import { enqueueJob } from "../queues/registry.js";
 
 export const jobsRouter = Router();
@@ -65,20 +65,23 @@ async function runLocalOrchestrate(
   const brief = String(input["brief"] ?? projectTitle);
   const now = new Date().toISOString();
 
+  const VIDEO_KEYWORDS = ["영상", "비디오", "유튜브", "광고영상", "릴스", "쇼츠", "동영상", "클립", "reels", "shorts", "youtube", "video", "광고 영상", "홍보 영상", "소개 영상"];
   const IMAGE_KEYWORDS = ["이미지", "디자인", "포스터", "배너", "그림", "비주얼", "썸네일", "로고", "image", "design", "poster", "banner", "visual", "graphic", "logo", "thumbnail"];
-  const isImageTask = IMAGE_KEYWORDS.some((kw) => brief.toLowerCase().includes(kw.toLowerCase()));
-  const taskType = isImageTask ? "image_production" : "project_plan";
+  const isVideoTask = VIDEO_KEYWORDS.some((kw) => brief.toLowerCase().includes(kw.toLowerCase()));
+  const isImageTask = !isVideoTask && IMAGE_KEYWORDS.some((kw) => brief.toLowerCase().includes(kw.toLowerCase()));
+  const taskType = isVideoTask ? "video_production" : isImageTask ? "image_production" : "project_plan";
 
-  // 이미지 태스크면 마케팅/디자인 팀 캐릭터 우선 배정
+  // 태스크 유형에 맞는 캐릭터 우선 배정
   let assigneeId = actorId;
-  if (isImageTask) {
-    const { data: designChars } = await sb
+  if (isVideoTask || isImageTask) {
+    // 영상/이미지 → 마케팅 팀 캐릭터
+    const { data: mktChars } = await sb
       .from("characters")
       .select("id")
       .eq("active_flag", true)
       .eq("division_id", "div_marketing")
       .limit(1);
-    assigneeId = String(designChars?.[0]?.id ?? actorId);
+    assigneeId = String(mktChars?.[0]?.id ?? actorId);
   } else {
     const { data: anyChars } = await sb
       .from("characters")
@@ -152,6 +155,18 @@ async function runLocalAiAction(
       }
     } catch (err) {
       output = `# 이미지 생성 실패\n\n${String(err)}`;
+    }
+  } else if (taskType === "video_production") {
+    try {
+      const aspectRatio = imagePrompt.includes("세로") || imagePrompt.includes("릴스") || imagePrompt.includes("reels") || imagePrompt.includes("쇼츠") ? "9:16" : "16:9";
+      const vid = await generateVideo({ prompt: imagePrompt, aspectRatio, duration: "5" });
+      if (vid.ok && vid.videoUrl) {
+        output = `[VIDEO](${vid.videoUrl})\n\n> ${vid.provider} / ${vid.modelUsed}로 생성`;
+      } else {
+        output = `# 영상 생성 실패\n\n오류: ${vid.errorCode ?? "알 수 없는 오류"}`;
+      }
+    } catch (err) {
+      output = `# 영상 생성 실패\n\n${String(err)}`;
     }
   } else {
     try {

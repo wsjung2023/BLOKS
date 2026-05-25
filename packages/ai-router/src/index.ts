@@ -360,5 +360,7 @@ export function getAiRouter(): AiRouter {
 export { OpenAiProvider };
 
 export { generateImage, listAvailableImageProviders } from "./image.js";
+export { generateVideo } from "./video.js";
+export type { VideoGenRequest, VideoGenResult } from "./video.js";
 export type { ImageGenRequest, ImageGenResult } from "./image.js";
 
