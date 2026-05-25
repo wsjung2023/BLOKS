@@ -1,7 +1,7 @@
 import { QUEUE_NAMES, TaskState } from "@bloks/shared";
 import { processOrchestrate } from "./orchestrator.js";
 import { getSupabase } from "@bloks/db";
-import { routeAI, TASK_TEMPLATES } from "@bloks/ai-router";
+import { routeAI, TASK_TEMPLATES, generateImage } from "@bloks/ai-router";
 import { globalRuntimeEngine } from "@bloks/agent-runtime";
 import { buildMemoryContext, createMemory, deriveMemorySummary } from "@bloks/memory";
 import { calcTaskExperience, expRequiredForLevel } from "@bloks/simulation";
@@ -289,6 +289,38 @@ async function runAiTask({ jobData, taskId, task, now }: {
     task.description ? `Description: ${task.description}` : "",
     `Complete this task professionally and thoroughly.`,
   ].filter(Boolean).join("\n");
+
+  // Image generation tasks bypass text AI and call generateImage directly
+  const IMAGE_TASK_TYPES = new Set(["image_production", "media_pipeline"]);
+  if (IMAGE_TASK_TYPES.has((task.task_type as string ?? "").toLowerCase())) {
+    const imgResult = await generateImage({ prompt: userPrompt }).catch(() => null);
+    const imgContent = imgResult?.ok
+      ? (imgResult.imageUrl
+          ? `![Generated Image](${imgResult.imageUrl})\n\n*Provider: ${imgResult.provider} | Model: ${imgResult.modelUsed}*`
+          : `![Generated Image](data:${imgResult.mimeType};base64,${imgResult.imageBase64 ?? ""})\n\n*Provider: ${imgResult.provider} | Model: ${imgResult.modelUsed}*`)
+      : `## Image Generation Failed\n\nProvider: ${imgResult?.provider ?? "none"} — Error: ${imgResult?.errorCode ?? "unknown"}\n\nPlease set one of: OPENAI_API_KEY, GOOGLE_AI_API_KEY, STABILITY_API_KEY, FAL_KEY, IDEOGRAM_API_KEY`;
+
+    await sb.from("artifacts").insert({
+      task_id: taskId,
+      project_id: task.project_id,
+      author_character_id: characterId,
+      artifact_type: "image",
+      title: `Image: ${task.title}`,
+      content_markdown: imgContent,
+      status: "Draft",
+      created_at: now,
+      updated_at: now,
+    });
+    await sb.from("tasks").update({ state: TaskState.InReview, updated_at: now }).eq("id", taskId);
+    await logEvent({
+      entityType: "task", entityId: taskId,
+      eventType: "task.state.changed",
+      previousState: task.state as string, nextState: TaskState.InReview,
+      changedBy: `worker:ai-actions:${characterId}`,
+      relatedTaskId: taskId, relatedProjectId: task.project_id as string | null, now,
+    });
+    return { ok: true, handler: QUEUE_NAMES.aiActions, processedAt: now, summary: `image generated via ${imgResult?.provider ?? "none"}` };
+  }
 
   const traceId = jobData.traceId ?? `ai_${taskId}_${Date.now()}`;
   const runtimeResult = await globalRuntimeEngine.execute({
