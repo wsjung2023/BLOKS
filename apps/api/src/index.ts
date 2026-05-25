@@ -1,4 +1,4 @@
-// API server entry — Express /api/v1 router with CORS, logging, Supabase init
+// API server entry — Express /api/v1 router with CORS, logging, DB init
 import { readFileSync, existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -23,7 +23,8 @@ import { metricsRouter } from "./routes/metrics.js";
 import { runtimeRouter } from "./routes/runtime.js";
 import { runtimeApprovalsRouter } from "./routes/runtime-approvals.js";
 import { runtimeAuditRouter } from "./routes/runtime-audit.js";
-import { getSupabase } from "@bloks/db";
+import { getDb } from "@bloks/db";
+import { startWorldTicker } from "./world-ticker.js";
 
 // Load .env from repo root if present — works without --env-file flag
 {
@@ -68,7 +69,7 @@ app.use((req, res, next) => {
     console.log(`[API] ${req.method} ${req.originalUrl} ${res.statusCode} ${ms}ms`);
     if (Math.random() < 0.1) {
       try {
-        void getSupabase()
+        void getDb()
           .from("request_metrics")
           .insert({ method: req.method, path, status_code: res.statusCode, duration_ms: ms });
       } catch { /* non-fatal */ }
@@ -82,7 +83,7 @@ app.use((req, res, next) => {
 app.get("/health", (_req, res) => {
   let dbStatus = "unknown";
   try {
-    getSupabase();
+    getDb();
     dbStatus = "up";
   } catch {
     dbStatus = "error";
@@ -171,13 +172,14 @@ app.use(
 
 app.listen(Number(PORT), () => {
   console.log(`[BLOKS API] http://localhost:${PORT} (${process.env["NODE_ENV"] ?? "development"})`);
-  // Eagerly validate Supabase connection
+  // Eagerly initialize DB client
   try {
-    getSupabase();
-    console.log("[BLOKS API] Supabase client initialized");
+    getDb();
+    console.log("[BLOKS API] DB client initialized");
   } catch (err) {
-    console.error("[BLOKS API] Supabase init failed:", err);
+    console.error("[BLOKS API] DB init failed:", err);
   }
+  startWorldTicker();
 });
 
 export default app;
