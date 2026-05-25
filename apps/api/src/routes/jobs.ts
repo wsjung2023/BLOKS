@@ -3,7 +3,7 @@ import { z } from "zod";
 import { QUEUE_NAMES } from "@bloks/shared";
 import type { JobExecutionRecord } from "@bloks/shared";
 import { getRuntimeProfile, getSupabase, writeEventLog } from "@bloks/db";
-import { routeAI } from "@bloks/ai-router";
+import { routeAI, generateImage } from "@bloks/ai-router";
 import { enqueueJob } from "../queues/registry.js";
 
 export const jobsRouter = Router();
@@ -65,20 +65,35 @@ async function runLocalOrchestrate(
   const brief = String(input["brief"] ?? projectTitle);
   const now = new Date().toISOString();
 
-  const { data: assignees } = await sb
-    .from("characters")
-    .select("id")
-    .eq("active_flag", true)
-    .limit(1);
+  const IMAGE_KEYWORDS = ["이미지", "디자인", "포스터", "배너", "그림", "비주얼", "썸네일", "로고", "image", "design", "poster", "banner", "visual", "graphic", "logo", "thumbnail"];
+  const isImageTask = IMAGE_KEYWORDS.some((kw) => brief.toLowerCase().includes(kw.toLowerCase()));
+  const taskType = isImageTask ? "image_production" : "project_plan";
 
-  const assigneeId = String(assignees?.[0]?.id ?? actorId);
+  // 이미지 태스크면 마케팅/디자인 팀 캐릭터 우선 배정
+  let assigneeId = actorId;
+  if (isImageTask) {
+    const { data: designChars } = await sb
+      .from("characters")
+      .select("id")
+      .eq("active_flag", true)
+      .eq("division_id", "div_marketing")
+      .limit(1);
+    assigneeId = String(designChars?.[0]?.id ?? actorId);
+  } else {
+    const { data: anyChars } = await sb
+      .from("characters")
+      .select("id")
+      .eq("active_flag", true)
+      .limit(1);
+    assigneeId = String(anyChars?.[0]?.id ?? actorId);
+  }
 
   // Local-first baseline: create one real executable task then execute ai-actions inline.
   const { data: createdTask } = await sb.from("tasks").insert({
     project_id: projectId,
     title: `${projectTitle} - execution draft`,
     description: brief,
-    task_type: "project_plan",
+    task_type: taskType,
     state: "Todo",
     priority: "High",
     assignee_character_id: assigneeId,
@@ -118,33 +133,48 @@ async function runLocalAiAction(
   await sb.from("tasks").update({ state: "InProgress", updated_at: now }).eq("id", taskId);
 
   const taskType = String(task.task_type ?? "document").toLowerCase();
-  const prompt = [
+  const imagePrompt = [String(task.title ?? ""), String(task.description ?? "")].filter(Boolean).join(". ");
+  const textPrompt = [
     `Task: ${String(task.title ?? "")}`,
     task.description ? `Description: ${String(task.description)}` : "",
     "Return practical, structured output with clear action items.",
   ].filter(Boolean).join("\n");
 
   let output = "";
-  try {
-    const ai = await routeAI({
-      characterId,
-      taskType,
-      prompt,
-      maxTokens: 1200,
-    });
-    output = ai.output;
-  } catch {
-    output = [
-      `# ${String(task.title ?? "Task Output")}`,
-      "",
-      "## Summary",
-      "Local fallback output generated because AI call was unavailable.",
-      "",
-      "## Next Actions",
-      "1. Validate scope",
-      "2. Implement first increment",
-      "3. Run review",
-    ].join("\n");
+  if (taskType === "image_production") {
+    try {
+      const img = await generateImage({ prompt: imagePrompt });
+      if (img.ok) {
+        const src = img.imageUrl ?? `data:${img.mimeType};base64,${img.imageBase64}`;
+        output = `![${String(task.title ?? "generated image")}](${src})\n\n> ${img.provider} / ${img.modelUsed}로 생성`;
+      } else {
+        output = `# 이미지 생성 실패\n\n오류: ${img.errorCode ?? "알 수 없는 오류"}`;
+      }
+    } catch (err) {
+      output = `# 이미지 생성 실패\n\n${String(err)}`;
+    }
+  } else {
+    try {
+      const ai = await routeAI({
+        characterId,
+        taskType,
+        prompt: textPrompt,
+        maxTokens: 1200,
+      });
+      output = ai.output;
+    } catch {
+      output = [
+        `# ${String(task.title ?? "Task Output")}`,
+        "",
+        "## Summary",
+        "Local fallback output generated because AI call was unavailable.",
+        "",
+        "## Next Actions",
+        "1. Validate scope",
+        "2. Implement first increment",
+        "3. Run review",
+      ].join("\n");
+    }
   }
 
   await sb.from("artifacts").insert({

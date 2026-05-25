@@ -34,6 +34,26 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleString("ko-KR", { dateStyle: "medium", timeStyle: "short" });
 }
 
+function ImageArtifactViewer({ content }: { content: string }) {
+  // content_markdown 형식: "![title](url_or_data_uri)\n\n> provider 정보"
+  const imgMatch = content.match(/!\[([^\]]*)\]\(([^)]+)\)/);
+  const caption = content.split("\n").find((l) => l.startsWith(">"))?.replace(/^>\s*/, "") ?? "";
+  if (!imgMatch) {
+    return (
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-muted)", fontSize: "0.9rem" }}>
+        이미지를 불러올 수 없습니다.
+      </div>
+    );
+  }
+  return (
+    <div style={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", gap: "1rem", background: "#111" }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={imgMatch[2]} alt={imgMatch[1]} style={{ maxWidth: "100%", maxHeight: "70vh", borderRadius: 8, boxShadow: "0 4px 32px rgba(0,0,0,0.6)" }} />
+      {caption && <p style={{ color: "#888", fontSize: "0.78rem" }}>{caption}</p>}
+    </div>
+  );
+}
+
 export default function ArtifactDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -228,22 +248,26 @@ export default function ArtifactDetailPage() {
 
         {/* Editor area */}
         <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-          <MonacoEditor
-            height="100%"
-            language="markdown"
-            theme="vs-dark"
-            value={content}
-            onChange={(val) => { setContent(val ?? ""); setDirty(true); }}
-            options={{
-              minimap: { enabled: false },
-              wordWrap: "on",
-              fontSize: 14,
-              lineHeight: 22,
-              padding: { top: 16, bottom: 16 },
-              scrollBeyondLastLine: false,
-              renderWhitespace: "none",
-            }}
-          />
+          {artifact.artifact_type === "image_production" ? (
+            <ImageArtifactViewer content={content} />
+          ) : (
+            <MonacoEditor
+              height="100%"
+              language="markdown"
+              theme="vs-dark"
+              value={content}
+              onChange={(val) => { setContent(val ?? ""); setDirty(true); }}
+              options={{
+                minimap: { enabled: false },
+                wordWrap: "on",
+                fontSize: 14,
+                lineHeight: 22,
+                padding: { top: 16, bottom: 16 },
+                scrollBeyondLastLine: false,
+                renderWhitespace: "none",
+              }}
+            />
+          )}
         </div>
 
         {/* AI revision panel */}
