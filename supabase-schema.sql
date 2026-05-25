@@ -1,4 +1,4 @@
--- BLOKS ÃÊ±â ½ºÅ°¸¶ »ý¼º (Supabase SQL Editor¿¡¼­ ½ÇÇà)
+ï»¿-- BLOKS ì´ˆê¸° ìŠ¤í‚¤ë§ˆ ìƒì„± (Supabase SQL Editorì—ì„œ ì‹¤í–‰)
 
 -- ENUMS
 CREATE TYPE character_type AS ENUM ('AI_AGENT', 'HUMAN_FOUNDER', 'DIGITAL_TWIN');

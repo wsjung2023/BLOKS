@@ -1,18 +1,25 @@
 {
   "name": "@bloks/cli",
   "version": "0.1.0",
-  "description": "BLOKS OS — one-command install and run",
-  "private": true,
+  "description": "BLOKS OS one-command install and run",
+  "private": false,
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "bloks-os": "./bin/bloks-os.mjs"
   },
+  "files": [
+    "bin",
+    "dist"
+  ],
   "scripts": {
-    "lint": "tsc --noEmit"
+    "build": "tsc -p tsconfig.json",
+    "lint": "tsc --noEmit",
+    "prepack": "npm run build"
   },
-  "dependencies": {
-    "@bloks/db": "workspace:*"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.8.0"
