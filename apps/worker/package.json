@@ -15,9 +15,7 @@
     "@bloks/ai-router": "workspace:*",
     "@bloks/db": "workspace:*",
     "@bloks/memory": "workspace:*",
-    "@bloks/shared": "workspace:*",
-    "bullmq": "^5.58.0",
-    "ioredis": "^5.10.1"
+    "@bloks/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

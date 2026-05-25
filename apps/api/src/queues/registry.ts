@@ -1,5 +1,4 @@
 import { ID_PREFIX, QUEUE_NAMES } from "@bloks/shared";
-import { getRuntimeProfile } from "@bloks/db";
 
 export const queueRegistry = Object.freeze([
   QUEUE_NAMES.workflowTransitions,
@@ -20,8 +19,7 @@ export type EnqueueJobParams = {
   payload: Record<string, unknown>;
   requestedByCharacterId?: string | null;
   traceId?: string | null;
-  // If provided, used as deterministic BullMQ job ID to prevent duplicate enqueueing.
-  // BullMQ skips adding a job whose ID already exists in the queue.
+  // If provided, used as deterministic job ID to prevent duplicate enqueueing.
   idempotencyKey?: string | null;
 };
 
@@ -34,58 +32,26 @@ export type QueueJobData = {
   idempotencyKey: string | null;
 };
 
-const redisConnection = {
-  host: process.env.REDIS_HOST ?? "127.0.0.1",
-  port: Number(process.env.REDIS_PORT ?? 6379),
-  password: process.env.REDIS_PASSWORD || undefined,
-};
-
 type QueueLike = {
   add: (name: string, data: QueueJobData, options: { jobId: string }) => Promise<{ id: string }>;
 };
 
-// In-memory queue for local profile — stores jobs in-memory; no Redis required.
 const inMemoryJobs = new Map<string, { name: string; data: QueueJobData }>();
-
-function makeInMemoryQueue(): QueueLike {
-  return {
-    add: async (name: string, data: QueueJobData, options: { jobId: string }) => {
-      inMemoryJobs.set(options.jobId, { name, data });
-      console.log(`[queue:local] enqueued ${name} => ${options.jobId}`);
-      return { id: options.jobId };
-    },
-  };
-}
 
 const queues = new Map<QueueName, QueueLike>();
 
-async function getQueue(queueName: QueueName): Promise<QueueLike> {
+function getQueue(queueName: QueueName): QueueLike {
   const existing = queues.get(queueName);
   if (existing) return existing;
-
-  // Local profile: skip Redis entirely
-  if (getRuntimeProfile() === "local") {
-    const q = makeInMemoryQueue();
-    queues.set(queueName, q);
-    return q;
-  }
-
-  const { Queue } = await import("bullmq");
-  const queue = new Queue(queueName, {
-    connection: redisConnection,
-    defaultJobOptions: {
-      removeOnComplete: 100,
-      removeOnFail: 500,
-      attempts: 3,
-      backoff: {
-        type: "exponential",
-        delay: 2000,
-      },
+  const q: QueueLike = {
+    add: async (name, data, options) => {
+      inMemoryJobs.set(options.jobId, { name, data });
+      console.log(`[queue] enqueued ${name} => ${options.jobId}`);
+      return { id: options.jobId };
     },
-  });
-
-  queues.set(queueName, queue);
-  return queue;
+  };
+  queues.set(queueName, q);
+  return q;
 }
 
 export function createJobId(nowMs = Date.now(), randomSuffix = Math.random().toString(36).slice(2, 8)): string {
@@ -104,10 +70,9 @@ export function buildQueueJobData(params: EnqueueJobParams, queuedAtIso: string)
 }
 
 export async function enqueueJob(params: EnqueueJobParams) {
-  const queue = await getQueue(params.queueName);
+  const queue = getQueue(params.queueName);
   const timestamp = Date.now();
   // Use idempotencyKey as deterministic job ID when provided.
-  // BullMQ will skip adding if the same job ID already exists (pending/active).
   const jobId = params.idempotencyKey
     ? `${ID_PREFIX.job}idem_${params.idempotencyKey}`
     : createJobId(timestamp);

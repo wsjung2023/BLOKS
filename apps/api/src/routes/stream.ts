@@ -1,6 +1,5 @@
 // SSE stream — broadcasts world events to all connected clients
 import { Router, type Request, type Response } from "express";
-import { getRuntimeProfile } from "@bloks/db";
 
 export const WORLD_EVENTS_CHANNEL = "world:events";
 
@@ -64,31 +63,6 @@ const heartbeatInterval = setInterval(
   25_000,
 );
 heartbeatInterval.unref();
-
-// ── Redis subscriber (connected mode only) ────────────────────────────────────
-// In local mode SSE still works for in-process emits; no Redis needed.
-
-if (getRuntimeProfile() === "connected") {
-  import("ioredis").then(({ default: Redis }) => {
-    const redisSub = new Redis({
-      host: process.env["REDIS_HOST"] ?? "127.0.0.1",
-      port: Number(process.env["REDIS_PORT"] ?? 6379),
-      password: process.env["REDIS_PASSWORD"] || undefined,
-      lazyConnect: true,
-      maxRetriesPerRequest: null,
-    });
-    redisSub.connect().catch(() => {});
-    redisSub.subscribe(WORLD_EVENTS_CHANNEL).catch((err: Error) => {
-      console.warn("[stream] Redis subscribe failed:", err.message);
-    });
-    redisSub.on("message", (_channel: string, message: string) => {
-      try {
-        const { type, payload } = JSON.parse(message) as WorldEvent;
-        emitWorldEvent(type, payload);
-      } catch { /* ignore malformed frames */ }
-    });
-  }).catch(() => {});
-}
 
 // ── GET /api/v1/stream ─────────────────────────────────────────────────────────
 

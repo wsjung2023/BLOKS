@@ -3,45 +3,9 @@ import { routeAI } from "@bloks/ai-router";
 import type { WorkerJobPayload, WorkerHandlerResult } from "./handlers.js";
 import { QUEUE_NAMES } from "@bloks/shared";
 import { sendAgentMessage } from "./helpers.js";
-const IS_LOCAL = process.env["BLOKS_PROFILE"] !== "connected";
-const WORLD_EVENTS_CHANNEL = "world:events";
 
-const redisConnection = {
-  host: process.env["REDIS_HOST"] ?? "127.0.0.1",
-  port: Number(process.env["REDIS_PORT"] ?? 6379),
-  password: process.env["REDIS_PASSWORD"] || undefined,
-};
-
-let _redisPub: import("ioredis").default | null = null;
-async function getRedisPub() {
-  if (IS_LOCAL) return null;
-  if (_redisPub) return _redisPub;
-  const { default: Redis } = await import("ioredis");
-  _redisPub = new Redis({ ...redisConnection, lazyConnect: true, maxRetriesPerRequest: null });
-  _redisPub.connect().catch(() => {});
-  return _redisPub;
-}
-
-let _aiActionsQueue: import("bullmq").Queue | null = null;
-async function getAiActionsQueue() {
-  if (IS_LOCAL) return null;
-  if (_aiActionsQueue) return _aiActionsQueue;
-  const { Queue } = await import("bullmq");
-  _aiActionsQueue = new Queue(QUEUE_NAMES.aiActions, {
-    connection: redisConnection,
-    defaultJobOptions: { removeOnComplete: 100, removeOnFail: 500, attempts: 3, backoff: { type: "exponential", delay: 2000 } },
-  });
-  return _aiActionsQueue;
-}
-
-async function publishWorldEvent(type: string, payload: Record<string, unknown>) {
-  try {
-    const pub = await getRedisPub();
-    if (!pub) return;
-    await pub.publish(WORLD_EVENTS_CHANNEL, JSON.stringify({ type, payload, timestamp: new Date().toISOString() }));
-  } catch {
-    // Non-fatal
-  }
+function publishWorldEvent(_type: string, _payload: Record<string, unknown>) {
+  // No-op: cross-process pub/sub removed. Events visible via direct API SSE emits.
 }
 
 function delay(ms: number): Promise<void> {
@@ -388,27 +352,17 @@ ${roster}
     .not("assignee_character_id", "is", null)
     .limit(3);
 
-  const aiQueue = await getAiActionsQueue();
+  const { runQueueHandler } = await import("./handlers.js");
   for (const task of readyTasks ?? []) {
     await sb.from("tasks").update({ state: "InProgress", updated_at: now }).eq("id", task.id);
     void publishWorldEvent("task_state_changed", { taskId: task.id, characterId: task.assignee_character_id, taskTitle: task.title, from: "Todo", to: "InProgress" });
-    const aiJob = {
+    void runQueueHandler(QUEUE_NAMES.aiActions, {
       queueName: QUEUE_NAMES.aiActions,
       payload: { input: { taskId: task.id, characterId: task.assignee_character_id } },
       requestedByCharacterId: "system:orchestrate",
       queuedAt: now,
       traceId: `orch-${projectId}`,
-    };
-
-    if (!aiQueue) {
-      // Local-first profile: execute AI job inline so first-task completion
-      // does not depend on Redis/BullMQ workers.
-      const { runQueueHandler } = await import("./handlers.js");
-      await runQueueHandler(QUEUE_NAMES.aiActions, aiJob);
-      continue;
-    }
-
-    await aiQueue.add("execute", aiJob, { jobId: `orch_ai_${task.id}` });
+    }).catch((err: unknown) => console.error("[orchestrate] ai-actions inline failed", err));
   }
 
   return {

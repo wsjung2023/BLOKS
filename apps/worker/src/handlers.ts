@@ -6,40 +6,11 @@ import { globalRuntimeEngine } from "@bloks/agent-runtime";
 import { buildMemoryContext, createMemory, deriveMemorySummary } from "@bloks/memory";
 import { calcTaskExperience, expRequiredForLevel } from "@bloks/simulation";
 import { sendAgentMessage, findAvailableReviewer } from "./helpers.js";
-const IS_LOCAL = process.env["BLOKS_PROFILE"] !== "connected";
-const WORLD_EVENTS_CHANNEL = "world:events";
-
-let _redisPub: import("ioredis").default | null = null;
-async function getOrCreateRedisPub() {
-  if (IS_LOCAL) return null;
-  if (_redisPub) return _redisPub;
-  const { default: Redis } = await import("ioredis");
-  _redisPub = new Redis({
-    host: process.env["REDIS_HOST"] ?? "127.0.0.1",
-    port: Number(process.env["REDIS_PORT"] ?? 6379),
-    password: process.env["REDIS_PASSWORD"] || undefined,
-    lazyConnect: true,
-    maxRetriesPerRequest: null,
-  });
-  _redisPub.connect().catch(() => {});
-  return _redisPub;
+function publishWorldEvent(_type: string, _payload: Record<string, unknown>): void {
+  // In-process only — no Redis. Events are logged by the tick engine directly.
 }
 
-async function publishWorldEvent(
-  type: string,
-  payload: Record<string, unknown>,
-): Promise<void> {
-  try {
-    const pub = await getOrCreateRedisPub();
-    if (!pub) return;
-    await pub.publish(
-      WORLD_EVENTS_CHANNEL,
-      JSON.stringify({ type, payload, timestamp: new Date().toISOString() }),
-    );
-  } catch {
-    // Non-fatal
-  }
-}
+const activeTaskIds = new Set<string>();
 
 type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
 
@@ -233,36 +204,24 @@ async function processAiActions(jobData: WorkerJobPayload): Promise<WorkerHandle
 
   if (taskErr || !task) throw new Error(`ai-actions: task ${taskId} not found`);
 
-  // ── 태스크 소유권 락 (동시 실행 방지) ────────────────────────────────────
-  // Redis SET NX로 최대 10분 동안 이 worker가 태스크를 독점 처리
-  const lockKey = `task:claim:${taskId}`;
-  const workerId = `${process.pid}_${Date.now()}`;
-  const pub = await getOrCreateRedisPub();
-  const locked = pub
-    ? await pub.set(lockKey, workerId, "EX", 600, "NX").catch(() => null)
-    : "OK"; // local mode: no distributed lock needed
-  if (locked === null) {
-    console.log(`[ai-actions] task ${taskId} already claimed by another worker, skipping`);
-    return { ok: true, handler: QUEUE_NAMES.aiActions, processedAt: now, summary: "skipped: task already claimed" };
+  // In-process dedup — prevents the tick engine from dispatching the same task twice
+  if (activeTaskIds.has(taskId)) {
+    return { ok: true, handler: QUEUE_NAMES.aiActions, processedAt: now, summary: "skipped: task already in-flight" };
   }
+  activeTaskIds.add(taskId);
 
   try {
-    return await runAiTask({ jobData, taskId, task, now, workerId, lockKey });
+    return await runAiTask({ jobData, taskId, task, now });
   } finally {
-    if (pub) {
-      const currentOwner = await pub.get(lockKey).catch(() => null);
-      if (currentOwner === workerId) await pub.del(lockKey).catch(() => {});
-    }
+    activeTaskIds.delete(taskId);
   }
 }
 
-async function runAiTask({ jobData, taskId, task, now, workerId: _workerId, lockKey: _lockKey }: {
+async function runAiTask({ jobData, taskId, task, now }: {
   jobData: WorkerJobPayload;
   taskId: string;
   task: Record<string, unknown>;
   now: string;
-  workerId: string;
-  lockKey: string;
 }): Promise<WorkerHandlerResult> {
   const sb = getSupabase();
 
@@ -905,33 +864,9 @@ const handlerMap: Record<QueueName, (jobData: WorkerJobPayload) => Promise<Worke
   [QUEUE_NAMES.monthlyReport]: processMonthlyReport,
 };
 
-const IDEMPOTENCY_TTL_SECONDS = 86_400; // 24 hours
-
 export async function runQueueHandler(queueName: QueueName, jobData: WorkerJobPayload): Promise<WorkerHandlerResult> {
   const handler = handlerMap[queueName];
   if (!handler) throw new Error(`No handler registered for queue: ${queueName}`);
-
-  // Idempotency guard: skip if this key was already processed within 24h.
-  // Uses Redis SET NX — first caller wins, subsequent calls are no-ops.
-  const idemKey = jobData.idempotencyKey;
-  if (idemKey) {
-    const redisKey = `idempotency:${idemKey}`;
-    const pub = await getOrCreateRedisPub();
-    const set = pub
-      ? await pub.set(redisKey, "1", "EX", IDEMPOTENCY_TTL_SECONDS, "NX")
-      : "OK"; // local mode: skip idempotency check
-    if (set === null) {
-      // Key already existed → job was already processed
-      console.log(`[worker:${queueName}] idempotency skip (key=${idemKey})`);
-      return {
-        ok: true,
-        handler: queueName,
-        processedAt: new Date().toISOString(),
-        summary: `skipped (idempotency key already processed: ${idemKey})`,
-      };
-    }
-  }
-
   return handler(jobData);
 }
 
@@ -1163,25 +1098,14 @@ async function processAgentMessages(_jobData: WorkerJobPayload): Promise<WorkerH
 
       void publishWorldEvent("task_state_changed", { taskId, characterId: assigneeCharId, taskTitle: task.title, from: TaskState.InReview, to: TaskState.InProgress });
 
-      // 재작업 잡 즉시 재큐잉 — BullMQ Queue 직접 사용
-      const { Queue: BullQueue } = await import("bullmq");
-      const redisConn = {
-        host: process.env["REDIS_HOST"] ?? "127.0.0.1",
-        port: Number(process.env["REDIS_PORT"] ?? 6379),
-        password: process.env["REDIS_PASSWORD"] || undefined,
-      };
-      const q = new BullQueue(QUEUE_NAMES.aiActions, {
-        connection: redisConn,
-        defaultJobOptions: { removeOnComplete: 100, removeOnFail: 500, attempts: 3, backoff: { type: "exponential", delay: 2000 } },
-      });
-      await q.add("execute", {
+      // 재작업 잡 즉시 인라인 실행
+      void runQueueHandler(QUEUE_NAMES.aiActions, {
         queueName: QUEUE_NAMES.aiActions,
         payload: { input: { taskId, characterId: assigneeCharId } },
         requestedByCharacterId: "system:ai-review",
         queuedAt: now,
         traceId: `revision_${taskId}_${revCount + 1}`,
-      }, { jobId: `revision_${taskId}_${revCount + 1}`, deduplication: { id: `revision_${taskId}_${revCount + 1}` } }).catch(() => {});
-      await q.close().catch(() => {});
+      }).catch(() => {});
     }
 
     await sb.from("agent_messages").update({ status: "ACTED_ON" }).eq("id", msg.id);

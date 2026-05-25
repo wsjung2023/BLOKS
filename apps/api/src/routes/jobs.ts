@@ -265,7 +265,7 @@ jobsRouter.post("/", async (req, res) => {
       }
     }
 
-    // Insert outbox record first (durability: relay picks it up if BullMQ publish fails)
+    // Insert outbox record first (durability: relay picks it up if enqueue fails)
     const outboxId = `outbox_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
     const jobPayload = { input: parsed.data.payload, companyId: "default", actorId };
 
@@ -292,7 +292,7 @@ jobsRouter.post("/", async (req, res) => {
       console.warn("[jobs] outbox insert failed (non-fatal):", outboxError.message);
     }
 
-    // Enqueue to BullMQ — jobId dedup via idempotencyKey prevents double-processing
+    // Enqueue job — idempotencyKey prevents double-processing
     const queued = await enqueueJob({
       queueName: parsed.data.queueName,
       payload: jobPayload,

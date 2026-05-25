@@ -1,22 +1,5 @@
 // Worker shared helpers — agent messaging + reviewer lookup
 import { getSupabase } from "@bloks/db";
-import Redis from "ioredis";
-
-const WORLD_EVENTS_CHANNEL = "world:events";
-
-let _redisPub: Redis | null = null;
-function getRedisPub(): Redis {
-  if (_redisPub) return _redisPub;
-  _redisPub = new Redis({
-    host: process.env["REDIS_HOST"] ?? "127.0.0.1",
-    port: Number(process.env["REDIS_PORT"] ?? 6379),
-    password: process.env["REDIS_PASSWORD"] || undefined,
-    lazyConnect: true,
-    maxRetriesPerRequest: null,
-  });
-  _redisPub.connect().catch(() => {});
-  return _redisPub;
-}
 
 export async function sendAgentMessage(opts: {
   fromCharId: string;
@@ -36,24 +19,6 @@ export async function sendAgentMessage(opts: {
     status: "PENDING",
     created_at: opts.now,
   });
-  try {
-    await getRedisPub().publish(
-      WORLD_EVENTS_CHANNEL,
-      JSON.stringify({
-        type: "agent_message",
-        payload: {
-          fromCharId: opts.fromCharId,
-          toCharId: opts.toCharId,
-          messageType: opts.messageType,
-          content: opts.content,
-          relatedTaskId: opts.relatedTaskId ?? null,
-        },
-        timestamp: opts.now,
-      }),
-    );
-  } catch {
-    // Non-fatal
-  }
 }
 
 export async function findAvailableReviewer(

@@ -8,18 +8,16 @@
 //   Phase 6: Broadcast world snapshot via Redis Pub/Sub → SSE
 
 import { QUEUE_NAMES, TaskState } from "@bloks/shared";
-import { getSupabase, getRuntimeProfile } from "@bloks/db";
+import { getSupabase } from "@bloks/db";
 import { routeAI } from "@bloks/ai-router";
 import { compressCharacterMemories } from "@bloks/memory";
 import { sendAgentMessage } from "./helpers.js";
-
-const IS_LOCAL = getRuntimeProfile() === "local";
+import { runQueueHandler } from "./handlers.js";
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
 const TICK_INTERVAL_MS = parseInt(process.env["WORLD_TICK_INTERVAL_MS"] ?? "60000", 10);
 const STALE_THRESHOLD_MS = 5 * 60 * 1000; // 5 min before auto-advancing states
-const WORLD_EVENTS_CHANNEL = "world:events";
 
 // ── Activity status → location zone mapping ──────────────────────────────────
 
@@ -43,57 +41,8 @@ const DEPT_FLOOR_MAP: Record<string, string> = {
   executive: "8f-executive",
 };
 
-// ── Redis + BullMQ setup ─────────────────────────────────────────────────────
-
-const redisConnection = {
-  host: process.env["REDIS_HOST"] ?? "127.0.0.1",
-  port: Number(process.env["REDIS_PORT"] ?? 6379),
-  password: process.env["REDIS_PASSWORD"] || undefined,
-};
-
-// No-op queue for local mode — silently drops all job enqueue calls.
-const noopQueue = {
-  add: async () => ({ id: "noop" }),
-  close: async () => {},
-} as unknown;
-
-async function getAiActionsQueue(): Promise<unknown> {
-  if (IS_LOCAL) return noopQueue;
-  const { Queue } = await import("bullmq");
-  return new Queue(QUEUE_NAMES.aiActions, {
-    connection: redisConnection,
-    defaultJobOptions: { removeOnComplete: 100, removeOnFail: 500, attempts: 3, backoff: { type: "exponential", delay: 2000 } },
-  });
-}
-
-const _queues = new Map<string, unknown>();
-async function getQueue(queueName: string): Promise<unknown> {
-  const existing = _queues.get(queueName);
-  if (existing) return existing;
-  if (IS_LOCAL) {
-    _queues.set(queueName, noopQueue);
-    return noopQueue;
-  }
-  const { Queue } = await import("bullmq");
-  const q = new Queue(queueName, {
-    connection: redisConnection,
-    defaultJobOptions: { removeOnComplete: 100, removeOnFail: 500, attempts: 3, backoff: { type: "exponential", delay: 2000 } },
-  });
-  _queues.set(queueName, q);
-  return q;
-}
-
-async function publishWorldEvent(type: string, payload: Record<string, unknown>): Promise<void> {
-  if (IS_LOCAL) return;
-  try {
-    const Redis = (await import("ioredis")).default;
-    const pub = new Redis({ ...redisConnection, lazyConnect: true, maxRetriesPerRequest: null });
-    await pub.connect();
-    await pub.publish(WORLD_EVENTS_CHANNEL, JSON.stringify({ type, payload, timestamp: new Date().toISOString() }));
-    await pub.quit();
-  } catch {
-    // Non-fatal
-  }
+function publishWorldEvent(_type: string, _payload: Record<string, unknown>): void {
+  // No-op: cross-process Redis pub/sub removed. API emits SSE directly.
 }
 
 // ── Phase 1: Character runtime state updates ─────────────────────────────────
@@ -374,26 +323,19 @@ async function phaseDispatchAiActions(): Promise<number> {
 
   if (!readyTasks || readyTasks.length === 0) return 0;
 
-  const queue = await getAiActionsQueue() as { add: (name: string, data: unknown, opts: { jobId: string }) => Promise<unknown> };
   let dispatched = 0;
+  const now = new Date().toISOString();
 
   for (const task of readyTasks) {
     if (!aiEnabledIds.has(task.assignee_character_id as string)) continue;
 
-    const jobId = `tick_ai_${task.id}_${Date.now()}`;
-
-    await queue.add("execute", {
+    void runQueueHandler(QUEUE_NAMES.aiActions, {
       queueName: QUEUE_NAMES.aiActions,
-      payload: {
-        input: {
-          taskId: task.id,
-          characterId: task.assignee_character_id,
-        },
-      },
+      payload: { input: { taskId: task.id, characterId: task.assignee_character_id } },
       requestedByCharacterId: "system:tick-engine",
-      queuedAt: new Date().toISOString(),
+      queuedAt: now,
       traceId: `tick-${Date.now()}`,
-    }, { jobId });
+    }).catch((err: unknown) => console.error("[tick-engine] ai-actions failed", err));
 
     dispatched++;
   }
@@ -1128,8 +1070,7 @@ async function phaseMemoryCompression(tickNumber: number): Promise<number> {
 }
 
 // ── Phase 13: Outbox Relay ────────────────────────────────────────────────────
-// Recovery path: re-enqueue outbox_events rows that were never marked published.
-// Handles server crash between outbox insert and BullMQ publish in POST /jobs.
+// Recovery path: execute outbox_events rows that were never dispatched.
 
 async function phaseRelayOutbox(): Promise<number> {
   const sb = getSupabase();
@@ -1149,17 +1090,14 @@ async function phaseRelayOutbox(): Promise<number> {
 
   for (const row of stuck) {
     try {
-      const queue = await getQueue(row.queue_name as string) as { add: (n: string, d: unknown, o: { jobId: string }) => Promise<unknown> };
-      // Use idempotency_key or outbox id as BullMQ jobId — prevents double-processing
-      const jobId = `job_idem_${(row.idempotency_key as string | null) ?? (row.id as string)}`;
-      await queue.add("execute", {
-        queueName: row.queue_name,
-        payload: row.payload,
+      await runQueueHandler(row.queue_name as (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES], {
+        queueName: row.queue_name as string,
+        payload: row.payload as Record<string, unknown>,
         requestedByCharacterId: (row.requested_by_character_id as string | null) ?? null,
-        queuedAt: row.created_at,
+        queuedAt: row.created_at as string,
         traceId: (row.trace_id as string | null) ?? null,
         idempotencyKey: (row.idempotency_key as string | null) ?? null,
-      }, { jobId });
+      });
       await sb.from("outbox_events").update({ published_at: now }).eq("id", row.id);
       relayed++;
     } catch (err) {
@@ -1167,32 +1105,11 @@ async function phaseRelayOutbox(): Promise<number> {
     }
   }
 
-  if (relayed > 0) console.log(`[tick-engine] outbox relay: ${relayed} jobs re-published`);
+  if (relayed > 0) console.log(`[tick-engine] outbox relay: ${relayed} jobs executed`);
   return relayed;
 }
 
-// ── Phase 14: Queue Depth Snapshot ───────────────────────────────────────────
-// Writes current BullMQ queue depths to Redis (connected mode only).
-
-async function phaseSnapshotQueues(): Promise<void> {
-  if (IS_LOCAL) return;
-  try {
-    const Redis = (await import("ioredis")).default;
-    const redis = new Redis({ ...redisConnection, lazyConnect: true, maxRetriesPerRequest: null });
-    await redis.connect();
-    for (const name of Object.values(QUEUE_NAMES)) {
-      try {
-        const q = await getQueue(name) as { getJobCounts: (...s: string[]) => Promise<Record<string, number>> };
-        const counts = await q.getJobCounts("waiting", "active", "delayed");
-        const depth = (counts["waiting"] ?? 0) + (counts["active"] ?? 0) + (counts["delayed"] ?? 0);
-        await redis.set(`bloks:queue_depth:${name}`, String(depth), "EX", 120);
-      } catch { /* non-fatal */ }
-    }
-    await redis.quit();
-  } catch { /* non-fatal */ }
-}
-
-// ── Phase 15: Monthly Report Trigger ─────────────────────────────────────────
+// ── Phase 14: Monthly Report Trigger ─────────────────────────────────────────
 // On the first tick of each month, enqueue a monthly-report job for the previous month.
 
 async function phaseMonthlyReportTrigger(tickNumber: number): Promise<void> {
@@ -1203,23 +1120,16 @@ async function phaseMonthlyReportTrigger(tickNumber: number): Promise<void> {
   const month = now.getUTCMonth(); // 0-based: 0 = Jan → previous month
   const prevMonth = month === 0 ? 12 : month;
   const prevYear = month === 0 ? now.getUTCFullYear() - 1 : now.getUTCFullYear();
-  const jobId = `job_idem_monthly-report-${prevYear}-${prevMonth}`;
+  void runQueueHandler(QUEUE_NAMES.monthlyReport, {
+    queueName: QUEUE_NAMES.monthlyReport,
+    payload: { input: { year: prevYear, month: prevMonth } },
+    requestedByCharacterId: null,
+    queuedAt: now.toISOString(),
+    traceId: null,
+    idempotencyKey: `monthly-report-${prevYear}-${prevMonth}`,
+  }).catch((err: unknown) => console.error("[tick-engine] monthly report failed", err));
 
-  const q = await getQueue(QUEUE_NAMES.monthlyReport) as { add: (n: string, d: unknown, o: { jobId: string }) => Promise<unknown> };
-  await q.add(
-    "execute",
-    {
-      queueName: QUEUE_NAMES.monthlyReport,
-      payload: { input: { year: prevYear, month: prevMonth } },
-      requestedByCharacterId: null,
-      queuedAt: now.toISOString(),
-      traceId: null,
-      idempotencyKey: `monthly-report-${prevYear}-${prevMonth}`,
-    },
-    { jobId }
-  );
-
-  console.log(`[tick-engine] monthly report enqueued for ${prevYear}-${prevMonth}`);
+  console.log(`[tick-engine] monthly report triggered for ${prevYear}-${prevMonth}`);
 }
 
 // ── Tick Stats ────────────────────────────────────────────────────────────────
@@ -1378,25 +1288,18 @@ export class WorldTickEngine {
         console.error("[tick-engine] Phase 12 (memory compression) error:", err instanceof Error ? err.message : err);
       }
 
-      // Phase 13: Outbox relay — recover jobs that were never published to BullMQ
+      // Phase 13: Outbox relay — recover jobs that were never executed
       try {
         await phaseRelayOutbox();
       } catch (err) {
         console.error("[tick-engine] Phase 13 (outbox relay) error:", err instanceof Error ? err.message : err);
       }
 
-      // Phase 14: Queue depth snapshot — write BullMQ depths to Redis for /metrics/queues
-      try {
-        await phaseSnapshotQueues();
-      } catch (err) {
-        console.error("[tick-engine] Phase 14 (queue snapshot) error:", err instanceof Error ? err.message : err);
-      }
-
-      // Phase 15: Monthly report trigger — enqueue report job on 1st of month
+      // Phase 14: Monthly report trigger — enqueue report job on 1st of month
       try {
         await phaseMonthlyReportTrigger(this.tickNumber);
       } catch (err) {
-        console.error("[tick-engine] Phase 15 (monthly report) error:", err instanceof Error ? err.message : err);
+        console.error("[tick-engine] Phase 14 (monthly report) error:", err instanceof Error ? err.message : err);
       }
 
       // Phase 6: Broadcast

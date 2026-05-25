@@ -2,24 +2,6 @@
 import { Router, type Request, type Response } from "express";
 import { getSupabase } from "@bloks/db";
 
-const IS_LOCAL = process.env["BLOKS_PROFILE"] !== "connected";
-
-let _redis: import("ioredis").default | null = null;
-async function getRedis(): Promise<import("ioredis").default | null> {
-  if (IS_LOCAL) return null;
-  if (_redis) return _redis;
-  const { default: Redis } = await import("ioredis");
-  _redis = new Redis({
-    host: process.env["REDIS_HOST"] ?? "127.0.0.1",
-    port: Number(process.env["REDIS_PORT"] ?? 6379),
-    password: process.env["REDIS_PASSWORD"] || undefined,
-    lazyConnect: true,
-    maxRetriesPerRequest: null,
-  });
-  _redis.connect().catch(() => {});
-  return _redis;
-}
-
 export const metricsRouter = Router();
 
 // ── GET /api/v1/metrics/p95 ───────────────────────────────────────────────────
@@ -108,34 +90,14 @@ metricsRouter.get("/costs", async (_req: Request, res: Response) => {
 });
 
 // ── GET /api/v1/metrics/queues ────────────────────────────────────────────────
-// Returns queue depths from Redis keys written by tick-engine Phase 14.
 
-metricsRouter.get("/queues", async (_req: Request, res: Response) => {
-  try {
-    const redis = await getRedis();
-    const QUEUE_NAMES_LIST = [
-      "workflowTransitions", "aiActions", "approvals", "artifactPostprocess",
-      "analyticsRollups", "notifications", "founderMessage", "orchestrate",
-    ];
-
-    if (!redis) {
-      const queues = QUEUE_NAMES_LIST.map((name) => ({ name, depth: 0 }));
-      return res.json({ ok: true, data: { queues } });
-    }
-
-    const keys = QUEUE_NAMES_LIST.map((n) => `bloks:queue_depth:${n}`);
-    const values = await redis.mget(...keys);
-
-    const queues = QUEUE_NAMES_LIST.map((name, i) => ({
-      name,
-      depth: values[i] !== null ? parseInt(values[i]!, 10) : null,
-    }));
-
-    return res.json({ ok: true, data: { queues } });
-  } catch (err) {
-    console.error("[metrics/queues] error:", err);
-    return res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR" } });
-  }
+metricsRouter.get("/queues", (_req: Request, res: Response) => {
+  const QUEUE_NAMES_LIST = [
+    "workflowTransitions", "aiActions", "approvals", "artifactPostprocess",
+    "analyticsRollups", "notifications", "founderMessage", "orchestrate",
+  ];
+  const queues = QUEUE_NAMES_LIST.map((name) => ({ name, depth: 0 }));
+  return res.json({ ok: true, data: { queues } });
 });
 
 // ── GET /api/v1/metrics/costs/daily ──────────────────────────────────────────
