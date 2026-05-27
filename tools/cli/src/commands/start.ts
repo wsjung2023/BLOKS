@@ -2,7 +2,7 @@
  * bloks-os start
  * 프로파일에 맞는 서비스 시작 + 준비 완료 시 브라우저 자동 오픈
  */
-import { spawn, exec } from "node:child_process";
+import { spawn, exec, execSync } from "node:child_process";
 import { existsSync, readFileSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
 import { ok, warn, info, fail, sep, c } from "../index.js";
@@ -102,6 +102,18 @@ export async function start(args: string[]): Promise<void> {
     info("연결 모드 — Redis 를 사용합니다.");
   } else {
     info("로컬 모드 — Redis 없이 시작합니다.");
+  }
+
+  // Fresh clone 감지: .bloks-data/local-db.json 없으면 시드 자동 실행
+  const dbFile = join(ROOT, ".bloks-data", "local-db.json");
+  if (!existsSync(dbFile)) {
+    info("첫 실행 감지 — 초기 데이터 시드 중...");
+    try {
+      execSync("pnpm db:seed", { cwd: ROOT, stdio: "inherit" });
+      ok("초기 데이터 시드 완료");
+    } catch {
+      warn("시드 실행 실패 — 계속 진행합니다. 나중에 'pnpm db:seed' 를 직접 실행해 주세요.");
+    }
   }
 
   console.log();

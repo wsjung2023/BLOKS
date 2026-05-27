@@ -211,8 +211,8 @@ function drawTiles(
 
   // Grid
   if (showGrid) {
-    ctx.strokeStyle = "rgba(255,255,255,0.18)";
-    ctx.lineWidth = 0.5;
+    ctx.strokeStyle = "rgba(255,255,255,0.45)";
+    ctx.lineWidth = 1;
     for (let c = 0; c <= MAP_COLS; c++) {
       ctx.beginPath(); ctx.moveTo(c * TILE_PX, 0); ctx.lineTo(c * TILE_PX, FULL_H); ctx.stroke();
     }

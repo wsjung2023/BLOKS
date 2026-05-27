@@ -57,11 +57,19 @@ type Row = Record<string, unknown>;
 const _persisted = loadPersistedTables();
 
 const localTables: Record<string, Row[]> = {
+  // Org structure — populated by pnpm db:seed on first run
+  companies:    _persisted["companies"] ?? [],
+  divisions:    _persisted["divisions"] ?? [],
+  departments:  _persisted["departments"] ?? [],
+  ranks:        _persisted["ranks"] ?? [],
+  roles:        _persisted["roles"] ?? [],
+  // Character data — seeded from JSON files automatically
   model_profiles: _persisted["model_profiles"] ?? loadSeed("model_profiles.json"),
   characters: _persisted["characters"] ?? loadSeed("characters.json"),
   character_runtime_states: _persisted["character_runtime_states"] ?? loadSeed("character_runtime_states.json"),
   character_conversations: _persisted["character_conversations"] ?? [],
   character_bubbles: _persisted["character_bubbles"] ?? [],
+  // User-created data
   projects: _persisted["projects"] ?? [],
   tasks: _persisted["tasks"] ?? [],
   artifacts: _persisted["artifacts"] ?? [],
