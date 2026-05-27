@@ -268,6 +268,23 @@ pnpm install
 pnpm bloks-os start
 ```
 
+> 새 버전에 캐릭터·모델 데이터가 추가된 경우 `pnpm db:seed` 를 한 번 실행하면 최신 상태로 반영됩니다.
+
+---
+
+## 다른 컴퓨터에 설치할 때 (새 PC)
+
+```bash
+git clone https://github.com/wsjung2023/BLOKS.git
+cd BLOKS
+pnpm install
+pnpm bloks-os init    # AI 키 입력
+pnpm bloks-os start   # 첫 실행 시 초기 데이터 자동 삽입
+```
+
+> `pnpm bloks-os start` 를 처음 실행하면 캐릭터·조직 데이터를 자동으로 채워 넣습니다.  
+> 별도로 `pnpm db:seed` 를 실행하지 않아도 됩니다.
+
 ---
 
 ## 뭔가 안 되면
