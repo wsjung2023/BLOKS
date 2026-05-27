@@ -92,16 +92,16 @@ export async function start(args: string[]): Promise<void> {
   }
 
   if (profile !== "local") {
-    const required = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "REDIS_URL"];
+    const required = ["REDIS_URL"];
     const missing = required.filter((k) => !readEnvVar(k));
     if (missing.length > 0) {
       fail(`연결 모드에 필요한 환경 변수가 없습니다: ${missing.join(", ")}`);
       info("'bloks-os init' 으로 다시 설정하거나 .env 를 직접 수정하세요.");
       process.exit(1);
     }
-    info("연결 모드 — Supabase + Redis 를 사용합니다.");
+    info("연결 모드 — Redis 를 사용합니다.");
   } else {
-    info("로컬 모드 — Supabase/Redis 없이 시작합니다.");
+    info("로컬 모드 — Redis 없이 시작합니다.");
   }
 
   console.log();

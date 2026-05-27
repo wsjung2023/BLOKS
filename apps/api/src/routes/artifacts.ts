@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { getSupabase } from "@bloks/db";
+import { getDb } from "@bloks/db";
 import { routeAI } from "@bloks/ai-router";
 
 export const artifactsRouter = Router();
@@ -39,7 +39,7 @@ artifactsRouter.get("/", async (req, res) => {
 
   const { projectId, taskId, authorCharacterId, limit, offset } = parsed.data;
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     let query = sb
       .from("artifacts")
       .select("id, project_id, task_id, artifact_type, title, content_markdown, status, author_character_id, created_at, updated_at", { count: "exact" })
@@ -72,7 +72,7 @@ artifactsRouter.get("/", async (req, res) => {
 artifactsRouter.get("/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     const { data, error } = await sb
       .from("artifacts")
       .select("id, project_id, task_id, artifact_type, title, content_markdown, status, author_character_id, created_at, updated_at")
@@ -99,6 +99,17 @@ const updateArtifactSchema = z.object({
   status: z.enum(["Draft", "Final", "Archived"]).optional(),
 });
 
+artifactsRouter.delete("/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const sb = getDb();
+    await sb.from("artifacts").eq("id", id).delete();
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다.", details: { message: String(err) } } });
+  }
+});
+
 artifactsRouter.put("/:id", async (req, res) => {
   const { id } = req.params;
   const parsed = updateArtifactSchema.safeParse(req.body);
@@ -113,7 +124,7 @@ artifactsRouter.put("/:id", async (req, res) => {
   if (parsed.data.status !== undefined) updates["status"] = parsed.data.status;
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     const { data, error } = await sb
       .from("artifacts")
       .update(updates)
@@ -149,7 +160,7 @@ artifactsRouter.post("/:id/revise", async (req, res) => {
   }
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     const { data: artifact, error } = await sb
       .from("artifacts")
       .select("id, title, content_markdown, artifact_type, author_character_id")
@@ -218,7 +229,7 @@ artifactsRouter.post("/", async (req, res) => {
   }
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     const now = new Date().toISOString();
     const { data, error } = await sb
       .from("artifacts")

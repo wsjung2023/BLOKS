@@ -1,5 +1,5 @@
 // Worker shared helpers — agent messaging + reviewer lookup
-import { getSupabase } from "@bloks/db";
+import { getDb } from "@bloks/db";
 
 export async function sendAgentMessage(opts: {
   fromCharId: string;
@@ -9,7 +9,7 @@ export async function sendAgentMessage(opts: {
   relatedTaskId?: string;
   now: string;
 }): Promise<void> {
-  const sb = getSupabase();
+  const sb = getDb();
   await sb.from("agent_messages").insert({
     from_char_id: opts.fromCharId,
     to_char_id: opts.toCharId,
@@ -25,7 +25,7 @@ export async function findAvailableReviewer(
   excludeCharId: string,
   _projectId?: string,
 ): Promise<string | null> {
-  const sb = getSupabase();
+  const sb = getDb();
   const { data } = await sb
     .from("character_runtime_states")
     .select("character_id, workload_score")

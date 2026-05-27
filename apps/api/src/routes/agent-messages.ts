@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { getSupabase } from "@bloks/db";
+import { getDb } from "@bloks/db";
 import { emitWorldEvent } from "./stream.js";
 
 export const agentMessagesRouter = Router();
@@ -20,7 +20,7 @@ agentMessagesRouter.post("/", async (req, res) => {
     return;
   }
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     const { data, error } = await sb.from("agent_messages").insert({
       from_char_id: parsed.data.fromCharId,
       to_char_id: parsed.data.toCharId,
@@ -49,7 +49,7 @@ agentMessagesRouter.post("/", async (req, res) => {
 agentMessagesRouter.get("/", async (req, res) => {
   const toCharId = req.query["toCharId"] as string | undefined;
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     let query = sb.from("agent_messages").select("*").order("created_at", { ascending: false }).limit(50);
     if (toCharId) query = query.eq("to_char_id", toCharId);
     const { data, error } = await query;

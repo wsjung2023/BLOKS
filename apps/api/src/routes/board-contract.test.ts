@@ -1,9 +1,9 @@
 // Board contract tests — verify the API shapes the board page depends on
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getSupabaseMock } = vi.hoisted(() => ({ getSupabaseMock: vi.fn() }));
+const { getDbMock } = vi.hoisted(() => ({ getDbMock: vi.fn() }));
 
-vi.mock("@bloks/db", () => ({ getSupabase: getSupabaseMock, writeEventLog: vi.fn() }));
+vi.mock("@bloks/db", () => ({ getDb: getDbMock, writeEventLog: vi.fn() }));
 vi.mock("./tasks-helpers.js", () => ({
   writeEventLog: vi.fn(),
   isAllowedTransition: vi.fn(),
@@ -64,7 +64,7 @@ describe("board contract — tasks endpoint", () => {
       },
     ];
     const chain = makeChain({ data: taskItems, count: 1, error: null });
-    getSupabaseMock.mockReturnValue({ from: vi.fn(() => chain) });
+    getDbMock.mockReturnValue({ from: vi.fn(() => chain) });
 
     const handler = findGetHandler(tasksRouter, "/");
     const req = { query: { page: "1", pageSize: "200" } };
@@ -86,7 +86,7 @@ describe("board contract — tasks endpoint", () => {
 
   it("GET /tasks returns pagination metadata", async () => {
     const chain = makeChain({ data: [], count: 0, error: null });
-    getSupabaseMock.mockReturnValue({ from: vi.fn(() => chain) });
+    getDbMock.mockReturnValue({ from: vi.fn(() => chain) });
 
     const handler = findGetHandler(tasksRouter, "/");
     const req = { query: { page: "1", pageSize: "200" } };
@@ -119,7 +119,7 @@ describe("board contract — characters endpoint", () => {
       },
     ];
     const chain = makeChain({ data: charItems, count: 1, error: null });
-    getSupabaseMock.mockReturnValue({ from: vi.fn(() => chain) });
+    getDbMock.mockReturnValue({ from: vi.fn(() => chain) });
 
     const handler = findGetHandler(charactersRouter, "/");
     const req = { query: { page: "1", pageSize: "100" } };

@@ -1,7 +1,5 @@
 // @bloks/ai-router: routeAI with character model lookup and provider routing
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-
-const IS_LOCAL = process.env["BLOKS_PROFILE"] !== "connected";
+import { getDb } from "@bloks/db";
 import { OpenAiProvider } from "./providers/openai.js";
 import { AnthropicProvider } from "./providers/anthropic.js";
 import { GoogleProvider } from "./providers/google.js";
@@ -61,20 +59,6 @@ export interface RouteAIResult {
 
 // section
 
-let _sb: SupabaseClient | null = null;
-
-function getSupabase(): SupabaseClient | null {
-  if (IS_LOCAL) return null;
-  if (_sb) return _sb;
-  const url = process.env["SUPABASE_URL"];
-  const key = process.env["SUPABASE_SERVICE_ROLE_KEY"];
-  if (!url || !key) return null;
-  _sb = createClient(url, key, { auth: { persistSession: false } });
-  return _sb;
-}
-
-// section
-
 interface ModelProfile {
   model_id: string;
   provider_name: string;
@@ -83,9 +67,8 @@ interface ModelProfile {
 
 async function fetchCharacterModelProfile(characterId: string): Promise<ModelProfile | null> {
   try {
-    const sb = getSupabase();
-    if (!sb) return null;
-    const { data } = await sb
+    const db = getDb();
+    const { data } = await db
       .from("characters")
       .select("model_profiles!default_model_profile_id(primary_model, provider_name, profile_name)")
       .eq("id", characterId)
@@ -257,7 +240,7 @@ function estimatedInputCost(model: string, promptLength: number): number {
 export async function routeAI(options: RouteAIOptions): Promise<RouteAIResult> {
   const { characterId, taskType, prompt, context, systemPrompt, maxTokens, responseFormat, jsonSchema } = options;
 
-  // Fetch character model profile from Supabase
+  // Fetch character model profile
   const profile = await fetchCharacterModelProfile(characterId);
   const model = selectModel(taskType, profile);
   const provider = resolveProvider(profile?.provider_name);

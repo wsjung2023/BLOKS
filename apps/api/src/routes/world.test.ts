@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getSupabaseMock } = vi.hoisted(() => ({ getSupabaseMock: vi.fn() }));
+const { getDbMock } = vi.hoisted(() => ({ getDbMock: vi.fn() }));
 
-vi.mock("@bloks/db", () => ({ getSupabase: getSupabaseMock }));
+vi.mock("@bloks/db", () => ({ getDb: getDbMock }));
 
 import { worldRouter } from "./world.js";
 
@@ -62,7 +62,7 @@ describe("GET /world/snapshot", () => {
     ];
 
     const chain = makeChain({ data: charData, error: null });
-    getSupabaseMock.mockReturnValue({ from: vi.fn(() => chain) });
+    getDbMock.mockReturnValue({ from: vi.fn(() => chain) });
 
     const handler = findGetHandler("/snapshot");
     const res = createRes();
@@ -89,7 +89,7 @@ describe("GET /world/snapshot", () => {
 
   it("returns empty array when no characters", async () => {
     const chain = makeChain({ data: [], error: null });
-    getSupabaseMock.mockReturnValue({ from: vi.fn(() => chain) });
+    getDbMock.mockReturnValue({ from: vi.fn(() => chain) });
 
     const handler = findGetHandler("/snapshot");
     const res = createRes();
@@ -100,9 +100,9 @@ describe("GET /world/snapshot", () => {
     expect((res.body as any).data.characters).toEqual([]);
   });
 
-  it("returns 500 with DB_ERROR when Supabase returns error", async () => {
+  it("returns 500 with DB_ERROR when DB returns error", async () => {
     const chain = makeChain({ data: null, error: { message: "connection refused" } });
-    getSupabaseMock.mockReturnValue({ from: vi.fn(() => chain) });
+    getDbMock.mockReturnValue({ from: vi.fn(() => chain) });
 
     const handler = findGetHandler("/snapshot");
     const res = createRes();

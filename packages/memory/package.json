@@ -15,8 +15,8 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@bloks/db": "workspace:*",
     "@bloks/shared": "workspace:*",
-    "@supabase/supabase-js": "^2.100.0",
     "openai": "^4.70.0"
   },
   "devDependencies": {

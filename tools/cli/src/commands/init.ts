@@ -1,7 +1,7 @@
 /**
  * bloks-os init
  * 최초 설정 마법사: .env 생성, API 키 설정
- * 기본값: 로컬 모드 (Supabase/Docker/Redis 불필요)
+ * 기본값: 로컬 모드 (Docker/Redis 불필요)
  */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline";
@@ -109,39 +109,14 @@ export async function init(_args: string[]): Promise<void> {
     info("AI 키 없이 시작합니다 — 나중에 .env 파일에서 직접 추가할 수 있습니다.");
   }
 
-  // ── 4. Supabase (고급 옵션) ───────────────────────────────────────────────
-  sep();
-  console.log(`\n${c.bold}고급 설정: Supabase 클라우드 DB (선택사항)${c.reset}`);
-  console.log(`  ${c.dim}기본 로컬 모드는 Supabase 없이 작동합니다. 팀 협업이나 데이터 영구 보존이 필요할 때만 설정하세요.${c.reset}`);
-  const wantSupabase = await promptYN("Supabase를 연결하시겠습니까?", false);
-  if (wantSupabase) {
-    const supabaseUrl = await prompt("SUPABASE_URL");
-    const supabaseKey = await prompt("SUPABASE_SERVICE_ROLE_KEY");
-    if (supabaseUrl && supabaseKey) {
-      setEnvVar("SUPABASE_URL", supabaseUrl);
-      setEnvVar("NEXT_PUBLIC_SUPABASE_URL", supabaseUrl);
-      setEnvVar("SUPABASE_SERVICE_ROLE_KEY", supabaseKey);
-      console.log(`\n  ${c.dim}Supabase → Connect → Session pooler → URI 탭에서 복사하세요.${c.reset}`);
-      console.log(`  ${c.dim}⚠️ 비밀번호에 @, # 등 특수문자가 있으면 URL 인코딩 필요 (@ → %40)${c.reset}`);
-      const dbUrl = await prompt("DATABASE_URL (Session pooler URI)", "postgresql://postgres.[ref]:[password]@aws-1-[region].pooler.supabase.com:5432/postgres");
-      if (dbUrl && dbUrl.startsWith("postgresql://")) {
-        setEnvVar("DATABASE_URL", dbUrl);
-        setEnvVar("BLOKS_PROFILE", "connected");
-        ok("Supabase 설정 저장됨 (연결 모드)");
-      } else {
-        warn("DATABASE_URL 형식이 올바르지 않습니다 — 나중에 .env에서 직접 설정하세요.");
-      }
-    }
-  } else {
-    info("로컬 모드로 시작합니다 — 데이터는 .bloks-data/local-db.json 에 저장됩니다.");
-  }
+  info("로컬 모드로 시작합니다 — 데이터는 .bloks-data/local-db.json 에 저장됩니다.");
 
-  // ── 5. .env 저장 ──────────────────────────────────────────────────────────
+  // ── 4. .env 저장 ──────────────────────────────────────────────────────────
   writeFileSync(envPath, envLines.filter(Boolean).join("\n") + "\n", "utf-8");
   sep();
   ok(`.env 파일 저장 완료: ${envPath}`);
 
-  // ── 6. 완료 안내 ──────────────────────────────────────────────────────────
+  // ── 5. 완료 안내 ──────────────────────────────────────────────────────────
   console.log(`
 ${c.bold}${c.green}설정 완료!${c.reset}
 

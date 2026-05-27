@@ -1,6 +1,6 @@
 import { QUEUE_NAMES, TaskState } from "@bloks/shared";
 import { processOrchestrate } from "./orchestrator.js";
-import { getSupabase } from "@bloks/db";
+import { getDb } from "@bloks/db";
 import { routeAI, TASK_TEMPLATES, generateImage } from "@bloks/ai-router";
 import { globalRuntimeEngine } from "@bloks/agent-runtime";
 import { buildMemoryContext, createMemory, deriveMemorySummary } from "@bloks/memory";
@@ -55,7 +55,7 @@ async function logEvent(opts: {
   relatedProjectId?: string | null;
   now: string;
 }) {
-  const sb = getSupabase();
+  const sb = getDb();
   await sb.from("event_logs").insert({
     entity_type: opts.entityType,
     entity_id: opts.entityId,
@@ -79,7 +79,7 @@ async function grantExperience(
   taskId: string,
   now: string,
 ): Promise<void> {
-  const sb = getSupabase();
+  const sb = getDb();
   try {
     const { data: char } = await sb
       .from("characters")
@@ -126,7 +126,7 @@ async function grantExperience(
 // Auto-advance stale Assigned → Accepted → InProgress
 
 async function processWorkflowTransitions(jobData: WorkerJobPayload): Promise<WorkerHandlerResult> {
-  const sb = getSupabase();
+  const sb = getDb();
   const taskId = (jobData.payload?.input?.["taskId"] as string | undefined)
     ?? jobData.payload?.taskId
     ?? null;
@@ -188,7 +188,7 @@ async function processWorkflowTransitions(jobData: WorkerJobPayload): Promise<Wo
 // Execute AI task via routeAI, save artifact, advance state to PendingReview
 
 async function processAiActions(jobData: WorkerJobPayload): Promise<WorkerHandlerResult> {
-  const sb = getSupabase();
+  const sb = getDb();
   const taskId = (jobData.payload?.input?.["taskId"] as string | undefined)
     ?? jobData.payload?.taskId;
 
@@ -223,7 +223,7 @@ async function runAiTask({ jobData, taskId, task, now }: {
   task: Record<string, unknown>;
   now: string;
 }): Promise<WorkerHandlerResult> {
-  const sb = getSupabase();
+  const sb = getDb();
 
   const characterId: string = (jobData.payload?.input?.["characterId"] as string | undefined)
     ?? jobData.payload?.characterId
@@ -486,7 +486,7 @@ const RANK_TO_LEVEL: Record<string, ALevel> = {
 };
 
 async function findApproverForLevel(
-  sb: ReturnType<typeof getSupabase>,
+  sb: ReturnType<typeof getDb>,
   level: ALevel,
   excludeCharId?: string | null,
 ): Promise<string | null> {
@@ -523,7 +523,7 @@ async function findApproverForLevel(
 }
 
 async function advanceApprovalChain(opts: {
-  sb: ReturnType<typeof getSupabase>;
+  sb: ReturnType<typeof getDb>;
   approval: { id: string; target_id: string; required_level: string };
   task: { priority: string | null; ai_output: unknown; assignee_character_id: string | null; title?: string | null };
   actor: string;
@@ -581,7 +581,7 @@ async function advanceApprovalChain(opts: {
 }
 
 async function processApprovals(jobData: WorkerJobPayload): Promise<WorkerHandlerResult> {
-  const sb = getSupabase();
+  const sb = getDb();
   const approvalId = (jobData.payload?.input?.["approvalId"] as string | undefined)
     ?? jobData.payload?.approvalId;
   const taskId = (jobData.payload?.input?.["taskId"] as string | undefined)
@@ -681,7 +681,7 @@ async function processApprovals(jobData: WorkerJobPayload): Promise<WorkerHandle
 // Quality check: word count, update artifact status
 
 async function processArtifactPostprocess(jobData: WorkerJobPayload): Promise<WorkerHandlerResult> {
-  const sb = getSupabase();
+  const sb = getDb();
   const artifactId = (jobData.payload?.input?.["artifactId"] as string | undefined)
     ?? jobData.payload?.artifactId;
 
@@ -730,7 +730,7 @@ async function processArtifactPostprocess(jobData: WorkerJobPayload): Promise<Wo
 // Compute workload/fatigue per character from active task counts
 
 async function processAnalyticsRollups(jobData: WorkerJobPayload): Promise<WorkerHandlerResult> {
-  const sb = getSupabase();
+  const sb = getDb();
   const characterId = (jobData.payload?.input?.["characterId"] as string | undefined)
     ?? jobData.payload?.characterId;
 
@@ -844,7 +844,7 @@ async function processMonthlyReport(jobData: WorkerJobPayload): Promise<WorkerHa
   const startDate = new Date(Date.UTC(year, month - 1, 1)).toISOString();
   const endDate = new Date(Date.UTC(year, month, 1)).toISOString();
 
-  const sb = getSupabase();
+  const sb = getDb();
 
   const [tasksRes, projectsRes] = await Promise.all([
     sb.from("tasks")
@@ -910,7 +910,7 @@ async function processFounderMessage(jobData: WorkerJobPayload): Promise<WorkerH
 
   if (!characterId || !message) throw new Error("founder-message: characterId and message are required");
 
-  const sb = getSupabase();
+  const sb = getDb();
   const { data: char } = await sb
     .from("characters")
     .select("id, name, persona_summary, ai_enabled")
@@ -982,7 +982,7 @@ function parseReviewDecision(raw: string): ReviewDecision {
 const MAX_REVISION_COUNT = 3;
 
 async function processAgentMessages(_jobData: WorkerJobPayload): Promise<WorkerHandlerResult> {
-  const sb = getSupabase();
+  const sb = getDb();
   const now = new Date().toISOString();
   const threshold = new Date(Date.now() - 3 * 60 * 1000).toISOString();
 

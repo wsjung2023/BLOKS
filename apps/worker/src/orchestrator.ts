@@ -1,4 +1,4 @@
-import { getSupabase } from "@bloks/db";
+import { getDb } from "@bloks/db";
 import { routeAI } from "@bloks/ai-router";
 import type { WorkerJobPayload, WorkerHandlerResult } from "./handlers.js";
 import { QUEUE_NAMES } from "@bloks/shared";
@@ -74,7 +74,7 @@ export async function processOrchestrate(jobData: WorkerJobPayload): Promise<Wor
 
   if (!projectId) throw new Error("orchestrate: projectId is required");
 
-  const sb = getSupabase();
+  const sb = getDb();
   const now = new Date().toISOString();
 
   // ── Load active characters ──────────────────────────────────────────────────

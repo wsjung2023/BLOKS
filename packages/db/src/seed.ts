@@ -1,6 +1,6 @@
-﻿// BLOKS 시드 러너 ? Supabase에 초기 데이터 삽입 (멱등, 중복 실행 안전)
-import { createClient } from '@supabase/supabase-js';
-import { COMPANY_ID, DIV, DEPT, COMPANY, DIVISIONS, DEPARTMENTS } from './seed-data/orgs.js';
+﻿// BLOKS 시드 러너 — 초기 데이터 삽입 (멱등, 중복 실행 안전)
+import { getDb } from './local-stub.js';
+import { COMPANY, DIVISIONS, DEPARTMENTS } from './seed-data/orgs.js';
 import { RANKS_DATA } from './seed-data/ranks.js';
 import { MODEL_PROFILES_DATA } from './seed-data/models.js';
 import { ROLES_DATA } from './seed-data/roles.js';
@@ -8,14 +8,11 @@ import { CHARACTERS_A } from './seed-data/characters-a.js';
 import { CHARACTERS_B } from './seed-data/characters-b.js';
 import { CHARACTERS_C } from './seed-data/characters-c.js';
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const db = getDb();
 
-async function upsert(table: string, data: Record<string, unknown>[], conflictCol = 'id') {
-  const { error } = await supabase.from(table).upsert(data, { onConflict: conflictCol, ignoreDuplicates: true });
-  if (error) throw new Error(`[seed] ${table} error: ${error.message}`);
+async function upsert(table: string, data: Record<string, unknown>[], _conflictCol = 'id') {
+  const { error } = await db.from(table).upsert(data);
+  if (error) throw new Error(`[seed] ${table} error: ${(error as { message?: string }).message}`);
 }
 
 async function main() {
@@ -56,7 +53,7 @@ async function main() {
   console.log('[seed] character_runtime_states...');
   await upsert('character_runtime_states', runtimeStates, 'character_id');
 
-  console.log('[seed] ? 완료!');
+  console.log('[seed] 완료!');
   console.log(`  - 회사: 1`);
   console.log(`  - 부문: ${DIVISIONS.length}`);
   console.log(`  - 부서: ${DEPARTMENTS.length}`);

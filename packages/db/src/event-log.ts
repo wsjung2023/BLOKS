@@ -1,6 +1,5 @@
 // Shared event log writer — single write path for all apps (API, worker)
-// Replaces ad-hoc sb.from("event_logs").insert() scattered across the codebase.
-import { getSupabase, type SupabaseClient } from './supabase.js';
+import { getDb, type DbClient } from './local-stub.js';
 
 export interface EventLogPayload {
   entityType: string;
@@ -20,23 +19,23 @@ export interface EventLogPayload {
 
 /**
  * Write a single event_logs row.
- * Pass an explicit `sb` client (useful when already inside a request context),
- * or omit to use the singleton getSupabase() (useful in workers).
+ * Pass an explicit `db` client (useful when already inside a request context),
+ * or omit to use the singleton getDb() (useful in workers).
  */
 export async function writeEventLog(
-  payloadOrSb: EventLogPayload | SupabaseClient,
+  payloadOrDb: EventLogPayload | DbClient,
   maybePayload?: EventLogPayload,
 ): Promise<void> {
-  let sb: SupabaseClient;
+  let sb: DbClient;
   let payload: EventLogPayload;
 
-  // Overload: (sb, payload) or (payload)
+  // Overload: (db, payload) or (payload)
   if (maybePayload !== undefined) {
-    sb = payloadOrSb as SupabaseClient;
+    sb = payloadOrDb as DbClient;
     payload = maybePayload;
   } else {
-    sb = getSupabase();
-    payload = payloadOrSb as EventLogPayload;
+    sb = getDb();
+    payload = payloadOrDb as EventLogPayload;
   }
 
   const { error } = await sb.from('event_logs').insert({
@@ -56,6 +55,6 @@ export async function writeEventLog(
   });
 
   if (error) {
-    console.error('[event_log] write error', error.message);
+    console.error('[event_log] write error', (error as { message?: string }).message);
   }
 }

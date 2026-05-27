@@ -15,7 +15,7 @@ vi.mock("ioredis", () => {
   return { default: Redis };
 });
 
-const mockSupabase = {
+const mockDb = {
   from: vi.fn().mockReturnThis(),
   select: vi.fn().mockReturnThis(),
   insert: vi.fn().mockReturnThis(),
@@ -34,7 +34,7 @@ const mockSupabase = {
 };
 
 vi.mock("@bloks/db", () => ({
-  getSupabase: vi.fn(() => mockSupabase),
+  getDb: vi.fn(() => mockDb),
   getRuntimeProfile: vi.fn(() => "local"),
 }));
 
@@ -65,7 +65,7 @@ describe("runQueueHandler dispatch", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Default: task not found → handler throws early (but dispatch still routes correctly)
-    mockSupabase.single.mockResolvedValue({ data: null, error: { message: "not found" } });
+    mockDb.single.mockResolvedValue({ data: null, error: { message: "not found" } });
   });
 
   it("routes ai-actions to processAiActions (throws when task not found)", async () => {
@@ -102,7 +102,7 @@ describe("runQueueHandler dispatch", () => {
   });
 
   it("returns ok when task found and runtime allows", async () => {
-    mockSupabase.single
+    mockDb.single
       .mockResolvedValueOnce({ data: { id: "task_1", title: "Test Task", description: "", task_type: "document", state: "InProgress", assignee_character_id: "char_1", project_id: "proj_1", reviewer_character_id: null, feedback_history: null, revision_count: 0 }, error: null })
       .mockResolvedValueOnce({ data: { name: "Arch", code_name: "ARCH", persona_summary: "A tech architect" }, error: null })
       .mockResolvedValueOnce({ data: { workload_score: 50, fatigue_score: 30, burnout_triggered: false, activity_status: "Working" }, error: null })
@@ -129,7 +129,7 @@ describe("runQueueHandler dispatch", () => {
   });
 
   it("throws when runtime engine denies execution", async () => {
-    mockSupabase.single
+    mockDb.single
       .mockResolvedValueOnce({ data: { id: "task_1", title: "Test", description: "", task_type: "document", state: "InProgress", assignee_character_id: "char_1", project_id: "proj_1", reviewer_character_id: null, feedback_history: null, revision_count: 0 }, error: null })
       .mockResolvedValueOnce({ data: { name: "Arch", code_name: "ARCH", persona_summary: "" }, error: null })
       .mockResolvedValue({ data: null, error: null });

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { EventType } from "@bloks/shared";
 import type { EventLogRecord } from "@bloks/shared";
-import { getSupabase } from "@bloks/db";
+import { getDb } from "@bloks/db";
 
 export const eventsRouter = Router();
 
@@ -25,7 +25,7 @@ eventsRouter.get("/", async (req, res) => {
 
   const { projectId, entityType, eventType, limit } = parsed.data;
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     let query = sb
       .from("event_logs")
       .select("id, entity_type, entity_id, event_type, previous_state, next_state, changed_by, changed_at, reason_code, comment, related_project_id, related_task_id", { count: "exact" })

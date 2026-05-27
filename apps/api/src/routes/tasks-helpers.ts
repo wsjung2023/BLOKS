@@ -1,5 +1,5 @@
 // tasks-helpers — state machine validation and event log writer for tasks
-import type { SupabaseClient } from "@bloks/db";
+import type { DbClient } from "@bloks/db";
 import { TaskState, TASK_TRANSITIONS } from "@bloks/shared";
 
 // ── State transition validation ────────────────────────────────────────────────
@@ -33,7 +33,7 @@ export interface EventLogPayload {
   relatedTaskId?: string | null;
 }
 
-export async function writeEventLog(sb: SupabaseClient, payload: EventLogPayload): Promise<void> {
+export async function writeEventLog(sb: DbClient, payload: EventLogPayload): Promise<void> {
   const { error } = await sb.from("event_logs").insert({
     entity_type: payload.entityType,
     entity_id: payload.entityId,
@@ -55,7 +55,7 @@ export async function writeEventLog(sb: SupabaseClient, payload: EventLogPayload
 // ── Reduce workload on task completion ────────────────────────────────────────
 
 export async function reduceAssigneeWorkload(
-  sb: SupabaseClient,
+  sb: DbClient,
   assigneeCharacterId: string | null | undefined
 ): Promise<void> {
   if (!assigneeCharacterId) return;

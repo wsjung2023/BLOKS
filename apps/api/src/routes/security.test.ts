@@ -166,11 +166,11 @@ describe("Audit log — secret masking (OWASP API3)", () => {
 
   it("masks env var assignments with known sensitive key names", async () => {
     const { maskSecrets } = await import("@bloks/audit");
-    const raw = "OPENAI_API_KEY=sk-secret123 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiJ9.secret";
+    const raw = "OPENAI_API_KEY=sk-secret123 DB_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiJ9.secret";
     const masked = maskSecrets(raw);
     expect(masked).not.toContain("sk-secret123");
     expect(masked).toContain("OPENAI_API_KEY=[REDACTED]");
-    expect(masked).toContain("SUPABASE_SERVICE_ROLE_KEY=[REDACTED]");
+    expect(masked).toContain("DB_SERVICE_ROLE_KEY=[REDACTED]");
   });
 
   it("masks Bearer tokens", async () => {
@@ -336,9 +336,9 @@ describe("Secret masking — extended patterns (OWASP API3)", () => {
     expect(masked).not.toContain("sk-openai-test-key-value-here");
   });
 
-  it("masks SUPABASE_SERVICE_ROLE_KEY assignment", async () => {
+  it("masks DB_SERVICE_ROLE_KEY assignment", async () => {
     const { maskSecrets } = await import("@bloks/audit");
-    const raw = "SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.secret-payload";
+    const raw = "DB_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.secret-payload";
     const masked = maskSecrets(raw);
     expect(masked).not.toContain("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.secret-payload");
   });

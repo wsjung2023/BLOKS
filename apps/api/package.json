@@ -17,7 +17,6 @@
     "@bloks/db": "workspace:*",
     "@bloks/memory": "workspace:*",
     "@bloks/shared": "workspace:*",
-    "@supabase/supabase-js": "^2.100.0",
     "cors": "^2.8.5",
     "express": "^4.21.0",
     "jsonwebtoken": "^9.0.0",

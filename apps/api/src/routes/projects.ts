@@ -1,8 +1,8 @@
-// Projects routes — GET/POST for /api/v1/projects with Supabase
+// Projects routes — GET/POST for /api/v1/projects
 import { Router } from "express";
 import { z } from "zod";
 import { QUEUE_NAMES } from "@bloks/shared";
-import { getSupabase, getRuntimeProfile } from "@bloks/db";
+import { getDb, getRuntimeProfile } from "@bloks/db";
 import { enqueueJob } from "../queues/registry.js";
 import { runLocalInlineJob } from "./jobs.js";
 
@@ -47,7 +47,7 @@ projectsRouter.get("/", async (req, res) => {
   const to = offset + limit - 1;
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     let query = sb
       .from("projects")
       .select("*", { count: "exact" })
@@ -84,7 +84,7 @@ projectsRouter.post("/", async (req, res) => {
   }
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     const { data: inserted, error } = await sb
       .from("projects")
       .insert({

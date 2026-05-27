@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getSupabaseMock } = vi.hoisted(() => ({
-  getSupabaseMock: vi.fn(),
+const { getDbMock } = vi.hoisted(() => ({
+  getDbMock: vi.fn(),
 }));
 
 vi.mock("@bloks/db", () => ({
-  getSupabase: getSupabaseMock,
+  getDb: getDbMock,
 }));
 
 vi.mock("./tasks-helpers.js", () => ({
@@ -59,7 +59,7 @@ describe("api routes happy path", () => {
   it("GET /approvals returns ok/data/items", async () => {
     const items = [{ id: "approval_1", state: "WaitingL1" }];
     const query = makeAwaitable({ data: items, count: 1, error: null });
-    getSupabaseMock.mockReturnValue({ from: vi.fn(() => query) });
+    getDbMock.mockReturnValue({ from: vi.fn(() => query) });
 
     const handler = findRouteHandler(approvalsRouter, "/", "get");
     const req = { query: { page: "1", pageSize: "20" } };
@@ -77,7 +77,7 @@ describe("api routes happy path", () => {
   it("GET /characters returns ok/data/items", async () => {
     const items = [{ id: "char_1", name: "Nova", code_name: "nova" }];
     const query = makeAwaitable({ data: items, count: 1, error: null });
-    getSupabaseMock.mockReturnValue({ from: vi.fn(() => query) });
+    getDbMock.mockReturnValue({ from: vi.fn(() => query) });
 
     const handler = findRouteHandler(charactersRouter, "/", "get");
     const req = { query: { page: "1", pageSize: "20" } };

@@ -1,6 +1,6 @@
 /**
  * bloks-os doctor
- * 환경 진단: Node 버전, .env, 포트 리스닝, Redis/Supabase 연결
+ * 환경 진단: Node 버전, .env, 포트 리스닝, Redis 연결
  *
  * --export[=path]  진단 결과를 JSON 번들로 저장 (기본 파일명: bloks-diagnostics-<ts>.json)
  */
@@ -13,8 +13,8 @@ const ROOT = join(import.meta.dirname, "../../../..");
 
 // Sensitive env var names whose values should be masked in the export
 const SENSITIVE_KEYS = new Set([
-  "SUPABASE_SERVICE_ROLE_KEY",
-  "SUPABASE_ANON_KEY",
+  "DB_SERVICE_ROLE_KEY",
+  "DB_ANON_KEY",
   "OPENAI_API_KEY",
   "ANTHROPIC_API_KEY",
   "DATABASE_URL",
@@ -107,7 +107,7 @@ export async function doctor(args: string[]): Promise<void> {
   console.log(`${c.bold}환경 변수 확인${c.reset}`);
 
   const localRequired = ["PORT"];
-  const connectedRequired = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "REDIS_URL"];
+  const connectedRequired = ["REDIS_URL"];
 
   for (const key of localRequired) {
     if (env[key]) {

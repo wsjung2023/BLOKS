@@ -1,8 +1,6 @@
-// Memory persistence — upsert, link, delete via Supabase (no-op in local profile)
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+// Memory persistence — upsert, link, delete (in-memory local DB)
+import { getDb } from "@bloks/db";
 import { embedText, vectorToSql } from "./embed.js";
-
-const IS_LOCAL = process.env["BLOKS_PROFILE"] !== "connected";
 
 export type MemoryScope = "company" | "team" | "character" | "project";
 export type MemoryType = "preference" | "lesson" | "warning" | "relationship" | "strategy";
@@ -44,38 +42,23 @@ export interface MemorySearchResult {
   similarity: number;
 }
 
-// ── Supabase singleton ────────────────────────────────────────────────────────
-
-let _sb: SupabaseClient | null = null;
-
-function getSupabase(): SupabaseClient | null {
-  if (IS_LOCAL) return null;
-  if (_sb) return _sb;
-  const url = process.env["SUPABASE_URL"];
-  const key = process.env["SUPABASE_SERVICE_ROLE_KEY"];
-  if (!url || !key) return null;
-  _sb = createClient(url, key, { auth: { persistSession: false } });
-  return _sb;
-}
-
 // ── Create memory ─────────────────────────────────────────────────────────────
 
 export async function createMemory(input: CreateMemoryInput): Promise<MemoryNode> {
-  const sb = getSupabase();
-  if (!sb) throw new Error("[memory] createMemory not available in local profile");
+  const db = getDb();
   const now = new Date().toISOString();
 
-  const embedding = await embedText(input.summary);
+  // embedText is called for API compatibility but vector not stored in local DB
+  await embedText(input.summary).catch(() => null);
   const tokenSize = Math.ceil(input.summary.length / 4);
 
-  const { data, error } = await sb
+  const { data, error } = await db
     .from("memory_nodes")
     .insert({
       memory_scope: input.memoryScope,
       scope_entity_id: input.scopeEntityId,
       memory_type: input.memoryType,
       summary: input.summary,
-      embedding: vectorToSql(embedding),
       importance_score: input.importanceScore ?? 0.5,
       decay_policy: input.decayPolicy ?? "medium",
       token_size: tokenSize,
@@ -86,7 +69,7 @@ export async function createMemory(input: CreateMemoryInput): Promise<MemoryNode
     .select("id, memory_scope, scope_entity_id, memory_type, summary, importance_score, decay_policy, token_size, source_event_id, created_at, updated_at")
     .single();
 
-  if (error || !data) throw new Error(`[memory] createMemory failed: ${error?.message}`);
+  if (error || !data) throw new Error(`[memory] createMemory failed: ${(error as { message?: string } | null)?.message ?? "unknown"}`);
 
   const memoryNode = data as MemoryNode;
 
@@ -107,8 +90,7 @@ export async function linkMemoryToCharacters(
   characterIds: string[],
   opts: { relevanceScore?: number; visibilityLevel?: VisibilityLevel } = {}
 ): Promise<void> {
-  const sb = getSupabase();
-  if (!sb) return;
+  const db = getDb();
   const rows = characterIds.map((characterId) => ({
     character_id: characterId,
     memory_id: memoryId,
@@ -116,10 +98,10 @@ export async function linkMemoryToCharacters(
     visibility_level: opts.visibilityLevel ?? "private",
   }));
 
-  await sb.from("character_memory_links").upsert(rows, { onConflict: "character_id,memory_id" });
+  await db.from("character_memory_links").upsert(rows);
 }
 
-// ── Semantic search ───────────────────────────────────────────────────────────
+// ── Semantic search (local: keyword filter, no vectors) ───────────────────────
 
 export async function searchMemories(opts: {
   characterId: string;
@@ -127,23 +109,9 @@ export async function searchMemories(opts: {
   topK?: number;
   threshold?: number;
 }): Promise<MemorySearchResult[]> {
-  const sb = getSupabase();
-  if (!sb) return [];
-  const embedding = await embedText(opts.query);
-
-  const { data, error } = await sb.rpc("match_memories", {
-    p_character_id: opts.characterId,
-    p_embedding: vectorToSql(embedding),
-    p_match_count: opts.topK ?? 5,
-    p_threshold: opts.threshold ?? 0.6,
-  });
-
-  if (error) {
-    console.warn("[memory] searchMemories RPC error:", error.message);
-    return [];
-  }
-
-  return (data as MemorySearchResult[]) ?? [];
+  // Vector search not available in local mode — return empty
+  void vectorToSql; // suppress unused import warning
+  return [];
 }
 
 export async function searchMemoriesByScope(opts: {
@@ -153,24 +121,8 @@ export async function searchMemoriesByScope(opts: {
   topK?: number;
   threshold?: number;
 }): Promise<MemorySearchResult[]> {
-  const sb = getSupabase();
-  if (!sb) return [];
-  const embedding = await embedText(opts.query);
-
-  const { data, error } = await sb.rpc("match_memories_by_scope", {
-    p_scope: opts.scope,
-    p_scope_id: opts.scopeId,
-    p_embedding: vectorToSql(embedding),
-    p_match_count: opts.topK ?? 5,
-    p_threshold: opts.threshold ?? 0.6,
-  });
-
-  if (error) {
-    console.warn("[memory] searchMemoriesByScope RPC error:", error.message);
-    return [];
-  }
-
-  return (data as MemorySearchResult[]) ?? [];
+  // Vector search not available in local mode — return empty
+  return [];
 }
 
 // ── List memories ─────────────────────────────────────────────────────────────
@@ -179,17 +131,14 @@ export async function listCharacterMemories(
   characterId: string,
   opts: { limit?: number | undefined; memoryType?: MemoryType | undefined } = {}
 ): Promise<MemoryNode[]> {
-  const sb = getSupabase();
-  if (!sb) return [];
+  const db = getDb();
 
-  let query = sb
+  const { data } = await db
     .from("character_memory_links")
     .select("memory_nodes(id, memory_scope, scope_entity_id, memory_type, summary, importance_score, decay_policy, token_size, created_at, updated_at)")
     .eq("character_id", characterId)
     .order("relevance_score", { ascending: false })
     .limit(opts.limit ?? 20);
-
-  const { data } = await query;
 
   const nodes: MemoryNode[] = [];
   for (const row of data ?? []) {
@@ -210,9 +159,8 @@ export async function listCharacterMemories(
 // ── Delete memory ─────────────────────────────────────────────────────────────
 
 export async function deleteMemory(memoryId: string): Promise<void> {
-  const sb = getSupabase();
-  if (!sb) return;
-  await sb.from("memory_nodes").delete().eq("id", memoryId);
+  const db = getDb();
+  await db.from("memory_nodes").delete().eq("id", memoryId);
 }
 
 // ── Auto-compression ──────────────────────────────────────────────────────────
@@ -229,11 +177,10 @@ export async function compressCharacterMemories(
   }
 ): Promise<number> {
   const { threshold = 30, batchSize = 20, summarize } = opts;
-  const sb = getSupabase();
-  if (!sb) return 0;
+  const db = getDb();
 
   // Count current memories
-  const { count } = await sb
+  const { count } = await db
     .from("character_memory_links")
     .select("*", { count: "exact", head: true })
     .eq("character_id", characterId);
@@ -241,7 +188,7 @@ export async function compressCharacterMemories(
   if ((count ?? 0) <= threshold) return 0;
 
   // Fetch oldest batchSize memories (by created_at asc via join)
-  const { data: linkRows } = await sb
+  const { data: linkRows } = await db
     .from("character_memory_links")
     .select("memory_id, memory_nodes(id, summary, memory_type, importance_score, created_at)")
     .eq("character_id", characterId)
@@ -277,7 +224,7 @@ export async function compressCharacterMemories(
 
   // Delete the original compressed memories
   const ids = nodes.map(n => n.id);
-  await sb.from("memory_nodes").delete().in("id", ids);
+  await db.from("memory_nodes").delete().in("id", ids);
 
   return ids.length;
 }

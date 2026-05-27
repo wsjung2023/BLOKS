@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
-const { getSupabaseMock } = vi.hoisted(() => ({ getSupabaseMock: vi.fn() }));
+const { getDbMock } = vi.hoisted(() => ({ getDbMock: vi.fn() }));
 const { writeEventLogMock } = vi.hoisted(() => ({ writeEventLogMock: vi.fn().mockResolvedValue(undefined) }));
 
-vi.mock("@bloks/db", () => ({ getSupabase: getSupabaseMock }));
+vi.mock("@bloks/db", () => ({ getDb: getDbMock }));
 vi.mock("./tasks-helpers.js", () => ({ writeEventLog: writeEventLogMock }));
 
 import { approvalsRouter } from "./approvals.js";
@@ -100,7 +100,7 @@ describe("approvals action routes", () => {
       }),
     };
 
-    getSupabaseMock.mockReturnValue(sb);
+    getDbMock.mockReturnValue(sb);
 
     const handler = findPostHandler("/:id/approve");
     const req = {

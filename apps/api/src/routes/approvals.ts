@@ -1,13 +1,13 @@
-// Approvals routes — GET/approve/reject for /api/v1/approvals with Supabase
+// Approvals routes — GET/approve/reject for /api/v1/approvals
 import { Router } from "express";
 import { z } from "zod";
-import { getSupabase } from "@bloks/db";
+import { getDb } from "@bloks/db";
 import { writeEventLog } from "./tasks-helpers.js";
 import { emitWorldEvent } from "./stream.js";
 
 export const approvalsRouter = Router();
 
-// Actual Supabase state values — "Pending" is the single waiting state for all levels
+// Actual DB state values — "Pending" is the single waiting state for all levels
 const DB_PENDING_STATES = ["Pending"] as const;
 const DB_STATE = z.enum(["Pending", "Approved", "Rejected", "Escalated", "Withdrawn"]);
 
@@ -72,7 +72,7 @@ approvalsRouter.get("/", async (req, res) => {
   const to = from + pageSize - 1;
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     let query = sb
       .from("approvals")
       .select(SELECT_COLS, { count: "exact" })
@@ -117,7 +117,7 @@ approvalsRouter.post("/:id/approve", async (req, res) => {
   }
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     const { data: approval, error: fetchError } = await sb
       .from("approvals")
       .select("id, state, target_type, target_id, required_level")
@@ -223,7 +223,7 @@ approvalsRouter.post("/:id/reject", async (req, res) => {
   }
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     const { data: approval, error: fetchError } = await sb
       .from("approvals")
       .select("id, state, target_type, target_id")

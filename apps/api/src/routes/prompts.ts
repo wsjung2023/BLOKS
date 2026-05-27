@@ -1,7 +1,7 @@
 // Prompt templates routes — GET/PATCH/history/rollback for /api/v1/prompts
 import { Router } from "express";
 import { z } from "zod";
-import { getSupabase } from "@bloks/db";
+import { getDb } from "@bloks/db";
 
 export const promptsRouter = Router();
 
@@ -33,7 +33,7 @@ promptsRouter.get("/", async (req, res) => {
   const to = from + pageSize - 1;
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     let query = sb
       .from("prompt_templates")
       .select("id, task_type, template_body, version, active_flag, character_id, role_id, created_at", { count: "exact" })
@@ -63,7 +63,7 @@ promptsRouter.get("/", async (req, res) => {
 promptsRouter.get("/:id", async (req, res) => {
   const id = req.params["id"];
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     const { data, error } = await sb
       .from("prompt_templates")
       .select("id, task_type, template_body, version, active_flag, character_id, role_id, created_at")
@@ -95,7 +95,7 @@ promptsRouter.patch("/:id", async (req, res) => {
   const { templateBody, activeFlag } = parsed.data;
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
 
     // Fetch current version
     const { data: existing } = await sb
@@ -163,7 +163,7 @@ promptsRouter.get("/:id/history", async (req, res) => {
   const limit = Math.min(parseInt((req.query["limit"] as string) ?? "20", 10) || 20, 100);
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     const { data, error } = await sb
       .from("event_logs")
       .select("id, event_type, previous_state, next_state, changed_by, changed_at, comment")
@@ -190,7 +190,7 @@ promptsRouter.post("/:id/rollback", async (req, res) => {
   const id = req.params["id"];
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
 
     // 마지막 변경 이력에서 이전 버전 내용 복원
     const { data: history } = await sb

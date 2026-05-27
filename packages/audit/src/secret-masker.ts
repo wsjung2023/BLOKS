@@ -2,7 +2,7 @@
  * Redacts common secret patterns from strings and objects before they are
  * written to the audit log or returned in API responses.
  *
- * Covers: OpenAI API keys, Supabase service role keys, generic Bearer tokens,
+ * Covers: OpenAI API keys, service role keys, generic Bearer tokens,
  * and env-var assignment syntax for known sensitive variable names.
  */
 
@@ -16,7 +16,7 @@ export function maskSecrets(value: string): string {
   result = result.replace(/\bBearer\s+[A-Za-z0-9\-_.+/=]{10,}/g, `Bearer ${REDACTED}`);
   // Environment variable assignments for known sensitive names
   result = result.replace(
-    /\b(OPENAI_API_KEY|ANTHROPIC_API_KEY|SUPABASE_SERVICE_ROLE_KEY|SUPABASE_ANON_KEY|DATABASE_URL|REDIS_URL|JWT_SECRET|SECRET_KEY|PRIVATE_KEY|API_KEY|ACCESS_TOKEN|REFRESH_TOKEN)=\S+/g,
+    /\b(OPENAI_API_KEY|ANTHROPIC_API_KEY|DB_SERVICE_ROLE_KEY|DB_ANON_KEY|DATABASE_URL|REDIS_URL|JWT_SECRET|SECRET_KEY|PRIVATE_KEY|API_KEY|ACCESS_TOKEN|REFRESH_TOKEN)=\S+/g,
     (_match, varName: string) => `${varName}=${REDACTED}`,
   );
   // Base64-ish values longer than 40 chars following a colon or equals (heuristic)

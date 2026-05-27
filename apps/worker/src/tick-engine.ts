@@ -8,7 +8,7 @@
 //   Phase 6: Broadcast world snapshot via Redis Pub/Sub → SSE
 
 import { QUEUE_NAMES, TaskState } from "@bloks/shared";
-import { getSupabase } from "@bloks/db";
+import { getDb } from "@bloks/db";
 import { routeAI } from "@bloks/ai-router";
 import { compressCharacterMemories } from "@bloks/memory";
 import { sendAgentMessage } from "./helpers.js";
@@ -48,7 +48,7 @@ function publishWorldEvent(_type: string, _payload: Record<string, unknown>): vo
 // ── Phase 1: Character runtime state updates ─────────────────────────────────
 
 async function phaseUpdateCharacterStates(): Promise<number> {
-  const sb = getSupabase();
+  const sb = getDb();
   const now = new Date().toISOString();
 
   // Only process active (non-vacation) characters
@@ -144,7 +144,7 @@ async function phaseUpdateCharacterStates(): Promise<number> {
 // ── Phase 2: Auto-assign unassigned tasks ────────────────────────────────────
 
 async function phaseAutoAssignTasks(): Promise<number> {
-  const sb = getSupabase();
+  const sb = getDb();
   const now = new Date().toISOString();
 
   // Find tasks in Created state with no assignee
@@ -211,7 +211,7 @@ async function phaseAutoAssignTasks(): Promise<number> {
 // ── Phase 3: Auto-advance stale state transitions ────────────────────────────
 
 async function phaseAutoAdvanceStates(): Promise<number> {
-  const sb = getSupabase();
+  const sb = getDb();
   const now = new Date().toISOString();
   const staleThreshold = new Date(Date.now() - STALE_THRESHOLD_MS).toISOString();
 
@@ -254,7 +254,7 @@ async function phaseAutoAdvanceStates(): Promise<number> {
 // ── Phase 3b: Unblock tasks whose predecessors are all Done ──────────────────
 
 async function phaseUnblockTasks(): Promise<number> {
-  const sb = getSupabase();
+  const sb = getDb();
   const now = new Date().toISOString();
 
   const { data: blockedTasks } = await sb
@@ -301,7 +301,7 @@ async function phaseUnblockTasks(): Promise<number> {
 // ── Phase 4: Dispatch AI actions ─────────────────────────────────────────────
 
 async function phaseDispatchAiActions(): Promise<number> {
-  const sb = getSupabase();
+  const sb = getDb();
 
   // Find ai_enabled characters so we skip LLM for those with it off
   const { data: aiEnabledChars } = await sb
@@ -407,7 +407,7 @@ async function phaseGenerateBubbles(tickNumber: number): Promise<number> {
   // Only generate bubbles every other tick to save costs
   if (tickNumber % 2 !== 0) return 0;
 
-  const sb = getSupabase();
+  const sb = getDb();
 
   // Get active (non-vacation) characters with their ai_enabled flag
   const { data: activeCharsForBubble } = await sb
@@ -536,7 +536,7 @@ async function phaseAutonomousConversations(tickNumber: number): Promise<number>
   // Every 3rd tick
   if (tickNumber % 3 !== 0) return 0;
 
-  const sb = getSupabase();
+  const sb = getDb();
 
   // Get active (non-vacation) character IDs
   const { data: activeCharsForConv } = await sb
@@ -670,7 +670,7 @@ async function phaseSchedule(): Promise<number> {
   const isMorningArrival = !isWeekend && hour === 9;
   const isEveningDeparture = !isWeekend && hour === 18;
 
-  const sb = getSupabase();
+  const sb = getDb();
   const now_str = now.toISOString();
 
   const { data: activeChars } = await sb
@@ -776,7 +776,7 @@ async function phaseMeetings(tickNumber: number): Promise<number> {
   // Every 5th tick
   if (tickNumber % 5 !== 0) return 0;
 
-  const sb = getSupabase();
+  const sb = getDb();
 
   // Find active projects with multiple assignees
   const { data: activeTasks } = await sb
@@ -878,7 +878,7 @@ async function phaseMeetings(tickNumber: number): Promise<number> {
 // ── Phase 10: Agent message processing ───────────────────────────────────────
 
 async function phaseProcessAgentMessages(): Promise<number> {
-  const sb = getSupabase();
+  const sb = getDb();
   const now = new Date().toISOString();
   const threshold = new Date(Date.now() - 3 * 60 * 1000).toISOString();
 
@@ -960,7 +960,7 @@ async function phaseProcessAgentMessages(): Promise<number> {
 // ── Phase 11: Project completion detection ────────────────────────────────────
 
 async function phaseProjectCompletion(): Promise<number> {
-  const sb = getSupabase();
+  const sb = getDb();
   const now_str = new Date().toISOString();
 
   const { data: activeProjects } = await sb
@@ -1038,7 +1038,7 @@ async function phaseProjectCompletion(): Promise<number> {
 async function phaseMemoryCompression(tickNumber: number): Promise<number> {
   if (tickNumber % 10 !== 0) return 0;
 
-  const sb = getSupabase();
+  const sb = getDb();
   const { data: chars } = await sb.from("characters").select("id").eq("active_flag", true);
   if (!chars || chars.length === 0) return 0;
 
@@ -1073,7 +1073,7 @@ async function phaseMemoryCompression(tickNumber: number): Promise<number> {
 // Recovery path: execute outbox_events rows that were never dispatched.
 
 async function phaseRelayOutbox(): Promise<number> {
-  const sb = getSupabase();
+  const sb = getDb();
   const threshold = new Date(Date.now() - 60_000).toISOString();
 
   const { data: stuck } = await sb

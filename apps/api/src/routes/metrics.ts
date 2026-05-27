@@ -1,6 +1,6 @@
 // Metrics routes — P95 latency, failure rate, cost summary, queue depth
 import { Router, type Request, type Response } from "express";
-import { getSupabase } from "@bloks/db";
+import { getDb } from "@bloks/db";
 
 export const metricsRouter = Router();
 
@@ -12,7 +12,7 @@ metricsRouter.get("/p95", async (req: Request, res: Response) => {
   const cutoff = new Date(Date.now() - hours * 3600 * 1000).toISOString();
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     const { data, error } = await sb
       .from("request_metrics")
       .select("path, status_code, duration_ms")
@@ -57,7 +57,7 @@ metricsRouter.get("/p95", async (req: Request, res: Response) => {
 
 metricsRouter.get("/costs", async (_req: Request, res: Response) => {
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     const { data, error } = await sb
       .from("projects")
       .select("id, title, api_cost_accumulated, virtual_budget_allocated, state")
@@ -110,7 +110,7 @@ metricsRouter.get("/costs/daily", async (req: Request, res: Response) => {
   const cutoff = new Date(Date.now() - days * 86400_000).toISOString();
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     let query = sb
       .from("event_logs")
       .select("created_at, comment, related_project_id")
@@ -167,7 +167,7 @@ metricsRouter.get("/costs/characters", async (req: Request, res: Response) => {
   const cutoff = new Date(Date.now() - days * 86400_000).toISOString();
 
   try {
-    const sb = getSupabase();
+    const sb = getDb();
     const { data, error } = await sb
       .from("event_logs")
       .select("changed_by, comment")

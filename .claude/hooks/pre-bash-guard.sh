@@ -22,6 +22,24 @@ if echo "$COMMAND" | grep -qE "generate-missing-sprites|remove-floor-characters"
   exit 0
 fi
 
+# Block Korean text in curl/echo commands — causes encoding corruption (U+FFFD)
+if python3 -c "
+import sys
+cmd = sys.stdin.read()
+# Hangul syllables AC00-D7A3, Jamo 1100-11FF, Compatibility Jamo 3130-318F
+has_korean = any(('가' <= c <= '힣') or ('ᄀ' <= c <= 'ᇿ') or ('㄰' <= c <= '㆏') for c in cmd)
+if not has_korean:
+    sys.exit(1)
+has_curl = any(k in cmd for k in ['curl ', 'wget '])
+has_echo_write = ('echo ' in cmd or 'printf ' in cmd) and ('>' in cmd or '|' in cmd)
+if has_curl or has_echo_write:
+    sys.exit(0)
+sys.exit(1)
+" <<< "\$COMMAND" 2>/dev/null; then
+  echo '{"decision":"block","reason":"한국어를 curl/echo 쉘 명령으로 처리하면 인코딩이 손상됩니다(U+FFFD 발생).\n\n대신 사용하세요:\n1. API 호출 → node -e 스크립트로 http.request() 사용\n2. 파일 쓰기 → Write/Edit 도구 직접 사용\n3. JSON body → Node.js Buffer.from(body, utf8) 방식"}'
+  exit 0
+fi
+
 # Allow everything else
 echo '{"decision":"approve"}'
 exit 0

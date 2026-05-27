@@ -6,6 +6,7 @@ import express from "express";
 import cors from "cors";
 import { authenticateRequest } from "./middleware/auth.js";
 import { tracingMiddleware } from "./middleware/tracing.js";
+import { encodingGuard } from "./middleware/encoding-guard.js";
 import { charactersRouter } from "./routes/characters.js";
 import { tasksRouter } from "./routes/tasks.js";
 import { projectsRouter } from "./routes/projects.js";
@@ -56,6 +57,7 @@ app.use(
 );
 
 app.use(express.json({ limit: "1mb" }));
+app.use(encodingGuard);
 
 // W3C traceparent → traceId 전파
 app.use(tracingMiddleware);
