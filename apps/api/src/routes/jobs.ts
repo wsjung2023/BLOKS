@@ -91,25 +91,90 @@ async function runLocalOrchestrate(
     assigneeId = String(anyChars?.[0]?.id ?? actorId);
   }
 
-  // Local-first baseline: create one real executable task then execute ai-actions inline.
-  const { data: createdTask } = await sb.from("tasks").insert({
-    project_id: projectId,
-    title: `${projectTitle} - execution draft`,
-    description: brief,
-    task_type: taskType,
-    state: "Todo",
-    priority: "High",
-    assignee_character_id: assigneeId,
-    created_at: now,
-    updated_at: now,
-  }).select("id").single();
+  // Multi-AI parallel: 리서치/전략 요청이면 다른 AI 모델 캐릭터 2명이 동시에 분석
+  const RESEARCH_KEYWORDS = ["research", "analysis", "market", "competitor", "strategy", "trend", "report", "리서치", "분석", "시장", "경쟁", "전략", "트렌드", "조사"];
+  const isResearchTask = !isVideoTask && !isImageTask && RESEARCH_KEYWORDS.some(kw => brief.toLowerCase().includes(kw.toLowerCase()));
 
   await Promise.resolve(sb.from("projects").update({ state: "Active", updated_at: now }).eq("id", projectId)).catch(() => {});
 
-  if (createdTask?.id) {
-    await runLocalAiAction({
-      input: { taskId: createdTask.id, characterId: assigneeId },
-    }, actorId, traceId);
+  if (isResearchTask) {
+    // 두 개의 다른 AI 캐릭터 찾기
+    const { data: allChars } = await sb
+      .from("characters")
+      .select("id, default_model_profile_id")
+      .eq("active_flag", true)
+      .limit(20);
+
+    type CharWithProfile = { id: string; default_model_profile_id: string | null };
+    const typedChars = (allChars ?? []) as CharWithProfile[];
+
+    // model_profiles에서 실제 provider 조회
+    const profileIds = [...new Set(typedChars.map(c => c.default_model_profile_id).filter(Boolean))] as string[];
+    const { data: profiles } = await sb.from("model_profiles").select("id, provider_name").in("id", profileIds);
+    const providerMap = new Map<string, string>((profiles ?? []).map((p: Record<string, string>): [string, string] => [p["id"]!, p["provider_name"]!]));
+
+    // OpenAI 캐릭터, Anthropic 캐릭터 각 1명씩
+    const openaiChar = typedChars.find(c => (providerMap.get(c.default_model_profile_id ?? "") ?? "") === "openai");
+    const claudeChar = typedChars.find(c => (providerMap.get(c.default_model_profile_id ?? "") ?? "") === "anthropic");
+
+    const primaryChar = openaiChar ?? typedChars[0];
+    const altChar = claudeChar ?? openaiChar;
+
+    // 태스크 1: 주 분석 (OpenAI)
+    const { data: task1 } = await sb.from("tasks").insert({
+      project_id: projectId,
+      title: `${projectTitle} - 분석 리포트`,
+      description: brief,
+      task_type: "market_research",
+      state: "Todo",
+      priority: "High",
+      assignee_character_id: primaryChar?.id ?? assigneeId,
+      created_at: now,
+      updated_at: now,
+    }).select("id").single();
+
+    // 태스크 2: 다른 시각 분석 (Claude) — 다른 캐릭터가 있을 때만
+    let task2Id: string | null = null;
+    if (altChar && altChar.id !== primaryChar?.id) {
+      const { data: task2 } = await sb.from("tasks").insert({
+        project_id: projectId,
+        title: `[다른 시각] ${projectTitle} - 비판적 분석`,
+        description: `${brief}\n\n[지시] 위 주제를 비판적·대안적 관점에서 분석하세요. 기존 통념에 도전하고 새로운 인사이트를 제시하세요.`,
+        task_type: "research_summary",
+        state: "Todo",
+        priority: "High",
+        assignee_character_id: altChar.id,
+        created_at: now,
+        updated_at: now,
+      }).select("id").single();
+      task2Id = task2?.id ?? null;
+    }
+
+    // 두 태스크 병렬 실행
+    const execPromises = [];
+    if (task1?.id) execPromises.push(runLocalAiAction({ input: { taskId: task1.id, characterId: primaryChar?.id ?? assigneeId } }, actorId, traceId));
+    if (task2Id) execPromises.push(runLocalAiAction({ input: { taskId: task2Id, characterId: altChar!.id } }, actorId, traceId));
+    await Promise.all(execPromises);
+
+  } else {
+    // 기존 단일 태스크 처리 (이미지/영상/문서)
+    const { data: createdTask } = await sb.from("tasks").insert({
+      project_id: projectId,
+      title: `${projectTitle} - execution draft`,
+      description: brief,
+      task_type: taskType,
+      state: "Todo",
+      priority: "High",
+      assignee_character_id: assigneeId,
+      created_at: now,
+      updated_at: now,
+    }).select("id").single();
+
+    if (createdTask?.id) {
+      await runLocalAiAction({
+        input: { taskId: createdTask.id, characterId: assigneeId },
+      }, actorId, traceId);
+    }
   }
 }
 
