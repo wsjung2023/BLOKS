@@ -63,3 +63,8 @@ packages/shared/src/**/*.map
 
 # tsbuildinfo
 *.tsbuildinfo
+
+# Acceptance test reports (generated output, not source)
+tools/reports/*.json
+tools/reports/*.jsonl
+tools/reports/daemon-audit-store/
