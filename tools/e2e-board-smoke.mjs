@@ -5,7 +5,7 @@ const API_BASE = process.env.BLOKS_API_BASE_URL || "http://localhost:4000";
 const MODE = process.env.BLOKS_BOARD_SMOKE_MODE || "fixture"; // fixture | api
 const FIXTURE_PATH = process.env.BLOKS_BOARD_SMOKE_FIXTURE || "tools/fixtures/board-smoke-tasks.json";
 
-const VALID_STATES = new Set(["Created", "Assigned", "InProgress", "PendingReview", "Blocked", "Done"]);
+const VALID_STATES = new Set(["Backlog", "Todo", "InProgress", "InReview", "Blocked", "Done", "Cancelled"]);
 const VALID_PRIORITIES = new Set(["P0", "P1", "P2", "P3", "P4"]);
 
 async function loadFromApi() {

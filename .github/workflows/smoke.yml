@@ -1,8 +1,16 @@
 name: Smoke
 
 on:
+  push:
+    branches: ["main"]
+    paths:
+      - "apps/api/**"
+      - "apps/web/**"
+      - "packages/**"
+      - "tools/e2e-board-smoke.mjs"
+      - "tools/fixtures/**"
   schedule:
-    - cron: "0 * * * *"   # every hour
+    - cron: "0 9 * * *"   # 매일 오전 9시 (KST 기준 UTC+9 = 00:00 UTC)
   workflow_dispatch:
 
 jobs:
