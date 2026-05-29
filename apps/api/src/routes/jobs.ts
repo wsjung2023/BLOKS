@@ -67,14 +67,16 @@ async function runLocalOrchestrate(
 
   const VIDEO_KEYWORDS = ["영상", "비디오", "유튜브", "광고영상", "릴스", "쇼츠", "동영상", "클립", "reels", "shorts", "youtube", "video", "광고 영상", "홍보 영상", "소개 영상"];
   const IMAGE_KEYWORDS = ["이미지", "디자인", "포스터", "배너", "그림", "비주얼", "썸네일", "로고", "image", "design", "poster", "banner", "visual", "graphic", "logo", "thumbnail"];
+  const AD_KEYWORDS = ["광고", "광고 대행", "광고배너", "광고 배너", "광고 이미지", "프로모션", "쿠폰", "랜딩 페이지", "랜딩페이지", "홍보 페이지", "광고 전략", "배포 전략", "ad campaign", "advertisement", "promo page", "promotion", "coupon"];
   const isVideoTask = VIDEO_KEYWORDS.some((kw) => brief.toLowerCase().includes(kw.toLowerCase()));
   const isImageTask = !isVideoTask && IMAGE_KEYWORDS.some((kw) => brief.toLowerCase().includes(kw.toLowerCase()));
+  const isAdTask = !isVideoTask && AD_KEYWORDS.some((kw) => brief.toLowerCase().includes(kw.toLowerCase()));
   const taskType = isVideoTask ? "video_production" : isImageTask ? "image_production" : "project_plan";
 
   // 태스크 유형에 맞는 캐릭터 우선 배정
   let assigneeId = actorId;
-  if (isVideoTask || isImageTask) {
-    // 영상/이미지 → 마케팅 팀 캐릭터
+  if (isVideoTask || isImageTask || isAdTask) {
+    // 영상/이미지/광고 → 마케팅 팀 캐릭터
     const { data: mktChars } = await sb
       .from("characters")
       .select("id")
@@ -93,7 +95,7 @@ async function runLocalOrchestrate(
 
   // Multi-AI parallel: 리서치/전략 요청이면 다른 AI 모델 캐릭터 2명이 동시에 분석
   const RESEARCH_KEYWORDS = ["research", "analysis", "market", "competitor", "strategy", "trend", "report", "리서치", "분석", "시장", "경쟁", "전략", "트렌드", "조사"];
-  const isResearchTask = !isVideoTask && !isImageTask && RESEARCH_KEYWORDS.some(kw => brief.toLowerCase().includes(kw.toLowerCase()));
+  const isResearchTask = !isVideoTask && !isImageTask && !isAdTask && RESEARCH_KEYWORDS.some(kw => brief.toLowerCase().includes(kw.toLowerCase()));
 
   await Promise.resolve(sb.from("projects").update({ state: "Active", updated_at: now }).eq("id", projectId)).catch(() => {});
 
@@ -155,6 +157,57 @@ async function runLocalOrchestrate(
     if (task1?.id) execPromises.push(runLocalAiAction({ input: { taskId: task1.id, characterId: primaryChar?.id ?? assigneeId } }, actorId, traceId));
     if (task2Id) execPromises.push(runLocalAiAction({ input: { taskId: task2Id, characterId: altChar!.id } }, actorId, traceId));
     await Promise.all(execPromises);
+
+  } else if (isAdTask) {
+    // 광고 대행: 배너 이미지 + 광고 카피 + 배포 전략 3종 세트
+    const needsBanner = /(배너|banner|이미지|image|포스터|poster)/i.test(brief);
+    const needsVideo = /(영상|video|릴스|reels|쇼츠)/i.test(brief);
+    const needsCoupon = /(쿠폰|coupon)/i.test(brief);
+    const needsPromoPage = /(랜딩|landing|프로모션 페이지|홍보 페이지|promo page)/i.test(brief);
+
+    const adTasks: Array<{ title: string; type: string; desc: string }> = [];
+
+    if (needsBanner || (!needsVideo && !needsCoupon && !needsPromoPage)) {
+      adTasks.push({ title: `${projectTitle} - Ad Banner`, type: "image_production", desc: `Create advertising banner image. ${brief}` });
+    }
+    if (needsVideo) {
+      adTasks.push({ title: `${projectTitle} - Ad Video`, type: "video_production", desc: `Create promotional video. ${brief}` });
+    }
+    if (needsCoupon) {
+      adTasks.push({ title: `${projectTitle} - Coupon Design`, type: "coupon_design", desc: `Design promotional coupon. ${brief}` });
+    }
+    if (needsPromoPage) {
+      adTasks.push({ title: `${projectTitle} - Promo Page`, type: "promo_page", desc: `Create promotional landing page HTML. ${brief}` });
+    }
+    // 광고 카피 + 배포 전략은 항상 포함
+    adTasks.push({ title: `${projectTitle} - Ad Copy`, type: "ad_copy", desc: `Write advertising copy variants. ${brief}` });
+    adTasks.push({ title: `${projectTitle} - Distribution Strategy`, type: "ad_strategy", desc: `Create ad distribution strategy with channel plan, budget, KPIs. ${brief}` });
+
+    const insertedTasks: Array<{ id: string; type: string }> = [];
+    for (const t of adTasks) {
+      const { data: created } = await sb.from("tasks").insert({
+        project_id: projectId,
+        title: t.title,
+        description: t.desc,
+        task_type: t.type,
+        state: "Todo",
+        priority: "High",
+        assignee_character_id: assigneeId,
+        created_at: now,
+        updated_at: now,
+      }).select("id").single();
+      if (created?.id) insertedTasks.push({ id: created.id, type: t.type });
+    }
+
+    // 병렬 실행 (이미지/영상은 순차, 텍스트는 병렬)
+    const mediaTypes = new Set(["image_production", "video_production"]);
+    const mediaTasks = insertedTasks.filter(t => mediaTypes.has(t.type));
+    const textTasks = insertedTasks.filter(t => !mediaTypes.has(t.type));
+
+    for (const t of mediaTasks) {
+      await runLocalAiAction({ input: { taskId: t.id, characterId: assigneeId } }, actorId, traceId);
+    }
+    await Promise.all(textTasks.map(t => runLocalAiAction({ input: { taskId: t.id, characterId: assigneeId } }, actorId, traceId)));
 
   } else {
     // 기존 단일 태스크 처리 (이미지/영상/문서)
@@ -221,8 +274,12 @@ async function runLocalAiAction(
     "Return practical, structured output with clear action items.",
   ].filter(Boolean).join("\n");
 
+  // 광고 배너/쿠폰 → 이미지 생성으로 처리
+  const IMAGE_TASK_TYPES = new Set(["image_production", "ad_banner", "coupon_design"]);
+  const VIDEO_TASK_TYPES = new Set(["video_production", "ad_video"]);
+
   let output = "";
-  if (taskType === "image_production") {
+  if (IMAGE_TASK_TYPES.has(taskType)) {
     try {
       // 캐릭터 프로필에서 이미지 프로바이더 결정
       const imgProvider = charModelProfile?.provider_name;
@@ -245,7 +302,7 @@ async function runLocalAiAction(
     } catch (err) {
       output = `# 이미지 생성 실패\n\n${String(err)}`;
     }
-  } else if (taskType === "video_production") {
+  } else if (VIDEO_TASK_TYPES.has(taskType)) {
     try {
       const aspectRatio = imagePrompt.includes("세로") || imagePrompt.includes("릴스") || imagePrompt.includes("reels") || imagePrompt.includes("쇼츠") ? "9:16" : "16:9";
       // 캐릭터 프로필에서 영상 모델 결정 (kie.ai 프로바이더면 primary_model 사용)

@@ -112,6 +112,13 @@ export const TASK_TEMPLATES: Record<string, string> = {
   media_pipeline:     "Describe media pipeline inputs, transforms, QC checks, and final deliverables.",
   document:           "Write documents with conclusion first, then supporting evidence.",
   memo:               "Write concise memo in 5 lines when possible.",
+  // ── 광고 대행 ──────────────────────────────────────────────────────────────
+  ad_banner:          "Create a compelling ad banner concept: headline, subtext, visual direction, CTA, color palette, and dimensions. Output structured spec ready for image generation.",
+  ad_video:           "Create a 15-30 second ad video concept: hook (0-3s), problem/solution (3-10s), product showcase (10-25s), CTA (25-30s). Include voiceover script and visual directions.",
+  promo_page:         "Create a complete promotional landing page in Korean HTML: hero section with headline/subheadline, product benefits (3 bullet points), social proof, clear CTA button, and terms. Use inline CSS for styling.",
+  coupon_design:      "Design a promotional coupon: discount offer (e.g. 20% off), product/service name, valid period, usage conditions, redemption code, and brand visual guidelines. Output as structured markdown ready for design.",
+  ad_strategy:        "Develop a full ad distribution strategy: target audience persona, recommended channels (Instagram/Naver/Kakao/YouTube), budget allocation, posting schedule, KPI targets, and A/B test ideas.",
+  ad_copy:            "Write high-converting Korean ad copy: 5 headline variants, 3 body copy options, 3 CTA variants. Each optimized for different emotional triggers (urgency, benefit, social proof).",
 };
 
 // section
@@ -186,6 +193,13 @@ const TASK_MODEL_MAP: Record<string, string> = {
   copy:                 "gpt-4o-mini",
   memo:                 "gpt-4o-mini",
   document:             "gpt-4o-mini",
+  // 광고 대행
+  ad_banner:            "gpt-4o",
+  ad_video:             "gpt-4o",
+  promo_page:           "gpt-4o",
+  coupon_design:        "gpt-4o-mini",
+  ad_strategy:          "gpt-4o",
+  ad_copy:              "gpt-4o-mini",
   // Lightweight operational
   approval_analysis:    "gpt-4o-mini",
   character_action:     "gpt-4o-mini",
