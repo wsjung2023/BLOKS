@@ -1,7 +1,7 @@
 import { QUEUE_NAMES, TaskState } from "@bloks/shared";
 import { processOrchestrate } from "./orchestrator.js";
 import { getDb } from "@bloks/db";
-import { routeAI, TASK_TEMPLATES, generateImage } from "@bloks/ai-router";
+import { routeAI, TASK_TEMPLATES, generateImage, searchWeb, buildSearchContext, deriveSearchQuery } from "@bloks/ai-router";
 import { globalRuntimeEngine } from "@bloks/agent-runtime";
 import { buildMemoryContext, createMemory, deriveMemorySummary } from "@bloks/memory";
 import { calcTaskExperience, expRequiredForLevel } from "@bloks/simulation";
@@ -280,7 +280,27 @@ async function runAiTask({ jobData, taskId, task, now }: {
   }
 
   const taskTemplate = TASK_TEMPLATES[task.task_type as string ?? ""] ?? "";
-  const systemPrompt = [basePersona, stateLayer, taskTemplate, memoryCtx.contextBlock, feedbackContext]
+
+  // Web search grounding — research/strategy/marketing 태스크에만 적용
+  const SEARCH_TASK_TYPES = new Set([
+    "market_research", "research_summary", "data_analysis",
+    "strategy_memo", "marketing_copy", "online_content", "proposal_draft",
+  ]);
+  let searchContext = "";
+  if (SEARCH_TASK_TYPES.has((task.task_type as string ?? "").toLowerCase())) {
+    try {
+      const searchQuery = deriveSearchQuery(task.title as string, task.task_type as string);
+      const searchRes = await searchWeb(searchQuery, 5);
+      if (searchRes.results.length > 0) {
+        searchContext = buildSearchContext(searchRes.results);
+        console.log(`[worker:ai-actions] web search: "${searchQuery}" → ${searchRes.results.length} results`);
+      }
+    } catch {
+      // Non-fatal: proceed without search context
+    }
+  }
+
+  const systemPrompt = [basePersona, stateLayer, taskTemplate, memoryCtx.contextBlock, searchContext, feedbackContext]
     .filter(Boolean)
     .join("\n\n");
 
@@ -882,6 +902,149 @@ async function processMonthlyReport(jobData: WorkerJobPayload): Promise<WorkerHa
   };
 }
 
+// ── collab-synthesis ──────────────────────────────────────────────────────────
+// 프로젝트 전체 태스크 완료 후 모든 아티팩트를 종합하여 마스터 리포트 생성.
+// 웹 서치 결과도 포함하면 출처 있는 종합 분석 리포트가 만들어진다.
+
+async function processCollabSynthesis(jobData: WorkerJobPayload): Promise<WorkerHandlerResult> {
+  const sb = getDb();
+  const projectId = jobData.payload?.input?.["projectId"] as string | undefined;
+  if (!projectId) throw new Error("collab-synthesis: projectId is required");
+
+  const now = new Date().toISOString();
+
+  // 1. 프로젝트 정보
+  const { data: project } = await sb
+    .from("projects")
+    .select("title, brief, state")
+    .eq("id", projectId)
+    .single();
+
+  if (!project) throw new Error(`collab-synthesis: project ${projectId} not found`);
+
+  // 2. 이미 마스터 리포트가 있으면 스킵
+  const { data: existing } = await sb
+    .from("artifacts")
+    .select("id")
+    .eq("project_id", projectId)
+    .eq("artifact_type", "synthesis_report")
+    .limit(1)
+    .single();
+
+  if (existing) {
+    return { ok: true, handler: QUEUE_NAMES.collabSynthesis, processedAt: now, summary: "already synthesized" };
+  }
+
+  // 3. 완료된 모든 아티팩트 수집
+  const { data: artifacts } = await sb
+    .from("artifacts")
+    .select("title, content_markdown, artifact_type, author_character_id")
+    .eq("project_id", projectId)
+    .in("status", ["Submitted", "Draft"])
+    .neq("artifact_type", "synthesis_report")
+    .order("created_at");
+
+  if (!artifacts || artifacts.length === 0) {
+    return { ok: true, handler: QUEUE_NAMES.collabSynthesis, processedAt: now, summary: "no artifacts to synthesize" };
+  }
+
+  // 4. 아티팩트 컨텐츠 조합 (각 팀원 결과물)
+  const artifactBlocks = (artifacts as Array<{ title: string; content_markdown: string; artifact_type: string; author_character_id: string }>)
+    .map((a, i) => `## [${i + 1}] ${a.title} (${a.artifact_type})\n${(a.content_markdown ?? "").slice(0, 3000)}`)
+    .join("\n\n---\n\n");
+
+  // 5. 프로젝트 주제로 보완 웹 서치
+  let searchContext = "";
+  try {
+    const searchRes = await searchWeb(project.title as string, 4);
+    if (searchRes.results.length > 0) {
+      searchContext = buildSearchContext(searchRes.results);
+    }
+  } catch { /* non-fatal */ }
+
+  // 6. 대표 캐릭터 선정 (PM 역할)
+  const { data: chars } = await sb
+    .from("characters")
+    .select("id, divisions(division_type)")
+    .eq("active_flag", true)
+    .limit(20);
+
+  type CharRow2 = { id: string; divisions: { division_type?: string } | null };
+  const typedChars = (chars ?? []) as CharRow2[];
+  const pmChar = typedChars.find(c => {
+    const dt = (c.divisions?.division_type ?? "").toLowerCase();
+    return dt.includes("exec") || dt.includes("strategy") || dt.includes("management");
+  }) ?? typedChars[0];
+
+  if (!pmChar) throw new Error("collab-synthesis: no character available");
+
+  // 7. 종합 AI 호출
+  const systemPrompt = [
+    "당신은 프로젝트의 최종 종합 보고서를 작성하는 시니어 애널리스트입니다.",
+    "팀 전체의 작업 결과물과 최신 웹 정보를 통합하여 출처가 명확한 종합 리포트를 작성합니다.",
+    "리포트는 한국어로 작성하되, 핵심 인사이트를 먼저 제시하고 세부 분석을 뒷받침하세요.",
+    searchContext,
+  ].filter(Boolean).join("\n\n");
+
+  const userPrompt = [
+    `프로젝트명: ${project.title}`,
+    project.brief ? `의뢰 내용: ${project.brief}` : "",
+    "",
+    "아래는 팀 각 멤버가 작업한 결과물입니다. 이것들을 통합하여 체계적인 종합 리포트를 작성해주세요:",
+    "",
+    artifactBlocks,
+    "",
+    "종합 리포트 구성:",
+    "1. 핵심 요약 (Executive Summary)",
+    "2. 주요 발견사항 및 인사이트",
+    "3. 각 분야별 세부 내용 통합",
+    "4. 실행 제안 및 다음 단계",
+    "5. 출처 및 참고자료 (웹 서치 결과 활용)",
+  ].filter(Boolean).join("\n");
+
+  const aiResult = await routeAI({
+    characterId: pmChar.id,
+    taskType: "research_summary",
+    prompt: userPrompt,
+    systemPrompt,
+    maxTokens: 4000,
+  });
+
+  // 8. 마스터 아티팩트 저장
+  const { data: masterArtifact } = await sb
+    .from("artifacts")
+    .insert({
+      project_id: projectId,
+      author_character_id: pmChar.id,
+      artifact_type: "synthesis_report",
+      title: `[종합 리포트] ${project.title}`,
+      content_markdown: aiResult.output as string,
+      status: "Submitted",
+      created_at: now,
+      updated_at: now,
+    })
+    .select("id")
+    .single();
+
+  await logEvent({
+    entityType: "project", entityId: projectId,
+    eventType: "project.synthesis_complete",
+    changedBy: `worker:collab-synthesis`,
+    comment: `${artifacts.length}개 아티팩트 통합 → 종합 리포트 생성 (${masterArtifact?.id ?? ""})`,
+    relatedProjectId: projectId, now,
+  });
+
+  // 9. 프로젝트 상태를 Done으로 업데이트
+  await sb.from("projects").update({ state: "Done", updated_at: now }).eq("id", projectId);
+
+  return {
+    ok: true,
+    handler: QUEUE_NAMES.collabSynthesis,
+    processedAt: now,
+    summary: `synthesized ${artifacts.length} artifacts → master report ${masterArtifact?.id ?? "n/a"}`,
+  };
+}
+
 // ── Handler map ───────────────────────────────────────────────────────────────
 
 const handlerMap: Record<QueueName, (jobData: WorkerJobPayload) => Promise<WorkerHandlerResult>> = {
@@ -894,6 +1057,7 @@ const handlerMap: Record<QueueName, (jobData: WorkerJobPayload) => Promise<Worke
   [QUEUE_NAMES.founderMessage]: processFounderMessage,
   [QUEUE_NAMES.orchestrate]: processOrchestrate,
   [QUEUE_NAMES.monthlyReport]: processMonthlyReport,
+  [QUEUE_NAMES.collabSynthesis]: processCollabSynthesis,
 };
 
 export async function runQueueHandler(queueName: QueueName, jobData: WorkerJobPayload): Promise<WorkerHandlerResult> {
@@ -946,6 +1110,43 @@ async function processFounderMessage(jobData: WorkerJobPayload): Promise<WorkerH
     processedAt: new Date().toISOString(),
     summary: `${char.name as string} replied: "${reply.slice(0, 30)}"`,
   };
+}
+
+// ── 프로젝트 완료 체크 & 종합 트리거 ────────────────────────────────────────────
+
+async function checkAndTriggerSynthesis(projectId: string, now: string): Promise<void> {
+  try {
+    const sb = getDb();
+    // 미완료 태스크 있으면 스킵
+    const { data: pending } = await sb
+      .from("tasks")
+      .select("id", { count: "exact", head: true })
+      .eq("project_id", projectId)
+      .in("state", ["Todo", "InProgress", "InReview", "Blocked"]);
+
+    if ((pending as unknown as { count: number })?.count > 0) return;
+
+    // 완료된 아티팩트 수 확인
+    const { data: arts } = await sb
+      .from("artifacts")
+      .select("id")
+      .eq("project_id", projectId)
+      .neq("artifact_type", "synthesis_report")
+      .limit(1);
+
+    if (!arts || arts.length === 0) return;
+
+    console.log(`[worker] all tasks done for project ${projectId} → triggering collab-synthesis`);
+    void runQueueHandler(QUEUE_NAMES.collabSynthesis, {
+      queueName: QUEUE_NAMES.collabSynthesis,
+      payload: { input: { projectId } },
+      requestedByCharacterId: "system:auto-synthesis",
+      queuedAt: now,
+      traceId: `synthesis_${projectId}`,
+    }).catch((err: unknown) => console.error("[worker:auto-synthesis] failed:", err));
+  } catch {
+    // Non-fatal
+  }
 }
 
 // ── AI 리뷰 결과 파싱 ──────────────────────────────────────────────────────────
@@ -1095,9 +1296,15 @@ async function processAgentMessages(_jobData: WorkerJobPayload): Promise<WorkerH
       void publishWorldEvent("task_state_changed", { taskId, characterId: assigneeCharId, taskTitle: task.title, from: TaskState.InReview, to: TaskState.Done });
 
       // 경험치 부여
-      const { data: doneTask } = await sb.from("tasks").select("priority, ai_output, assignee_character_id").eq("id", taskId).single();
+      const { data: doneTask } = await sb.from("tasks").select("priority, ai_output, assignee_character_id, project_id").eq("id", taskId).single();
       if (doneTask?.assignee_character_id) {
         void grantExperience(doneTask.assignee_character_id as string, doneTask.priority as string, !!doneTask.ai_output, taskId, now);
+      }
+
+      // 프로젝트 전체 완료 체크 → 종합 리포트 자동 생성
+      const projId = (doneTask?.project_id as string | null) ?? (task.project_id as string | null);
+      if (projId) {
+        void checkAndTriggerSynthesis(projId, now);
       }
     } else {
       // ── 거절 → 재작업 사이클 ────────────────────────────────────────────────

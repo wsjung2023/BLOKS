@@ -21,4 +21,5 @@ export const QUEUE_NAMES = {
   founderMessage: "founder-message",
   orchestrate: "orchestrate",
   monthlyReport: "monthly-report",
+  collabSynthesis: "collab-synthesis",
 } as const;

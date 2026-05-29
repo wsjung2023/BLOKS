@@ -346,4 +346,6 @@ export { generateImage, listAvailableImageProviders } from "./image.js";
 export { generateVideo } from "./video.js";
 export type { VideoGenRequest, VideoGenResult } from "./video.js";
 export type { ImageGenRequest, ImageGenResult } from "./image.js";
+export { searchWeb, buildSearchContext, deriveSearchQuery } from "./search.js";
+export type { SearchResult, SearchResponse } from "./search.js";
 
