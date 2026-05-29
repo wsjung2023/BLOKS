@@ -151,10 +151,16 @@ ${roster}
 - 워크로드가 낮은 캐릭터를 우선 배정하세요
 - 반드시 아래 JSON 형식으로만 응답하세요`;
 
-  const userPrompt = `다음 프로젝트를 수행하기 위한 태스크 계획을 수립해주세요:
+  const userPrompt = `다음 프로젝트를 실제로 수행할 태스크들로 분해하세요. 하나의 큰 계획 태스크가 아니라 각 팀원이 실제로 작업하는 개별 태스크 여러 개를 만드세요.
 
 프로젝트명: ${title}
 의뢰 내용: ${brief}
+
+규칙:
+- 태스크는 최소 3개, 최대 7개로 분해하세요
+- 각 태스크는 한 명이 2~4시간 내에 완료할 수 있는 구체적인 작업이어야 합니다
+- 리서치/분석/전략 프로젝트라면 반드시 MARKET_RESEARCH, DATA_ANALYSIS, STRATEGY_MEMO 타입을 포함하세요
+- PROJECT_PLAN 타입은 최초 계획 태스크에만 사용하세요
 
 다음 JSON 형식으로 태스크를 분해하고 담당자를 배정하세요:
 {
@@ -293,7 +299,7 @@ ${roster}
   }
 
   // ── 병렬 관점 분석: 리서치/전략 태스크는 다른 AI 모델 캐릭터가 동시에 다른 각도로 분석 ──
-  const COLLAB_TYPES = new Set(["market_research", "research_summary", "strategy_memo", "data_analysis", "proposal_draft"]);
+  const COLLAB_TYPES = new Set(["market_research", "research_summary", "strategy_memo", "data_analysis", "proposal_draft", "project_plan", "planningdocument", "analysis"]);
 
   // Build provider map: character id → provider_name
   const charProviderMap = new Map<string, string>();
