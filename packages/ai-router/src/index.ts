@@ -4,6 +4,7 @@ import { OpenAiProvider } from "./providers/openai.js";
 import { AnthropicProvider } from "./providers/anthropic.js";
 import { GoogleProvider } from "./providers/google.js";
 import { listCharacterMemories } from "@bloks/memory";
+import { getToolsForTask, type BloksTool } from "./tools.js";
 
 // section
 
@@ -18,6 +19,10 @@ export interface AiRequest {
   /** When set, enables OpenAI Structured Outputs (json_schema strict mode). */
   jsonSchema?: Record<string, unknown>;
   characterId?: string;
+  /** MCP tools available to this AI call. Auto-populated by routeAI based on taskType. */
+  tools?: BloksTool[];
+  /** Set to true to disable tool injection (for simple/fast calls). */
+  noTools?: boolean;
 }
 
 export interface AiExecutionResult<T = unknown> {
@@ -284,12 +289,16 @@ export async function routeAI(options: RouteAIOptions): Promise<RouteAIResult> {
     throw new Error(`AI_BUDGET_EXCEEDED: estimated cost exceeds ${MAX_COST_USD} USD`);
   }
 
+  // Task type에 맞는 MCP 툴 자동 선택 (json 응답 모드에서는 툴 비활성화)
+  const tools = (jsonSchema || responseFormat === "json") ? [] : getToolsForTask(taskType);
+
   const request: AiRequest = {
     userPrompt: prompt,
     taskType,
     model,
     responseFormat: jsonSchema ? "json" : (responseFormat ?? "text"),
     characterId,
+    tools,
     ...(resolvedSystem ? { systemPrompt: resolvedSystem } : {}),
     ...(maxTokens !== undefined ? { maxTokens } : {}),
     ...(jsonSchema !== undefined ? { jsonSchema } : {}),
@@ -362,4 +371,6 @@ export type { VideoGenRequest, VideoGenResult } from "./video.js";
 export type { ImageGenRequest, ImageGenResult } from "./image.js";
 export { searchWeb, buildSearchContext, deriveSearchQuery } from "./search.js";
 export type { SearchResult, SearchResponse } from "./search.js";
+export { getToolsForTask, TOOL_REGISTRY } from "./tools.js";
+export type { BloksTool } from "./tools.js";
 
