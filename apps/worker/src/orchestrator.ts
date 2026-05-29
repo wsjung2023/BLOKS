@@ -292,6 +292,67 @@ ${roster}
     }
   }
 
+  // ── 병렬 관점 분석: 리서치/전략 태스크는 다른 AI 모델 캐릭터가 동시에 다른 각도로 분석 ──
+  const COLLAB_TYPES = new Set(["market_research", "research_summary", "strategy_memo", "data_analysis", "proposal_draft"]);
+
+  // Build provider map: character id → provider_name
+  const charProviderMap = new Map<string, string>();
+  for (const c of chars) {
+    // model profile info is not loaded here; derive from known character IDs
+    // Claude 캐릭터는 id에 selene 또는 jaemin 포함
+    const isClaudeChar = c.id.includes("selene") || c.id.includes("jaemin");
+    charProviderMap.set(c.id, isClaudeChar ? "anthropic" : "openai");
+  }
+
+  let perspectiveCount = 0;
+  for (const t of plan.tasks) {
+    if (!COLLAB_TYPES.has(t.deliverable_type.toLowerCase())) continue;
+    const primaryAssignee = taskAssigneeMap.get(t.title);
+    if (!primaryAssignee) continue;
+
+    const primaryProvider = charProviderMap.get(primaryAssignee.id) ?? "openai";
+
+    // 다른 provider의 캐릭터 찾기 (워크로드 낮은 순)
+    const altChar = chars
+      .filter(c => c.id !== primaryAssignee.id && (charProviderMap.get(c.id) ?? "openai") !== primaryProvider)
+      .sort((a, b) => (a.character_runtime_states?.workload_score ?? 0) - (b.character_runtime_states?.workload_score ?? 0))[0];
+
+    if (!altChar) continue;
+
+    const { data: perspTask } = await sb.from("tasks").insert({
+      project_id: projectId,
+      title: `[다른 시각] ${t.title}`,
+      description: `${t.description ?? ""}\n\n[지시] 위 주제에 대해 비판적·대안적 관점에서 분석하세요. 기존 통념에 도전하고 새로운 인사이트를 제시하세요.`,
+      task_type: t.deliverable_type.toLowerCase(),
+      state: "Todo",
+      priority: normalizePriority(t.priority),
+      assignee_character_id: altChar.id,
+      created_at: now,
+      updated_at: now,
+    }).select("id").single();
+
+    if (perspTask?.id) {
+      perspectiveCount++;
+      void sendAgentMessage({
+        fromCharId: primaryAssignee.id,
+        toCharId: altChar.id,
+        messageType: "HANDOFF",
+        content: `"${t.title.slice(0, 25)}" — 다른 시각으로 분석해줘! 🔍`,
+        now,
+      });
+    }
+  }
+
+  if (perspectiveCount > 0) {
+    console.log(`[orchestrate] ${perspectiveCount}개 병렬 관점 분석 태스크 생성`);
+    void publishWorldEvent("character_bubble", {
+      characterId: pm.id,
+      bubbleType: "speech",
+      text: `다각도 분석을 위해 ${perspectiveCount}개 추가 태스크를 배정했습니다 🧠`,
+      duration: 8000,
+    });
+  }
+
   // ── Stage 4: Work delegation (team lead → each assignee) ─────────────────
   await delay(1000);
 
