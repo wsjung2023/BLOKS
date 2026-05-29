@@ -82,6 +82,7 @@ export async function processOrchestrate(jobData: WorkerJobPayload): Promise<Wor
     .from("characters")
     .select(`
       id, name, code_name, ai_enabled, persona_summary,
+      default_model_profile_id,
       divisions(division_type, name),
       character_runtime_states(workload_score)
     `)
@@ -97,6 +98,7 @@ export async function processOrchestrate(jobData: WorkerJobPayload): Promise<Wor
     name: string;
     code_name: string;
     ai_enabled: boolean | null;
+    default_model_profile_id: string | null;
     persona_summary: string | null;
     divisions: { division_type?: string; name?: string } | null;
     character_runtime_states: { workload_score?: number } | null;
@@ -301,13 +303,20 @@ ${roster}
   // ── 병렬 관점 분석: 리서치/전략 태스크는 다른 AI 모델 캐릭터가 동시에 다른 각도로 분석 ──
   const COLLAB_TYPES = new Set(["market_research", "research_summary", "strategy_memo", "data_analysis", "proposal_draft", "project_plan", "planningdocument", "analysis"]);
 
-  // Build provider map: character id → provider_name
+  // Build provider map from actual model_profiles in DB
+  const allProfileIds = [...new Set(chars.map(c => c.default_model_profile_id).filter(Boolean))] as string[];
   const charProviderMap = new Map<string, string>();
-  for (const c of chars) {
-    // model profile info is not loaded here; derive from known character IDs
-    // Claude 캐릭터는 id에 selene 또는 jaemin 포함
-    const isClaudeChar = c.id.includes("selene") || c.id.includes("jaemin");
-    charProviderMap.set(c.id, isClaudeChar ? "anthropic" : "openai");
+  if (allProfileIds.length > 0) {
+    const { data: profiles } = await sb
+      .from("model_profiles")
+      .select("id, provider_name")
+      .in("id", allProfileIds);
+    const profileProviderMap = new Map<string, string>((profiles ?? []).map((p: Record<string, string>): [string, string] => [p["id"]!, p["provider_name"]!]));
+    for (const c of chars) {
+      const profileId = c.default_model_profile_id ?? "";
+      const provider = profileProviderMap.get(profileId) ?? "openai";
+      charProviderMap.set(c.id, provider);
+    }
   }
 
   let perspectiveCount = 0;
