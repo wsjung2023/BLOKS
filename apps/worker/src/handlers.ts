@@ -522,22 +522,23 @@ async function findApproverForLevel(
     .select("id, ranks(name), character_runtime_states(workload_score, burnout_triggered)")
     .eq("active_flag", true);
 
-  const candidate = (chars ?? [])
-    .filter(c => {
+  type ApproverRow = { id: string; ranks: { name: string }[] | { name: string } | null; character_runtime_states: { workload_score?: number; burnout_triggered?: boolean }[] | { workload_score?: number; burnout_triggered?: boolean } | null };
+  const candidate = ((chars ?? []) as ApproverRow[])
+    .filter((c: ApproverRow) => {
       if (excludeCharId && c.id === excludeCharId) return false;
       const rankName = Array.isArray(c.ranks)
         ? (c.ranks[0] as { name: string } | undefined)?.name
         : (c.ranks as { name: string } | null)?.name;
       return targetRanks.includes(rankName ?? "");
     })
-    .map(c => {
+    .map((c: ApproverRow) => {
       const rt = Array.isArray(c.character_runtime_states)
         ? (c.character_runtime_states[0] as { workload_score?: number; burnout_triggered?: boolean } | undefined)
         : (c.character_runtime_states as { workload_score?: number; burnout_triggered?: boolean } | null);
-      return { id: c.id as string, workload: rt?.workload_score ?? 0, burnout: rt?.burnout_triggered ?? false };
+      return { id: c.id, workload: rt?.workload_score ?? 0, burnout: rt?.burnout_triggered ?? false };
     })
-    .filter(c => !c.burnout && c.workload < 80)
-    .sort((a, b) => a.workload - b.workload)[0];
+    .filter((c: { id: string; workload: number; burnout: boolean }) => !c.burnout && c.workload < 80)
+    .sort((a: { workload: number }, b: { workload: number }) => a.workload - b.workload)[0];
 
   return candidate?.id ?? null;
 }

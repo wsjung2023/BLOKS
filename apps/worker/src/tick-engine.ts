@@ -58,7 +58,7 @@ async function phaseUpdateCharacterStates(): Promise<number> {
     .eq("active_flag", true);
 
   if (!activeChars || activeChars.length === 0) return 0;
-  const activeCharIds = activeChars.map((c) => c.id as string);
+  const activeCharIds = (activeChars as Array<{ id: string }>).map((c) => c.id);
 
   const { data: runtimes } = await sb
     .from("character_runtime_states")
@@ -178,7 +178,7 @@ async function phaseAutoAssignTasks(): Promise<number> {
         .eq("active_flag", true);
 
       if (deptChars && deptChars.length > 0) {
-        const charIds = deptChars.map((c) => c.id);
+        const charIds = (deptChars as Array<{ id: string }>).map((c) => c.id);
         candidateQuery = candidateQuery.in("character_id", charIds);
       }
     }
@@ -281,7 +281,7 @@ async function phaseUnblockTasks(): Promise<number> {
       continue;
     }
 
-    const predIds = deps.map((d) => d.predecessor_id as string);
+    const predIds = (deps as Array<{ predecessor_id: string }>).map((d) => d.predecessor_id);
     const { count: doneCount } = await sb
       .from("tasks")
       .select("id", { count: "exact", head: true })
@@ -310,7 +310,7 @@ async function phaseDispatchAiActions(): Promise<number> {
     .eq("active_flag", true)
     .eq("ai_enabled", true);
 
-  const aiEnabledIds = new Set((aiEnabledChars ?? []).map((c) => c.id as string));
+  const aiEnabledIds = new Set(((aiEnabledChars ?? []) as Array<{ id: string }>).map((c) => c.id));
 
   // Find InProgress tasks that haven't been processed by AI yet
   const { data: readyTasks } = await sb
@@ -417,7 +417,8 @@ async function phaseGenerateBubbles(tickNumber: number): Promise<number> {
 
   if (!activeCharsForBubble || activeCharsForBubble.length === 0) return 0;
 
-  const activeCharMap = new Map(activeCharsForBubble.map((c) => [c.id as string, c]));
+  type BubbleChar = { id: string; name: string; code_name: string; persona_summary: string | null; ai_enabled: boolean | null };
+  const activeCharMap = new Map((activeCharsForBubble as BubbleChar[]).map((c) => [c.id, c]));
 
   const { data: runtimes } = await sb
     .from("character_runtime_states")
@@ -545,8 +546,10 @@ async function phaseAutonomousConversations(tickNumber: number): Promise<number>
     .eq("active_flag", true);
 
   if (!activeCharsForConv || activeCharsForConv.length < 2) return 0;
-  const activeConvIds = activeCharsForConv.map((c) => c.id as string);
-  const convAiEnabledMap = new Map(activeCharsForConv.map((c) => [c.id as string, c.ai_enabled as boolean ?? true]));
+  type ConvChar = { id: string; ai_enabled: boolean | null };
+  const typedConvChars = activeCharsForConv as ConvChar[];
+  const activeConvIds = typedConvChars.map((c) => c.id);
+  const convAiEnabledMap = new Map(typedConvChars.map((c) => [c.id, c.ai_enabled ?? true]));
 
   // Get characters grouped by location_zone
   const { data: runtimes } = await sb
@@ -558,15 +561,18 @@ async function phaseAutonomousConversations(tickNumber: number): Promise<number>
 
   if (!runtimes || runtimes.length < 2) return 0;
 
+  type ConvRuntime = { character_id: string; activity_status: string | null; location_zone: string | null };
+  const typedRuntimes = runtimes as ConvRuntime[];
+
   // Build status map for topic selection
-  const statusMap = new Map<string, string>(runtimes.map((rt) => [rt.character_id as string, (rt.activity_status as string) ?? "Idle"]));
+  const statusMap = new Map<string, string>(typedRuntimes.map((rt) => [rt.character_id, rt.activity_status ?? "Idle"]));
 
   // Group by location
   const byZone = new Map<string, string[]>();
-  for (const rt of runtimes) {
-    const zone = (rt.location_zone as string) ?? "desk";
+  for (const rt of typedRuntimes) {
+    const zone = rt.location_zone ?? "desk";
     const arr = byZone.get(zone) ?? [];
-    arr.push(rt.character_id as string);
+    arr.push(rt.character_id);
     byZone.set(zone, arr);
   }
 
@@ -586,11 +592,13 @@ async function phaseAutonomousConversations(tickNumber: number): Promise<number>
       .in("id", [charA, charB]);
 
     if (!chars || chars.length < 2) continue;
-    const a = chars.find((c) => c.id === charA);
-    const b = chars.find((c) => c.id === charB);
+    type ConvCharDetail = { id: string; name: string; code_name: string; persona_summary: string | null };
+    const typedChars = chars as ConvCharDetail[];
+    const a = typedChars.find((c) => c.id === charA);
+    const b = typedChars.find((c) => c.id === charB);
     if (!a || !b) continue;
 
-    const bPersona = getPersonaType((b.code_name as string) ?? "");
+    const bPersona = getPersonaType(b.code_name ?? "");
     const statusA = statusMap.get(charA) ?? "Idle";
 
     let textA: string;
@@ -680,7 +688,7 @@ async function phaseSchedule(): Promise<number> {
 
   if (!activeChars || activeChars.length === 0) return 0;
 
-  const charIds = activeChars.map((c) => c.id as string);
+  const charIds = (activeChars as Array<{ id: string }>).map((c) => c.id);
 
   const { data: runtimes } = await sb
     .from("character_runtime_states")
@@ -838,7 +846,7 @@ async function phaseMeetings(tickNumber: number): Promise<number> {
       .single();
 
     const projectTitle = (project?.title as string) ?? "프로젝트";
-    const attendeeNames = chars.map((c) => c.name).join(", ");
+    const attendeeNames = (chars as Array<{ name: string }>).map((c) => c.name).join(", ");
 
     // Emit meeting bubble
     void publishWorldEvent("character_bubble", {
@@ -991,7 +999,7 @@ async function phaseProjectCompletion(): Promise<number> {
       .eq("project_id", project.id)
       .eq("state", "Done")
       .not("assignee_character_id", "is", null);
-    const celebrantIds = [...new Set((assignees ?? []).map((t) => t.assignee_character_id as string).filter(Boolean))];
+    const celebrantIds = [...new Set(((assignees ?? []) as Array<{ assignee_character_id: string | null }>).map((t) => t.assignee_character_id).filter((id): id is string => Boolean(id)))];
 
     await sb.from("projects").update({
       state: "Released",
