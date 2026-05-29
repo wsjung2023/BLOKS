@@ -37,7 +37,8 @@
     "capability-packs:run-all": "node tools/capability-packs/run-all-packs.mjs",
     "distribution:cli-smoke": "node tools/cli-distribution-smoke.mjs",
     "check:clean-install": "node tools/clean-install-check.mjs",
-    "gate:ga": "node tools/ga-gate.mjs"
+    "gate:ga": "node tools/ga-gate.mjs",
+    "setup:claude": "node -e \"const p=process.platform;const {execSync}=require('child_process');execSync(p==='win32'?'powershell -File scripts/setup-claude-skills.ps1':'bash scripts/setup-claude-skills.sh',{stdio:'inherit'})\""
   },
   "devDependencies": {
     "turbo": "^2.3.0",

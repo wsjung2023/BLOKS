@@ -345,3 +345,49 @@ BLOKS/.bloks-data/local-db.json
 | 영상 AI (릴스, 광고영상 등) | 5초 영상 1개당 약 300~600원 (KIE.AI) |
 | 실시간 웹 검색 | 월 1,000회 무료 (Tavily 무료 플랜) |
 | 서버, 클라우드 | **없음** — 내 PC에서만 돌아감 |
+
+---
+
+## 개발자 가이드 (Claude Code로 기여할 때)
+
+BLOKS는 **Claude Code 스킬 번들**이 내장되어 있습니다.  
+개발 작업 시 Karpathy 코딩 원칙, 반복 루프, 전체 워크플로우 스킬이 자동으로 활성화됩니다.
+
+### Claude Code 스킬 설치
+
+저장소를 clone한 후 아래 명령어를 한 번만 실행하세요:
+
+```bash
+pnpm setup:claude
+```
+
+Windows/macOS/Linux 모두 동일한 명령어로 동작합니다.
+
+### 설치되는 스킬 목록
+
+| 스킬 | 출처 | 용도 |
+|---|---|---|
+| `/karpathy-guidelines` | BLOKS 번들 | 단순하게·외과적으로·목표 기반으로 코딩 |
+| `/bloks-collab-impl` | BLOKS 번들 | BLOKS 협업 시스템 구현 체크리스트 |
+| `/superpowers` | [obra/superpowers](https://github.com/obra/superpowers) | TDD·디버깅·코드리뷰 전체 워크플로우 |
+| `/ralph-loop` | Anthropic 공식 | 같은 프롬프트를 완료될 때까지 반복 실행 |
+| `/agent-toolkit` | [softaworks/agent-toolkit](https://github.com/softaworks/agent-toolkit) | 문서화·테스팅·플래닝 50+ 스킬 모음 |
+
+> 이미 설치된 스킬은 건너뜁니다. Claude Code를 재시작하면 바로 사용 가능합니다.
+
+### 개발 서버 실행
+
+```bash
+docker compose up -d   # Postgres + Redis
+pnpm install
+pnpm dev               # 전체 앱 (api:4000 + web:3000 + worker)
+```
+
+### 주요 개발 명령어
+
+```bash
+pnpm lint              # 타입 체크
+pnpm test              # 전체 테스트
+pnpm db:migrate        # DB 마이그레이션
+pnpm verify:ci         # CI 전체 검증 (lint + test + smoke)
+```

@@ -96,6 +96,14 @@ async function fetchCharacterModelProfile(characterId: string): Promise<ModelPro
 // section
 // Used as fallback when the caller doesn't provide an explicit systemPrompt.
 
+// Karpathy coding guidelines — injected into all development task templates
+const DEV_GUIDELINES = `
+CODING GUIDELINES (follow strictly):
+1. Think Before Coding: State assumptions explicitly. If unclear, ask. Surface tradeoffs. Don't pick silently between interpretations.
+2. Simplicity First: Minimum code that solves the problem. No speculative features, no abstractions for single-use code, no unnecessary error handling.
+3. Surgical Changes: Touch only what you must. Don't improve adjacent code. Match existing style. Every changed line must trace to the request.
+4. Goal-Driven: Define success criteria before coding. For multi-step tasks state a brief plan with a verify step per item. Loop until verified.`.trimStart();
+
 export const TASK_TEMPLATES: Record<string, string> = {
   planningDocument:   "Write a planning doc with goals, scope, timeline, and risks.",
   prd_draft:          "Write a PRD with user stories, requirements, and done criteria.",
@@ -105,13 +113,13 @@ export const TASK_TEMPLATES: Record<string, string> = {
   research_summary:   "Summarize key insights, sources, and actionable conclusions.",
   market_research:    "Include market size, competitors, trends, and entry opportunities.",
   data_analysis:      "Provide numeric evidence, insights, and business implications.",
-  code_development:   "Provide maintainable code with error handling and testability.",
-  web_development:    "Produce web output with UX, performance, and accessibility in mind.",
+  code_development:   `Provide maintainable code with error handling and testability.\n\n${DEV_GUIDELINES}`,
+  web_development:    `Produce web output with UX, performance, and accessibility in mind.\n\n${DEV_GUIDELINES}`,
   marketing_copy:     "Write target-aware marketing copy with clear CTA.",
   online_content:     "Produce shareable SEO-aware online content.",
   erp_operation:      "Describe ERP flows, master data impact, access control, and validation scenarios.",
-  sap_abap_spec:      "Provide ABAP spec: purpose, IO schema, main FORM/CLASS design, and test points.",
-  sap_abap_review:    "Review ABAP for performance, SQL efficiency, exception handling, and transaction safety.",
+  sap_abap_spec:      `Provide ABAP spec: purpose, IO schema, main FORM/CLASS design, and test points.\n\n${DEV_GUIDELINES}`,
+  sap_abap_review:    `Review ABAP for performance, SQL efficiency, exception handling, and transaction safety.\n\n${DEV_GUIDELINES}`,
   image_production:   "Define image concept, ratio/resolution, style constraints, and export format.",
   video_production:   "Define shot list, timeline, subtitle/voice plan, and output format.",
   media_pipeline:     "Describe media pipeline inputs, transforms, QC checks, and final deliverables.",
