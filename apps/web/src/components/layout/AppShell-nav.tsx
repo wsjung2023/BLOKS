@@ -6,7 +6,7 @@ import type { Route } from "next";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type NavItem = "world" | "projects" | "board" | "directory" | "char-editor" | "approval" | "analytics" | "prompts" | "map-editor" | "demo" | "artifacts";
+export type NavItem = "world" | "projects" | "board" | "directory" | "char-editor" | "approval" | "analytics" | "prompts" | "map-editor" | "demo" | "artifacts" | "settings";
 
 export interface ContextPanelCtx {
   openPanel: (title: string, content: React.ReactNode) => void;
@@ -32,6 +32,7 @@ const NAV_ITEMS: { key: NavItem; label: string; href: Route; icon: string; divid
   { key: "prompts",      label: "프롬프트 콘솔", href: "/prompts",          icon: "⚡" },
   { key: "map-editor",   label: "맵 에디터",     href: "/map-editor",       icon: "🗺️", dividerBefore: true },
   { key: "demo",         label: "데모 결과",     href: "/demo",             icon: "🎬" },
+  { key: "settings",     label: "설정",          href: "/settings" as Route, icon: "⚙️", dividerBefore: true },
 ];
 
 // Standalone action links (not part of active nav tracking)

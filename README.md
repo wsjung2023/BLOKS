@@ -124,91 +124,55 @@ pnpm install
 
 ---
 
-## Step 4 — 최초 설정 마법사 실행
+## Step 4 — 초기 설정
 
 ```bash
 pnpm bloks-os init
 ```
 
-이 명령을 실행하면 질문이 하나씩 나옵니다.
-
-```
-BLOKS OS 설치 마법사
-
-AI API 키 설정 (선택사항)
-  OpenAI API 키 (없으면 Enter 스킵): sk-proj-...
-  Anthropic API 키 (없으면 Enter 스킵):
-  Google AI API 키 (없으면 Enter 스킵):
-
-설정 완료!
-```
-
-키를 입력하면 자동으로 저장됩니다. **다음부터는 다시 입력 안 해도 됩니다.**
-
-### AI API 키 발급 방법
-
-**텍스트 생성 (기획서, 코드, 리포트)**
-
-| 서비스 | 발급 주소 | 비용 |
-|---|---|---|
-| OpenAI (ChatGPT 회사) | https://platform.openai.com/api-keys | 사용한 만큼만. 가볍게 쓰면 월 1~3달러 수준 |
-| Anthropic (Claude 회사) | https://console.anthropic.com | 동일 |
-| Google AI | https://aistudio.google.com/app/apikey | 무료 티어 있음 |
-
-> 텍스트는 셋 중 하나만 있어도 됩니다. OpenAI가 가장 무난합니다.
-
-**이미지 생성 (포스터, 배너, 디자인)**
-
-이미지는 OpenAI 키만 있어도 자동으로 생성됩니다 (DALL-E / gpt-image-1 사용).  
-더 다양한 스타일을 원하면 아래 키를 추가로 입력할 수 있습니다.
-
-| 서비스 | 특징 | 발급 주소 |
-|---|---|---|
-| OpenAI | 기본값. 한국어 텍스트 잘 그림 | https://platform.openai.com/api-keys |
-| Google Imagen 3 | 사실적인 사진 스타일 | https://aistudio.google.com/app/apikey |
-| Stability AI (SD3.5) | 아트/일러스트 스타일 | https://platform.stability.ai |
-| fal.ai (FLUX Pro) | 빠르고 고품질 | https://fal.ai |
-| Ideogram v3 | 텍스트 포함 디자인 특화 | https://ideogram.ai |
-
-> 여러 개 입력하면 자동으로 우선순위에 따라 선택됩니다.  
-> `.env` 파일에 직접 추가: `STABILITY_API_KEY=...`, `FAL_KEY=...`, `IDEOGRAM_API_KEY=...`
-
-**실시간 웹 서치 (리서치/마케팅 결과 품질 향상)**
-
-시장 조사·전략·마케팅 태스크에서 최신 웹 정보를 자동 수집해 AI 결과물에 반영합니다.
-
-| 서비스 | 특징 | 발급 주소 |
-|---|---|---|
-| Tavily | AI 에이전트 전용 서치 API. 월 1,000회 무료 | https://app.tavily.com |
-
-```
-TAVILY_API_KEY=tvly-...
-```
-
-> 키 없어도 동작합니다. 있으면 리서치/마케팅 캐릭터가 실제 웹 정보를 검색해 결과에 반영합니다.
+실행하면 질문이 하나씩 나옵니다. **Enter만 누르면 스킵**됩니다.  
+나중에 브라우저 화면에서도 언제든 바꿀 수 있습니다.
 
 ---
 
-**영상 생성 (유튜브, 광고영상, 릴스, 쇼츠)**
+### AI 서비스 연결 (선택사항)
 
-영상은 **KIE.AI** API를 사용합니다. Kling, Seedance, Veo 등 최신 영상 생성 모델을 하나의 키로 사용할 수 있습니다.
+> **BLOKS는 무료입니다.** AI 서비스는 별도 회사(OpenAI, Google 등)의 서비스이며 사용량에 따라 소액 과금됩니다.  
+> 키 없이도 앱은 완전히 실행됩니다. 캐릭터가 실제로 일하게 하려면 하나 이상 필요합니다.
 
-| 서비스 | 특징 | 발급 주소 |
+#### 글쓰기 AI — 하나만 있으면 됩니다
+
+| 서비스 | 비용 | 발급 |
 |---|---|---|
-| KIE.AI | Kling 2.6 / Seedance 2.0 / Veo 3 통합. 기본값 Kling 2.6 | https://kie.ai |
+| **OpenAI** (가장 무난, 추천) | 가볍게 쓰면 월 1~3달러 수준 | https://platform.openai.com/api-keys |
+| Anthropic (Claude) | 비슷한 수준 | https://console.anthropic.com |
+| Google (Gemini) | **무료 플랜 있음** | https://aistudio.google.com/app/apikey |
 
-발급 방법:
-1. https://kie.ai 접속 → 회원가입
-2. 대시보드 → **API Keys** → 새 키 생성
-3. `.env` 파일에 추가:
+#### 실시간 웹 검색 — 없어도 되지만 있으면 훨씬 좋습니다
 
-```
-KIE_AI_API_KEY=your-kie-ai-key-here
-```
+AI가 인터넷에서 최신 정보를 검색해 결과물에 반영합니다.
 
-> **비용**: 5초 영상 1개당 약 $0.25~0.50 (모델에 따라 다름)  
-> **소요 시간**: 요청 후 30초~3분 (서버 부하에 따라 다름)  
-> 영상은 마케팅팀 AI 캐릭터가 자동 담당합니다. "유튜브", "광고영상", "릴스", "쇼츠" 등 키워드가 포함되면 자동 감지합니다.
+| 서비스 | 비용 | 발급 |
+|---|---|---|
+| Tavily | **무료 플랜: 월 1,000회** | https://app.tavily.com |
+
+#### 이미지 생성 — OpenAI 키만 있으면 자동으로 됩니다
+
+포스터, 배너 등 이미지를 만들 때 사용합니다. OpenAI 키가 있으면 별도 설정 없이 자동으로 이미지를 생성합니다.
+
+#### 영상 생성 — 영상이 필요할 때만
+
+유튜브, 릴스, 쇼츠 등 AI 영상을 만들 때 필요합니다.
+
+| 서비스 | 비용 | 발급 |
+|---|---|---|
+| KIE.AI | 5초 영상 1개당 약 300~600원 | https://kie.ai |
+
+---
+
+> **앱 실행 후 브라우저에서도 설정할 수 있습니다.**  
+> 화면 왼쪽 메뉴 → **설정 ⚙️** 클릭 → 키 입력  
+> 입력한 키는 내 PC에만 저장되며 외부로 전송되지 않습니다.
 
 ---
 

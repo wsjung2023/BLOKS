@@ -24,6 +24,7 @@ import { metricsRouter } from "./routes/metrics.js";
 import { runtimeRouter } from "./routes/runtime.js";
 import { runtimeApprovalsRouter } from "./routes/runtime-approvals.js";
 import { runtimeAuditRouter } from "./routes/runtime-audit.js";
+import { settingsRouter } from "./routes/settings.js";
 import { getDb } from "@bloks/db";
 import { startWorldTicker } from "./world-ticker.js";
 
@@ -115,6 +116,7 @@ app.get("/healthz", (_req, res) => {
 // Public routes (no auth)
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/stream", streamRouter);
+app.use("/api/v1/settings", settingsRouter);
 
 // Protected /api/v1 routes
 

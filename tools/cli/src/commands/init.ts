@@ -106,7 +106,31 @@ export async function init(_args: string[]): Promise<void> {
   }
 
   if (!openaiKey && !anthropicKey && !googleKey) {
-    info("AI 키 없이 시작합니다 — 나중에 .env 파일에서 직접 추가할 수 있습니다.");
+    info("AI 키 없이 시작합니다 — 앱 실행 후 브라우저에서 [설정] 메뉴로 언제든 추가할 수 있습니다.");
+  }
+
+  // Tavily (웹 서치)
+  console.log(`\n${c.bold}실시간 웹 검색 설정 (선택사항)${c.reset}`);
+  console.log(`  ${c.dim}AI가 인터넷에서 최신 정보를 찾아 결과물에 반영합니다.${c.reset}`);
+  console.log(`  ${c.dim}무료 플랜: 월 1,000회 — https://app.tavily.com${c.reset}\n`);
+
+  const tavilyKey = await prompt("Tavily 웹 검색 키 (tvly-...  없으면 Enter 스킵)");
+  if (tavilyKey.startsWith("tvly-")) {
+    setEnvVar("TAVILY_API_KEY", tavilyKey);
+    ok("Tavily 웹 검색 키 저장됨");
+  } else if (tavilyKey) {
+    warn("Tavily 키 형식이 올바르지 않아 저장하지 않습니다.");
+  }
+
+  // KIE.AI (영상)
+  console.log(`\n${c.bold}영상 생성 설정 (선택사항)${c.reset}`);
+  console.log(`  ${c.dim}유튜브, 릴스, 쇼츠 등 AI 영상을 만들 때 필요합니다.${c.reset}`);
+  console.log(`  ${c.dim}5초 영상 1개당 약 300~600원 — https://kie.ai${c.reset}\n`);
+
+  const kieKey = await prompt("KIE.AI 영상 키 (없으면 Enter 스킵)");
+  if (kieKey) {
+    setEnvVar("KIE_AI_API_KEY", kieKey);
+    ok("KIE.AI 영상 키 저장됨");
   }
 
   info("로컬 모드로 시작합니다 — 데이터는 .bloks-data/local-db.json 에 저장됩니다.");
@@ -124,5 +148,7 @@ ${c.bold}${c.green}설정 완료!${c.reset}
 
   ${c.cyan}pnpm bloks-os start${c.reset}    ${c.gray}# 서비스 시작 (브라우저 자동 오픈)${c.reset}
   ${c.cyan}pnpm bloks-os doctor${c.reset}   ${c.gray}# 환경 진단${c.reset}
+
+${c.dim}API 키는 앱 실행 후 브라우저에서 [설정 ⚙️] 메뉴로 언제든 추가·변경할 수 있습니다.${c.reset}
 `);
 }
