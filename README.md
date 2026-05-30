@@ -348,6 +348,38 @@ BLOKS/.bloks-data/local-db.json
 
 ---
 
+## 클라우드 배포 (Vercel + Railway)
+
+로컬 PC 없이 24시간 운영하려면 Vercel(웹)과 Railway(API+워커)를 사용합니다.
+
+### Web — Vercel
+
+1. [vercel.com](https://vercel.com) → 이 저장소 import
+2. 환경변수 설정:
+
+| 변수 | 값 |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | Railway API 서비스 URL (예: `https://bloks-api.up.railway.app`) |
+| `NEXT_PUBLIC_ENABLE_DEV_BYPASS_AUTH` | `false` |
+
+### API + Worker — Railway
+
+1. [railway.app](https://railway.app) → New Project → Deploy from GitHub
+2. 서비스 2개 생성: **api** (`apps/api`), **worker** (`apps/worker`)
+3. Redis 플러그인 추가 → `REDIS_URL` 자동 주입
+4. 각 서비스 환경변수 설정:
+
+| 변수 | 설명 |
+|---|---|
+| `OPENAI_API_KEY` | OpenAI API 키 |
+| `NODE_ENV` | `production` |
+| `BLOKS_DATA_DIR` | `/data` (영구 볼륨 마운트 경로) |
+| `ENABLE_DEV_BYPASS_AUTH` | `false` |
+
+5. API 서비스에 **/data 볼륨** 마운트 → local-db.json 영구 보존
+
+---
+
 ## 개발자 가이드 (Claude Code로 기여할 때)
 
 BLOKS는 **Claude Code 스킬 번들**이 내장되어 있습니다.  
