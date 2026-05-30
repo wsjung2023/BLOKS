@@ -46,6 +46,7 @@ async function assertRoute(path, expectedStatuses, headers = {}) {
 
 async function main() {
   const server = spawn("pnpm", ["--filter", "api", "exec", "tsx", "src/index.ts"], {
+    shell: true,
     env: {
       ...process.env,
       PORT: String(PORT),
