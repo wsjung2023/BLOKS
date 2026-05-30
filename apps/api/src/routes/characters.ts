@@ -360,6 +360,7 @@ charactersRouter.post("/:id/assign-task", async (req, res) => {
 
 const messageSchema = z.object({
   message: z.string().min(1).max(500),
+  attachmentIds: z.array(z.string()).max(10).optional(),
 });
 
 charactersRouter.post("/:id/message", async (req, res) => {
@@ -370,7 +371,7 @@ charactersRouter.post("/:id/message", async (req, res) => {
     return;
   }
 
-  const { message } = parsed.data;
+  const { message, attachmentIds } = parsed.data;
 
   try {
     const sb = getDb();
@@ -384,6 +385,20 @@ charactersRouter.post("/:id/message", async (req, res) => {
       res.status(404).json({ ok: false, error: { code: "NOT_FOUND", message: "캐릭터를 찾을 수 없습니다." } });
       return;
     }
+
+    // 첨부파일 컨텍스트 병합
+    let attachmentContext = "";
+    if (attachmentIds?.length) {
+      const { data: atts } = await sb.from("attachments").select("filename, extracted_text").in("id", attachmentIds);
+      if (atts?.length) {
+        attachmentContext = (atts as Array<{ filename: string; extracted_text: string }>)
+          .map(a => `[첨부: ${a.filename}]\n${a.extracted_text}`)
+          .join("\n\n---\n\n");
+      }
+    }
+    const fullMessage = attachmentContext
+      ? `${message}\n\n[첨부 파일 내용]\n${attachmentContext}`
+      : message;
 
     // Emit founder's message as a gold bubble on the character
     emitWorldEvent("character_bubble", {
@@ -405,7 +420,7 @@ charactersRouter.post("/:id/message", async (req, res) => {
     if ((char.ai_enabled as boolean) !== false) {
       void enqueueJob({
         queueName: QUEUE_NAMES.founderMessage,
-        payload: { characterId: charId, message },
+        payload: { characterId: charId, message: fullMessage },
       });
     }
 
