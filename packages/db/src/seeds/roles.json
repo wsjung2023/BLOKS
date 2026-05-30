@@ -1,0 +1,317 @@
+[
+  {
+    "id": "role_founder",
+    "department_id": "dept_exec",
+    "name": "창업자 아바타",
+    "family": "Executive",
+    "is_lead_role": true
+  },
+  {
+    "id": "role_digital_twin",
+    "department_id": "dept_exec",
+    "name": "에코 트윈",
+    "family": "Executive",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_ceo",
+    "department_id": "dept_exec",
+    "name": "CEO",
+    "family": "Executive",
+    "is_lead_role": true
+  },
+  {
+    "id": "role_coo",
+    "department_id": "dept_exec",
+    "name": "COO",
+    "family": "Executive",
+    "is_lead_role": true
+  },
+  {
+    "id": "role_cfo",
+    "department_id": "dept_exec",
+    "name": "CFO",
+    "family": "Finance",
+    "is_lead_role": true
+  },
+  {
+    "id": "role_cto",
+    "department_id": "dept_exec",
+    "name": "CTO",
+    "family": "Engineering",
+    "is_lead_role": true
+  },
+  {
+    "id": "role_cmo",
+    "department_id": "dept_exec",
+    "name": "CMO",
+    "family": "Marketing",
+    "is_lead_role": true
+  },
+  {
+    "id": "role_strategy_head",
+    "department_id": "dept_strategy",
+    "name": "전략기획 본부장",
+    "family": "Strategy",
+    "is_lead_role": true
+  },
+  {
+    "id": "role_sr_strategist",
+    "department_id": "dept_strategy",
+    "name": "시니어 전략기획",
+    "family": "Strategy",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_ux_planner",
+    "department_id": "dept_strategy",
+    "name": "UX 기획 차장",
+    "family": "Strategy",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_biz_strategist",
+    "department_id": "dept_strategy",
+    "name": "비즈니스 전략 부장",
+    "family": "Strategy",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_pmo_lead",
+    "department_id": "dept_pmo",
+    "name": "PMO 리드",
+    "family": "Strategy",
+    "is_lead_role": true
+  },
+  {
+    "id": "role_ux_analyst",
+    "department_id": "dept_strategy",
+    "name": "UX 분석 차장",
+    "family": "Strategy",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_spec_writer",
+    "department_id": "dept_strategy",
+    "name": "스펙 기록 과장",
+    "family": "Strategy",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_mktg_head",
+    "department_id": "dept_brand",
+    "name": "마케팅 본부장",
+    "family": "Marketing",
+    "is_lead_role": true
+  },
+  {
+    "id": "role_brand_mgr",
+    "department_id": "dept_brand",
+    "name": "브랜드 부장",
+    "family": "Marketing",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_copywriter",
+    "department_id": "dept_content",
+    "name": "카피라이터 과장",
+    "family": "Marketing",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_growth_hacker",
+    "department_id": "dept_growth",
+    "name": "그로스 해커",
+    "family": "Marketing",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_visual_designer",
+    "department_id": "dept_design",
+    "name": "비주얼 디자이너",
+    "family": "Design",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_sns_mgr",
+    "department_id": "dept_social",
+    "name": "SNS 매니저",
+    "family": "Marketing",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_mktg_analyst",
+    "department_id": "dept_analytics",
+    "name": "마케팅 애널리스트",
+    "family": "Marketing",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_research_head",
+    "department_id": "dept_market_research",
+    "name": "리서치 본부장",
+    "family": "Research",
+    "is_lead_role": true
+  },
+  {
+    "id": "role_market_analyst",
+    "department_id": "dept_market_research",
+    "name": "시장 분석 부장",
+    "family": "Research",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_competitive_analyst",
+    "department_id": "dept_competitive_intel",
+    "name": "경쟁 분석가",
+    "family": "Research",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_investment_analyst",
+    "department_id": "dept_investment",
+    "name": "투자 분석가",
+    "family": "Research",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_data_scientist",
+    "department_id": "dept_data_science",
+    "name": "데이터 사이언티스트",
+    "family": "Data",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_data_engineer",
+    "department_id": "dept_data_science",
+    "name": "데이터 엔지니어",
+    "family": "Engineering",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_strategy_researcher",
+    "department_id": "dept_strategy_research",
+    "name": "전략 연구원",
+    "family": "Strategy",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_eng_head",
+    "department_id": "dept_backend",
+    "name": "개발 본부장",
+    "family": "Engineering",
+    "is_lead_role": true
+  },
+  {
+    "id": "role_backend_dev",
+    "department_id": "dept_backend",
+    "name": "백엔드 개발자",
+    "family": "Engineering",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_frontend_dev",
+    "department_id": "dept_frontend",
+    "name": "프론트엔드 개발자",
+    "family": "Engineering",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_security_engineer",
+    "department_id": "dept_security",
+    "name": "보안 엔지니어",
+    "family": "Security",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_product_manager",
+    "department_id": "dept_product",
+    "name": "프로덕트 매니저",
+    "family": "Strategy",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_qa_engineer",
+    "department_id": "dept_qa",
+    "name": "QA 엔지니어",
+    "family": "Engineering",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_devops_engineer",
+    "department_id": "dept_devops",
+    "name": "DevOps 엔지니어",
+    "family": "Engineering",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_junior_dev",
+    "department_id": "dept_backend",
+    "name": "주니어 개발자",
+    "family": "Engineering",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_tech_architect",
+    "department_id": "dept_platform",
+    "name": "기술 아키텍트",
+    "family": "Engineering",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_hr_head",
+    "department_id": "dept_hr",
+    "name": "HR 본부장",
+    "family": "HR",
+    "is_lead_role": true
+  },
+  {
+    "id": "role_ops_manager",
+    "department_id": "dept_admin",
+    "name": "운영 매니저",
+    "family": "Operations",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_finance_analyst",
+    "department_id": "dept_finance",
+    "name": "재무 분석가",
+    "family": "Finance",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_legal_compliance",
+    "department_id": "dept_legal",
+    "name": "법무 컴플라이언스",
+    "family": "Legal",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_recruiter",
+    "department_id": "dept_hr",
+    "name": "리크루터",
+    "family": "HR",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_ops_specialist",
+    "department_id": "dept_operations",
+    "name": "운영 전문가",
+    "family": "Operations",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_strategy_lead",
+    "department_id": "dept_strategy",
+    "name": "전략 리드",
+    "family": "Strategy",
+    "is_lead_role": false
+  },
+  {
+    "id": "role_product_strategist",
+    "department_id": "dept_product_strategy",
+    "name": "제품 전략가",
+    "family": "Strategy",
+    "is_lead_role": false
+  }
+]

@@ -1,0 +1,8 @@
+[
+  { "id": "div_exec",        "company_id": "company_001", "name": "Executive",                "division_type": "Executive",   "sort_order": 1, "active_flag": true },
+  { "id": "div_strategy",    "company_id": "company_001", "name": "Strategy & Planning HQ",   "division_type": "Strategy",    "sort_order": 2, "active_flag": true },
+  { "id": "div_marketing",   "company_id": "company_001", "name": "Marketing & Growth HQ",    "division_type": "Marketing",   "sort_order": 3, "active_flag": true },
+  { "id": "div_research",    "company_id": "company_001", "name": "Research & Investment HQ", "division_type": "Research",    "sort_order": 4, "active_flag": true },
+  { "id": "div_engineering", "company_id": "company_001", "name": "Engineering & Product HQ", "division_type": "Engineering", "sort_order": 5, "active_flag": true },
+  { "id": "div_ops",         "company_id": "company_001", "name": "Platform Operations HQ",   "division_type": "Operations",  "sort_order": 6, "active_flag": true }
+]
