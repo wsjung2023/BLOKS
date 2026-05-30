@@ -275,6 +275,8 @@ interface Character {
   name: string;
   code_name: string;
   divisions?: { division_type?: string };
+  ranks?:     { name?: string };
+  roles?:     { name?: string };
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
@@ -399,7 +401,9 @@ export default function CharacterEditorPage() {
           <label style={labelStyle}>캐릭터 선택</label>
           <select value={selectedId} onChange={(e) => setSelectedId(e.target.value)} style={selectStyle}>
             {characters.map((c) => (
-              <option key={c.id} value={c.id}>{c.name} ({c.code_name}) — {c.divisions?.division_type ?? "팀 미배정"}</option>
+              <option key={c.id} value={c.id}>
+                {c.name} ({c.code_name}) — {c.divisions?.division_type ?? "팀 미배정"} / {c.ranks?.name ?? ""} / {c.roles?.name ?? ""}
+              </option>
             ))}
           </select>
         </div>
