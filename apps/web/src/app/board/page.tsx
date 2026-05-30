@@ -286,6 +286,8 @@ function TaskPanel({ task, charMap, projMap, onTransition, onTriggerAI }: {
   const [currentState, setCurrentState] = useState(task.state);
   const [savingArtifact, setSavingArtifact] = useState(false);
   const [savedArtifactId, setSavedArtifactId] = useState<string | null>(null);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
   const nextStates = NEXT_STATES[currentState] ?? [];
   const assigneeName = task.assignee_character_id
@@ -452,6 +454,50 @@ function TaskPanel({ task, charMap, projMap, onTransition, onTriggerAI }: {
       )}
 
       {/* 피드백 */}
+      {(currentState === "InReview" || currentState === "Done") && (
+        <div style={{ marginTop: "1rem", borderTop: "1px solid var(--color-border)", paddingTop: "0.75rem" }}>
+          <div style={{ fontSize: "0.78rem", fontWeight: 600, marginBottom: "0.4rem", color: "var(--color-muted)" }}>
+            피드백 / 재작업 요청
+          </div>
+          <textarea
+            value={feedbackText}
+            onChange={(e) => setFeedbackText(e.target.value)}
+            placeholder="피드백 내용을 입력하세요..."
+            rows={3}
+            style={{
+              width: "100%", padding: "0.5rem", borderRadius: 6,
+              border: "1px solid var(--color-border)", background: "rgba(255,255,255,0.04)",
+              color: "var(--color-text)", fontSize: "0.78rem", resize: "vertical",
+              boxSizing: "border-box",
+            }}
+          />
+          <button
+            onClick={async () => {
+              if (!feedbackText.trim()) return;
+              setSubmittingFeedback(true);
+              try {
+                await apiPost(`/tasks/${task.id}/feedback`, { comment: feedbackText, requestRevision: true });
+                setFeedbackText("");
+                setCurrentState("Todo");
+                setMsg("재작업 요청 전송 완료");
+              } catch {
+                setMsg("피드백 전송 실패");
+              } finally {
+                setSubmittingFeedback(false);
+              }
+            }}
+            disabled={submittingFeedback || !feedbackText.trim()}
+            style={{
+              marginTop: "0.4rem", padding: "0.4rem 1rem", borderRadius: 6,
+              background: "rgba(90,140,220,0.2)", border: "1px solid rgba(90,140,220,0.4)",
+              color: "#7aaee8", cursor: "pointer", fontSize: "0.78rem",
+              opacity: submittingFeedback || !feedbackText.trim() ? 0.5 : 1,
+            }}
+          >
+            {submittingFeedback ? "전송 중..." : "↩ 재작업 요청"}
+          </button>
+        </div>
+      )}
       {msg && (
         <div style={{ fontSize: "0.75rem", color: msg.includes("실패") ? "#f87171" : "#4ade80" }}>
           {msg}
