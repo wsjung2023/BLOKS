@@ -78,6 +78,7 @@ const localTables: Record<string, Row[]> = {
   agent_messages: _persisted["agent_messages"] ?? [],
   prompt_templates: _persisted["prompt_templates"] ?? [],
   outbox_events: _persisted["outbox_events"] ?? [],
+  attachments:   _persisted["attachments"]   ?? [],
   request_metrics: _persisted["request_metrics"] ?? [],
 };
 
