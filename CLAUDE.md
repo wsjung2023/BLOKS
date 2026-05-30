@@ -88,15 +88,8 @@ pnpm --filter api test
 pnpm --filter web test
 pnpm --filter worker test
 
-# Database
-pnpm db:generate      # regenerate Prisma client after schema change
-pnpm db:migrate       # run migrations (dev)
-pnpm db:push          # push schema directly (no migration file)
-pnpm db:seed          # seed initial data
-pnpm db:studio        # open Prisma Studio
-
-# Local infrastructure (Postgres + Redis via Docker)
-docker compose up -d
+# Database (local in-memory, no external DB needed)
+pnpm db:seed          # seed initial data into .bloks-data/local-db.json
 
 # CI verification (lint + test + smoke)
 pnpm verify:ci
@@ -127,7 +120,7 @@ This is a **pnpm + Turborepo monorepo** modelling a "company-as-a-game" simulati
 
 | Package | Description |
 |---------|-------------|
-| `packages/db` | Local in-memory DB client (`getDb()`) + Prisma ORM. Schema is split across `prisma/schema/*.prisma` files (requires `prismaSchemaFolder` preview feature) |
+| `packages/db` | Local in-memory DB client (`getDb()`). Data persisted to `.bloks-data/local-db.json`. Prisma schema files serve as data model documentation only. |
 | `packages/shared` | Shared enums, state machines, ID utilities, and `ApiResponse<T>` envelope type used across all apps |
 | `packages/ai-router` | `routeAI()` function — resolves OpenAI model per character profile, enforces `$0.50` per-task budget, falls back to `gpt-4o-mini` on error. MVP is single-provider (OpenAI only) |
 | `packages/simulation` | `deriveRuntimeSignal()` — workload/fatigue → burnout flag computation |
@@ -151,9 +144,8 @@ web (Next.js)
 
 ### Database
 
-- Primary runtime DB is a **local in-memory store** (accessed via `@bloks/db`'s `getDb()`). Data is persisted to `.bloks-data/local-db.json` on every mutation.
-- Prisma is used for schema management and migrations only; it points at a Postgres via `DATABASE_URL`.
-- Local dev uses `docker-compose.yml` which runs `pgvector/pgvector:pg16` + Redis 7.
+- Runtime DB는 **로컬 인메모리 스토어** (`@bloks/db`의 `getDb()`). 모든 변경은 `.bloks-data/local-db.json`에 자동 저장됨.
+- 외부 DB(Postgres, Supabase 등) 불필요. Prisma 스키마 파일은 데이터 모델 문서화 용도만.
 
 ### Queue / Worker
 
@@ -162,17 +154,15 @@ Worker listens on all queue names defined in `@bloks/shared`'s `QUEUE_NAMES`. Ea
 ### Environment
 
 Copy `.env.example` to `.env`. Required keys:
-- `DATABASE_URL` — Prisma migrations (`postgresql://postgres:postgres@localhost:5432/bloks` for local Docker)
-- `OPENAI_API_KEY` — AI tasks
-- `REDIS_URL` / `REDIS_HOST` + `REDIS_PORT` — BullMQ queues
+- `OPENAI_API_KEY` — AI 태스크 실행 (사용자 직접 발급)
+- `REDIS_URL` — BullMQ 큐 (워커 사용 시 필요, 미설정 시 AI 백그라운드 작업 비활성)
 
 ## Claude Code Configuration (`.claude/`)
 
 Project-level settings live in `.claude/settings.json`.
 
-**Permissions** — common pnpm/git/docker commands are pre-approved. The following are **blocked**:
+**Permissions** — common pnpm/git commands are pre-approved. The following are **blocked**:
 - `git push --force` — use normal push
-- `pnpm db:push` — use `pnpm db:migrate` instead (preserves migration history)
 - `scripts/generate-missing-sprites.py` — Codex already completed all character sprites
 - `scripts/remove-floor-characters.py` — floor images already processed
 

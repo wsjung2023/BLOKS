@@ -13,11 +13,8 @@ const ROOT = join(import.meta.dirname, "../../../..");
 
 // Sensitive env var names whose values should be masked in the export
 const SENSITIVE_KEYS = new Set([
-  "DB_SERVICE_ROLE_KEY",
-  "DB_ANON_KEY",
   "OPENAI_API_KEY",
   "ANTHROPIC_API_KEY",
-  "DATABASE_URL",
   "REDIS_URL",
   "JWT_SECRET",
   "SECRET_KEY",

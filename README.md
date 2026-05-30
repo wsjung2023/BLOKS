@@ -410,7 +410,6 @@ Windows/macOS/Linux 모두 동일한 명령어로 동작합니다.
 ### 개발 서버 실행
 
 ```bash
-docker compose up -d   # Postgres + Redis
 pnpm install
 pnpm dev               # 전체 앱 (api:4000 + web:3000 + worker)
 ```
