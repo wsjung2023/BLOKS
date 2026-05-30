@@ -89,7 +89,8 @@ const GLASSES_STYLES = [
 const SHIRT_STYLES_M = [
   { label: "긴소매 셔츠", value: "shirt"   },
   { label: "카디건",      value: "jacket"  },
-  { label: "버튼 셔츠",   value: "jacket2" },
+  { label: "정장 재킷",   value: "jacket2" },
+  { label: "조끼",        value: "vest"    },
   { label: "오버롤",      value: "overalls"},
 ];
 const SHIRT_STYLES_F = [
@@ -97,6 +98,7 @@ const SHIRT_STYLES_F = [
   { label: "블라우스",        value: "blouse"      },
   { label: "긴소매 셔츠",     value: "shirt"       },
   { label: "카디건",          value: "jacket"      },
+  { label: "정장 재킷",       value: "jacket2"     },
   { label: "조끼",            value: "vest"        },
   { label: "드레스",          value: "dress_bodice"},
 ];
@@ -112,10 +114,17 @@ const SHIRT_COLORS = [
   { label: "검정",    value: "black"    },
   { label: "차콜",    value: "charcoal" },
   { label: "빨강",    value: "red"      },
+  { label: "핑크",    value: "pink"     },
   { label: "하늘색",  value: "sky"      },
+  { label: "라벤더",  value: "lavender" },
+  { label: "청록",    value: "teal"     },
   { label: "초록숲",  value: "forest"   },
   { label: "갈색",    value: "brown"    },
   { label: "회색",    value: "gray"     },
+  { label: "청회색",  value: "bluegray" },
+  { label: "와인",    value: "maroon"   },
+  { label: "로즈",    value: "rose"     },
+  { label: "탄",      value: "tan"      },
 ];
 
 const PANTS_STYLES = [
@@ -251,8 +260,8 @@ function buildLayers(p: Preset): LpcLayer[] {
   addUrl(sh, 10);
 
   addUrl(p.glasses ? `glasses/${p.glasses}/${p.glassesColor ?? DEFAULT_GLASSES_COLOR}.png` : null, 15);
-  addUrl(p.beard    ? `beards/${p.beard}/${p.hairColor}.png` : null, 16);
-  addUrl(p.mustache ? `mustache/${p.mustache}/${p.hairColor}.png` : null, 17);
+  addUrl((g === "male" && p.beard)    ? `beards/${p.beard}/${p.hairColor}.png` : null, 16);
+  addUrl((g === "male" && p.mustache) ? `mustache/${p.mustache}/${p.hairColor}.png` : null, 17);
   addUrl(p.hairStyle ? `hair/${p.hairStyle}/${p.hairColor}.png` : null, 20);
   addUrl(p.shoesStyle ? `feet/${p.shoesStyle}/${g}/${p.shoesColor}.png` : null, 25);
 
@@ -304,7 +313,10 @@ export default function CharacterEditorPage() {
       startAnimation(url);
     }).catch(() => {});
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      if (animRef.current) cancelAnimationFrame(animRef.current);
+    };
   }, [preset]);
 
   function startAnimation(sheetUrl: string) {
@@ -387,7 +399,7 @@ export default function CharacterEditorPage() {
           <label style={labelStyle}>캐릭터 선택</label>
           <select value={selectedId} onChange={(e) => setSelectedId(e.target.value)} style={selectStyle}>
             {characters.map((c) => (
-              <option key={c.id} value={c.id}>{c.name} ({c.code_name}) — {c.divisions?.division_type ?? "?"}</option>
+              <option key={c.id} value={c.id}>{c.name} ({c.code_name}) — {c.divisions?.division_type ?? "팀 미배정"}</option>
             ))}
           </select>
         </div>
@@ -411,7 +423,14 @@ export default function CharacterEditorPage() {
             <Section title="성별">
               <div style={{ display: "flex", gap: "0.5rem" }}>
                 {GENDERS.map((gi) => (
-                  <button key={gi.value} onClick={() => update({ gender: gi.value })} style={chipStyle(preset.gender === gi.value, true)}>
+                  <button
+                    key={gi.value}
+                    onClick={() => update(gi.value === "female"
+                      ? { gender: gi.value, beard: "", mustache: "" }
+                      : { gender: gi.value }
+                    )}
+                    style={chipStyle(preset.gender === gi.value, true)}
+                  >
                     {gi.label}
                   </button>
                 ))}
