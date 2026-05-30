@@ -100,7 +100,8 @@ const SHIRT_STYLES_F = [
   { label: "카디건",          value: "jacket"      },
   { label: "정장 재킷",       value: "jacket2"     },
   { label: "조끼",            value: "vest"        },
-  { label: "드레스",          value: "dress_bodice"},
+  { label: "원피스 드레스",   value: "dress_bodice"},
+  { label: "포멀 드레스",     value: "dress_slit"  },
 ];
 
 const SHIRT_COLORS = [
@@ -221,6 +222,7 @@ function randomPreset(): Preset {
 function shirtUrl(g: string, style: string, color: string): string | null {
   if (!style || !color) return null;
   if (style === "dress_bodice") return `dress/bodice/female/${color}.png`;
+  if (style === "dress_slit")   return `dress/slit/female/${color}.png`;
   if (style === "blouse") return `torso/blouse/${g}/${color}.png`;
   if (style === "blouse_long") return `torso/blouse_long/${g}/${color}.png`;
   return `torso/${style}/${g}/${color}.png`;
