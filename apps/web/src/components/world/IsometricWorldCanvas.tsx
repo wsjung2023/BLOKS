@@ -864,6 +864,7 @@ export default function IsometricWorldCanvas() {
         burnout: rt.burnout_triggered ?? false,
         seatX, seatY,
         isFounder: char.code_name === "FOUNDER-01",
+        role: char.roles?.name,
         ...(charTaskStates[char.id] ? { taskState: charTaskStates[char.id] } : {}),
       };
     });

@@ -15,6 +15,7 @@ export interface CharInfo {
   seatY: number;
   isFounder: boolean;
   taskState?: string | undefined;
+  role?: string | undefined;
 }
 
 export interface WorldSceneAPI {
@@ -562,9 +563,17 @@ export function createWorldScene(
         ? this.add.text(-label.width / 2 - 20, LABEL_OFFSET - sprite.displayHeight - 6, badgeEmoji, { fontSize: "16px", resolution: 2 }).setOrigin(0.5, 1)
         : null;
 
+      const roleLabel = char.role
+        ? this.add.text(0, LABEL_OFFSET - sprite.displayHeight + 20, char.role, {
+            fontSize: "16px", color: "#aaaacc",
+            stroke: "#000000", strokeThickness: 3, resolution: 2,
+          }).setOrigin(0.5, 1)
+        : null;
+
       const items: PhGameObj[] = [sprite, label, dot];
       if (crown) items.push(crown);
       if (badge) items.push(badge);
+      if (roleLabel) items.push(roleLabel);
 
       const container = this.add.container(char.seatX, char.seatY, items);
       container.setDepth(char.seatY);
