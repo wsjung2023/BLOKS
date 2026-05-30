@@ -486,6 +486,31 @@ function FounderMessageInput({ charId, charName }: { charId: string; charName: s
   const [inReviewTasks, setInReviewTasks] = useState<Array<{ id: string; title: string }>>([]);
   const [selectedTaskId, setSelectedTaskId] = useState("");
   const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
+  const [attachments, setAttachments] = useState<Array<{ id: string; filename: string; uploading?: boolean }>>([]);
+
+  const uploadFile = async (file: File) => {
+    const tempId = `temp_${Date.now()}`;
+    setAttachments(prev => [...prev, { id: tempId, filename: file.name, uploading: true }]);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const token = window.localStorage.getItem("BLOKS_AUTH_TOKEN") ?? "dev-bypass";
+      const res = await fetch("/api/v1/attachments", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      const json = await res.json() as { ok: boolean; data?: { id: string; filename: string } };
+      if (json.ok && json.data) {
+        setAttachments(prev => prev.map(a => a.id === tempId ? { id: json.data!.id, filename: json.data!.filename } : a));
+      } else {
+        setAttachments(prev => prev.filter(a => a.id !== tempId));
+      }
+    } catch {
+      setAttachments(prev => prev.filter(a => a.id !== tempId));
+    }
+  };
+
 
   useEffect(() => {
     if (mode !== "task") return;
@@ -521,8 +546,13 @@ function FounderMessageInput({ charId, charName }: { charId: string; charName: s
     setFeedback(null);
     try {
       if (mode === "message") {
-        await apiPost<unknown>(`/characters/${charId}/message`, { message: text });
+        const attIds = attachments.filter(a => !a.uploading).map(a => a.id);
+        await apiPost<unknown>(`/characters/${charId}/message`, {
+          message: text,
+          ...(attIds.length > 0 ? { attachmentIds: attIds } : {}),
+        });
         setMsg("");
+        setAttachments([]);
         setFeedback({ ok: true, text: "메시지 전송됨" });
       } else if (mode === "feedback") {
         if (!selectedTaskId) { setFeedback({ ok: false, text: "태스크를 선택해주세요" }); return; }
@@ -619,6 +649,29 @@ function FounderMessageInput({ charId, charName }: { charId: string; charName: s
         </select>
       )}
 
+      {/* 첨부파일 목록 (메시지 모드에서만) */}
+      {mode === "message" && attachments.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
+          {attachments.map(a => (
+            <span key={a.id} style={{
+              fontSize: "0.7rem", padding: "0.15rem 0.4rem",
+              background: a.uploading ? "rgba(255,255,255,0.05)" : "rgba(100,180,255,0.12)",
+              border: "1px solid rgba(100,180,255,0.2)", borderRadius: 4,
+              color: a.uploading ? "var(--color-muted)" : "#7aaee8",
+              display: "flex", alignItems: "center", gap: "0.25rem",
+            }}>
+              {a.uploading ? "⏳" : "✓"} {a.filename}
+              {!a.uploading && (
+                <button type="button"
+                  onClick={() => setAttachments(p => p.filter(x => x.id !== a.id))}
+                  style={{ background: "none", border: "none", color: "var(--color-muted)", cursor: "pointer", marginLeft: 2, padding: 0 }}
+                >×</button>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* Input row */}
       <div style={{ display: "flex", gap: "0.4rem" }}>
         <input
@@ -637,6 +690,27 @@ function FounderMessageInput({ charId, charName }: { charId: string; charName: s
             padding: "0.35rem 0.55rem", fontSize: "0.78rem",
           }}
         />
+        {mode === "message" && (
+          <>
+            <button
+              type="button"
+              onClick={() => (document.getElementById(`file-input-${charId}`) as HTMLInputElement | null)?.click()}
+              title="파일 첨부"
+              style={{
+                background: "none", border: "1px solid var(--color-border)",
+                borderRadius: 6, padding: "0.35rem 0.5rem",
+                color: "var(--color-muted)", cursor: "pointer", fontSize: "0.82rem",
+              }}
+            >📎</button>
+            <input
+              id={`file-input-${charId}`}
+              type="file"
+              multiple
+              style={{ display: "none" }}
+              onChange={e => Array.from(e.target.files ?? []).forEach(f => void uploadFile(f))}
+            />
+          </>
+        )}
         <button
           onClick={() => void send()}
           disabled={!msg.trim() || sending || (mode === "task" && !selectedProjectId) || (mode === "feedback" && !selectedTaskId)}
