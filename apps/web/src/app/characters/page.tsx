@@ -1,6 +1,7 @@
 "use client";
 
 import { useContext, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import AppShell from "@/components/layout/AppShell";
 import LoadStateBlock from "@/components/common/LoadStateBlock";
 import { ContextPanelContext } from "@/components/layout/AppShell-nav";
@@ -102,6 +103,7 @@ const DIVISION_COLOR: Record<string, string> = {
 
 export default function CharacterDirectoryPage() {
   const { openPanel } = useContext(ContextPanelContext);
+  const router = useRouter();
   const [characters, setCharacters] = useState<Character[]>([]);
   const [taskCounts, setTaskCounts] = useState<Map<string, { active: number; done: number }>>(new Map());
   const [loading, setLoading] = useState(true);
@@ -167,6 +169,16 @@ export default function CharacterDirectoryPage() {
           {character.persona_summary}
         </div>
         <div><span style={{ color: "var(--color-muted)" }}>누적 경험치: </span>{character.total_experience ?? 0} · 완료 {character.total_tasks_done ?? 0}개</div>
+        <button
+          onClick={() => router.push(`/characters/editor?id=${character.id}`)}
+          style={{
+            marginTop: "0.5rem", width: "100%", padding: "0.5rem",
+            background: "rgba(100,180,255,0.15)", border: "1px solid rgba(100,180,255,0.3)",
+            borderRadius: 8, color: "#7aaee8", cursor: "pointer", fontSize: "0.82rem",
+          }}
+        >
+          🎨 스프라이트 에디터에서 편집
+        </button>
       </div>
     );
   }

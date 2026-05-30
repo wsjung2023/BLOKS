@@ -289,6 +289,10 @@ interface Character {
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function CharacterEditorPage() {
+  const searchParams = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search)
+    : null;
+  const targetId = searchParams?.get("id") ?? null;
   const [characters, setCharacters] = useState<Character[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
   const [preset, setPreset] = useState<Preset>({ ...DEFAULT_M });
@@ -304,8 +308,12 @@ export default function CharacterEditorPage() {
     apiGet<{ data?: { items?: Character[] } }>("/characters?pageSize=100")
       .then((body) => {
         const items = body.data?.items ?? [];
-        setCharacters(items.filter((c) => c.code_name));
-        if (items[0]) setSelectedId(items[0].id);
+        const filtered = items.filter((c) => c.code_name);
+        setCharacters(filtered);
+        const initial = targetId && filtered.find((c) => c.id === targetId)
+          ? targetId
+          : filtered[0]?.id ?? "";
+        setSelectedId(initial);
       })
       .catch(() => {});
   }, []);
