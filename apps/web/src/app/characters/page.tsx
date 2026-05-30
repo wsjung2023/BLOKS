@@ -30,6 +30,9 @@ interface Character {
   level_experience?: number;
   total_tasks_done?: number;
   character_runtime_states?: RuntimeState | RuntimeState[];
+  divisions?: { division_type?: string };
+  ranks?:     { name?: string };
+  roles?:     { name?: string };
 }
 
 function getRuntime(character: Character): RuntimeState | undefined {
@@ -37,19 +40,65 @@ function getRuntime(character: Character): RuntimeState | undefined {
   return Array.isArray(state) ? state[0] : state;
 }
 
-function getCharacterSpriteUrl(codeName: string): string {
-  return `/sprites-v2/char-${codeName.toLowerCase().replace(/_/g, "-")}-work-stand.png`;
+function getSlug(codeName: string): string {
+  return codeName.toLowerCase().replace(/_/g, "-");
 }
 
 function getInitials(name: string): string {
-  return name
-    .trim()
-    .split(/\s+/)
-    .map((part) => part[0] ?? "")
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  return name.trim().split(/\s+/).map((p) => p[0] ?? "").join("").slice(0, 2).toUpperCase();
 }
+
+// 에디터 저장 스프라이트: DOWN 방향 0번 프레임 (col=0, row=2 → pixel 0,128)
+// 표시 크기 52×52, 원본 프레임 64×64 → scale 0.8125
+const FRAME = 64, DISPLAY = 52, SCALE = DISPLAY / FRAME;
+const SHEET_W = 576 * SCALE, SHEET_H = 256 * SCALE;
+const POS_X = 0, POS_Y = -(128 * SCALE); // DOWN row offset
+
+function CharacterSprite({ codeName }: { codeName: string }) {
+  const slug = getSlug(codeName);
+  const editorSrc  = `/assets/characters/${slug}.png`;
+  const fallbackSrc = `/sprites-v2/char-${slug}-work-stand.png`;
+  const [useEditor, setUseEditor] = useState(true);
+  const [fallbackFailed, setFallbackFailed] = useState(false);
+
+  if (!useEditor) {
+    if (fallbackFailed) return null;
+    return (
+      <img
+        src={fallbackSrc}
+        alt=""
+        loading="lazy"
+        onError={() => setFallbackFailed(true)}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", imageRendering: "pixelated", transform: "scale(1.18)" }}
+      />
+    );
+  }
+
+  return (
+    <>
+      {/* 에디터 스프라이트 존재 여부 감지용 숨김 img */}
+      <img src={editorSrc} alt="" style={{ display: "none" }} onError={() => setUseEditor(false)} />
+      <div
+        style={{
+          position: "absolute", inset: 0,
+          backgroundImage: `url('${editorSrc}')`,
+          backgroundSize: `${SHEET_W}px ${SHEET_H}px`,
+          backgroundPosition: `${POS_X}px ${POS_Y}px`,
+          backgroundRepeat: "no-repeat",
+          imageRendering: "pixelated",
+        }}
+      />
+    </>
+  );
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  Idle: "대기", Working: "근무 중", InMeeting: "회의 중", OnBreak: "휴식", Focused: "집중",
+};
+const DIVISION_COLOR: Record<string, string> = {
+  Engineering: "#5b8dee", Marketing: "#e8824a", Research: "#5cb85c",
+  Strategy: "#9b7fe8", Operations: "#7ec8c8", Executive: "#c8a84b",
+};
 
 export default function CharacterDirectoryPage() {
   const { openPanel } = useContext(ContextPanelContext);
@@ -83,9 +132,7 @@ export default function CharacterDirectoryPage() {
     }).finally(() => setLoading(false));
   }
 
-  useEffect(() => {
-    loadCharacters();
-  }, []);
+  useEffect(() => { loadCharacters(); }, []);
 
   const burnoutCount = useMemo(
     () => characters.filter((c) => getRuntime(c)?.burnout_triggered).length,
@@ -95,23 +142,31 @@ export default function CharacterDirectoryPage() {
   function openCharacterPanel(character: Character) {
     const runtime = getRuntime(character);
     const lv = character.current_level ?? 1;
-    const totalExp = character.total_experience ?? 0;
-    const tasksDone = character.total_tasks_done ?? 0;
     openPanel(
       character.name,
       <div style={{ display: "grid", gap: "0.6rem", fontSize: "0.82rem" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span style={{ background: "rgba(255,215,0,0.15)", color: "#ffd700", padding: "0.2rem 0.6rem", borderRadius: 999, fontWeight: 700 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+          <span style={{ background: "rgba(255,255,255,0.12)", color: "var(--color-text)", border: "1px solid var(--color-border)", padding: "0.2rem 0.6rem", borderRadius: 999, fontWeight: 700, fontSize: "0.78rem" }}>
             Lv.{lv}
           </span>
-          <span style={{ color: "var(--color-muted)", fontSize: "0.75rem" }}>{totalExp} exp 누적 · 완료 {tasksDone}개</span>
+          {character.divisions?.division_type && (
+            <span style={{ color: DIVISION_COLOR[character.divisions.division_type] ?? "var(--color-muted)", fontWeight: 600 }}>
+              {character.divisions.division_type}
+            </span>
+          )}
         </div>
-        <div>Code: {character.code_name}</div>
-        <div>Mode: {character.active_mode ?? "N/A"}</div>
+        {character.ranks?.name && <div><span style={{ color: "var(--color-muted)" }}>직급: </span>{character.ranks.name}</div>}
+        {character.roles?.name && <div><span style={{ color: "var(--color-muted)" }}>역할: </span>{character.roles.name}</div>}
+        <div><span style={{ color: "var(--color-muted)" }}>코드명: </span>{character.code_name}</div>
+        <div><span style={{ color: "var(--color-muted)" }}>모드: </span>{character.active_mode ?? "N/A"}</div>
         <div style={{ color: runtime?.burnout_triggered ? "#e05c5c" : "var(--color-muted)" }}>
-          Workload: {runtime?.workload_score ?? 0} · Fatigue: {runtime?.fatigue_score ?? 0}
+          워크로드 {runtime?.workload_score ?? 0} · 피로도 {runtime?.fatigue_score ?? 0}
           {runtime?.burnout_triggered ? " 🔥 번아웃" : ""}
         </div>
+        <div style={{ color: "var(--color-muted)", fontSize: "0.78rem", lineHeight: 1.6 }}>
+          {character.persona_summary}
+        </div>
+        <div><span style={{ color: "var(--color-muted)" }}>누적 경험치: </span>{character.total_experience ?? 0} · 완료 {character.total_tasks_done ?? 0}개</div>
       </div>
     );
   }
@@ -135,138 +190,110 @@ export default function CharacterDirectoryPage() {
         ) : characters.length === 0 ? (
           <LoadStateBlock message="표시할 캐릭터가 없습니다." actionLabel="새로고침" onAction={loadCharacters} />
         ) : (
-          <div
-            style={{
-              display: "grid",
-              gap: "0.75rem",
-              gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-            }}
-          >
+          <div style={{ display: "grid", gap: "0.75rem", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))" }}>
             {characters.map((character) => {
               const runtime = getRuntime(character);
               const locked = character.active_mode === "Specialist";
+              const tc = taskCounts.get(character.id);
+              const lv = character.current_level ?? 1;
+              const wl = runtime?.workload_score ?? 0;
+              const fa = runtime?.fatigue_score ?? 0;
+              const isBurnout = runtime?.burnout_triggered ?? false;
+              const barColor = isBurnout ? "#e05c5c" : wl > 70 ? "#e07a3a" : "#4caf7d";
+              const divType = character.divisions?.division_type;
+              const divColor = DIVISION_COLOR[divType ?? ""] ?? "var(--color-muted)";
+              const statusLabel = STATUS_LABEL[runtime?.activity_status ?? ""] ?? runtime?.activity_status ?? "대기";
 
               return (
                 <article
                   key={character.id}
                   onClick={() => openCharacterPanel(character)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      openCharacterPanel(character);
-                    }
-                  }}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openCharacterPanel(character); } }}
                   role="button"
                   tabIndex={0}
                   aria-label={`${character.name} 상세 보기`}
                   style={{
                     border: "1px solid var(--color-border)",
                     borderRadius: 12,
-                    padding: "0.8rem",
+                    padding: "0.85rem",
                     background: locked ? "rgba(255,255,255,0.03)" : "var(--color-panel)",
                     opacity: locked ? 0.7 : 1,
                     cursor: "pointer",
+                    display: "grid",
+                    gap: "0.6rem",
                   }}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.75rem" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.7rem", minWidth: 0 }}>
-                      <div
-                        aria-hidden="true"
-                        style={{
-                          position: "relative",
-                          width: 52,
-                          height: 52,
-                          flexShrink: 0,
-                          borderRadius: 12,
-                          overflow: "hidden",
-                          border: "1px solid rgba(0,0,0,0.08)",
-                          background:
-                            "linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(218,198,159,0.42) 100%)",
-                          display: "grid",
-                          placeItems: "center",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: "0.82rem",
-                            fontWeight: 700,
-                            color: "rgba(92, 68, 34, 0.72)",
-                            letterSpacing: "0.04em",
-                          }}
-                        >
-                          {getInitials(character.name)}
-                        </span>
-                        <img
-                          src={getCharacterSpriteUrl(character.code_name)}
-                          alt=""
-                          loading="lazy"
-                          onError={(event) => {
-                            event.currentTarget.style.display = "none";
-                          }}
-                          style={{
-                            position: "absolute",
-                            inset: 0,
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "contain",
-                            imageRendering: "pixelated",
-                            transform: "scale(1.18)",
-                          }}
-                        />
-                      </div>
-                      <div style={{ minWidth: 0 }}>
-                        <strong style={{ display: "block", lineHeight: 1.2 }}>{character.name}</strong>
-                        <div style={{ marginTop: "0.3rem", fontSize: "0.75rem", color: "var(--color-muted)" }}>
-                          {character.code_name}
-                        </div>
-                      </div>
+                  {/* 헤더: 스프라이트 + 이름 */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                    <div
+                      aria-hidden="true"
+                      style={{
+                        position: "relative", width: 52, height: 52, flexShrink: 0,
+                        borderRadius: 10, overflow: "hidden",
+                        border: "1px solid rgba(0,0,0,0.08)",
+                        background: "linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(218,198,159,0.42) 100%)",
+                        display: "grid", placeItems: "center",
+                      }}
+                    >
+                      <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "rgba(92,68,34,0.72)", letterSpacing: "0.04em" }}>
+                        {getInitials(character.name)}
+                      </span>
+                      <CharacterSprite codeName={character.code_name} />
                     </div>
-                    {locked ? <span style={{ fontSize: "0.7rem", color: "var(--color-muted)", flexShrink: 0 }}>LOCKED</span> : null}
-                  </div>
-                  <div style={{ marginTop: "0.7rem", fontSize: "0.78rem" }}>
-                    {(character.persona_summary ?? "persona 미등록").split(" ")[0]}
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <strong style={{ display: "block", lineHeight: 1.2, fontSize: "0.9rem" }}>{character.name}</strong>
+                      <div style={{ fontSize: "0.72rem", color: "var(--color-muted)", marginTop: 1 }}>{character.code_name}</div>
+                      {divType && (
+                        <div style={{ fontSize: "0.72rem", color: divColor, fontWeight: 600, marginTop: 2 }}>{divType}</div>
+                      )}
+                    </div>
+                    {locked && <span style={{ fontSize: "0.68rem", color: "var(--color-muted)", flexShrink: 0 }}>LOCKED</span>}
                   </div>
 
-                  {(() => {
-                    const tc = taskCounts.get(character.id);
-                    const lv = character.current_level ?? 1;
-                    const wl = runtime?.workload_score ?? 0;
-                    const fa = runtime?.fatigue_score ?? 0;
-                    const isBurnout = runtime?.burnout_triggered ?? false;
-                    const barColor = isBurnout ? "#e05c5c" : wl > 70 ? "#f0a500" : "#4caf7d";
-                    return (
-                      <div style={{ marginTop: "0.8rem", display: "grid", gap: "0.45rem" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <span style={{ background: "rgba(255,215,0,0.12)", color: "#ffd700", padding: "0.1rem 0.45rem", borderRadius: 999, fontSize: "0.7rem", fontWeight: 700 }}>
-                            Lv.{lv}
-                          </span>
-                        </div>
-                        {tc && (
-                          <div style={{ display: "flex", gap: "0.5rem", fontSize: "0.72rem" }}>
-                            {tc.active > 0 && (
-                              <span style={{ background: "rgba(240,165,0,0.12)", color: "#f0a500", padding: "0.1rem 0.4rem", borderRadius: 999 }}>
-                                진행 {tc.active}
-                              </span>
-                            )}
-                            {tc.done > 0 && (
-                              <span style={{ background: "rgba(76,175,125,0.12)", color: "#4caf7d", padding: "0.1rem 0.4rem", borderRadius: 999 }}>
-                                완료 {tc.done}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                        <div>
-                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.68rem", color: "var(--color-muted)", marginBottom: 3 }}>
-                            <span>{isBurnout ? "🔥 번아웃" : "워크로드"}</span>
-                            <span>{wl} / fa:{fa}</span>
-                          </div>
-                          <div style={{ height: 5, background: "rgba(255,255,255,0.08)", borderRadius: 3 }}>
-                            <div style={{ width: `${wl}%`, height: "100%", background: barColor, borderRadius: 3, transition: "width 0.3s" }} />
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
+                  {/* 직급 / 역할 */}
+                  {(character.ranks?.name || character.roles?.name) && (
+                    <div style={{ fontSize: "0.73rem", color: "var(--color-muted)", display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
+                      {character.ranks?.name && <span>{character.ranks.name}</span>}
+                      {character.ranks?.name && character.roles?.name && <span style={{ opacity: 0.4 }}>·</span>}
+                      {character.roles?.name && <span>{character.roles.name}</span>}
+                    </div>
+                  )}
+
+                  {/* 페르소나 요약 */}
+                  <div style={{ fontSize: "0.75rem", color: "var(--color-muted)", lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                    {character.persona_summary ?? "—"}
+                  </div>
+
+                  {/* 뱃지 행 */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
+                    <span style={{ background: "rgba(255,255,255,0.1)", color: "var(--color-text)", border: "1px solid var(--color-border)", padding: "0.1rem 0.45rem", borderRadius: 999, fontSize: "0.68rem", fontWeight: 700 }}>
+                      Lv.{lv}
+                    </span>
+                    <span style={{ fontSize: "0.68rem", color: isBurnout ? "#e05c5c" : wl > 70 ? "#e07a3a" : "var(--color-muted)" }}>
+                      {isBurnout ? "🔥 번아웃" : statusLabel}
+                    </span>
+                    {tc && tc.active > 0 && (
+                      <span style={{ background: "rgba(90,140,220,0.15)", color: "#7aaee8", padding: "0.1rem 0.4rem", borderRadius: 999, fontSize: "0.68rem" }}>
+                        진행 {tc.active}
+                      </span>
+                    )}
+                    {tc && tc.done > 0 && (
+                      <span style={{ background: "rgba(76,175,125,0.12)", color: "#4caf7d", padding: "0.1rem 0.4rem", borderRadius: 999, fontSize: "0.68rem" }}>
+                        완료 {tc.done}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* 워크로드 바 */}
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.67rem", color: "var(--color-muted)", marginBottom: 3 }}>
+                      <span>워크로드</span>
+                      <span>{wl} · 피로 {fa}</span>
+                    </div>
+                    <div style={{ height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
+                      <div style={{ width: `${wl}%`, height: "100%", background: barColor, borderRadius: 2, transition: "width 0.3s" }} />
+                    </div>
+                  </div>
                 </article>
               );
             })}
