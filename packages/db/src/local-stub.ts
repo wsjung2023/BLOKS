@@ -100,17 +100,66 @@ class LocalQueryBuilder {
   private _pendingInsert: Row | Row[] | null = null;
   private tableName: string;
   private _selectRequested = false;
+  private _selectCols = "";
 
   constructor(tableName: string, rows: Row[]) {
     this.tableName = tableName;
     this.rows = rows;
   }
 
-  select(_cols?: string, opts?: { count?: string; head?: boolean }) {
+  select(cols?: string, opts?: { count?: string; head?: boolean }) {
     this._selectRequested = true;
+    this._selectCols = cols ?? "";
     if (opts?.count === "exact") this._countMode = true;
     if (opts?.head) this._head = true;
     return this;
+  }
+
+  // Resolve Supabase-style join syntax: tableName(col1, col2)
+  private _resolveJoins(rows: Row[]): Row[] {
+    const pattern = /(\w+)\(([^)]+)\)/g;
+    const joins: Array<{ table: string; cols: string[] }> = [];
+    let m;
+    while ((m = pattern.exec(this._selectCols)) !== null) {
+      joins.push({ table: m[1]!, cols: m[2]!.split(",").map((c) => c.trim()) });
+    }
+    if (joins.length === 0) return rows;
+
+    return rows.map((row) => {
+      const enriched = { ...row };
+      for (const { table: jt, cols } of joins) {
+        const jtRows = localTables[jt];
+        if (!jtRows) { enriched[jt] = null; continue; }
+
+        // Forward join: FK on current row (e.g. division_id, default_model_profile_id)
+        const singular = jt.replace(/s$/, "");
+        const fkCol = row[`${singular}_id`] !== undefined ? `${singular}_id`
+          : row[`default_${singular}_id`] !== undefined ? `default_${singular}_id`
+          : null;
+
+        if (fkCol) {
+          const match = jtRows.find((jr) => jr["id"] === row[fkCol]);
+          if (match) {
+            const subset: Row = {};
+            for (const col of cols) if (col in match) subset[col] = match[col];
+            enriched[jt] = subset;
+          } else {
+            enriched[jt] = null;
+          }
+        } else {
+          // Reverse join: FK on joined table (e.g. character_id for character_runtime_states)
+          const currentSingular = this.tableName.replace(/s$/, "");
+          const fkOnJoined = `${currentSingular}_id`;
+          const matched = jtRows.filter((jr) => jr[fkOnJoined] === row["id"]);
+          enriched[jt] = matched.map((jr) => {
+            const subset: Row = {};
+            for (const col of cols) if (col in jr) subset[col] = jr[col];
+            return subset;
+          });
+        }
+      }
+      return enriched;
+    });
   }
 
   eq(col: string, val: unknown) {
@@ -265,16 +314,18 @@ class LocalQueryBuilder {
       return { data: this._selectRequested ? inserted : null, error: null };
     }
 
-    // UPSERT
+    // UPSERT — match by id field, then fall back to filters
     if (this._pendingUpsert !== null) {
       const toUpsert = Array.isArray(this._pendingUpsert) ? this._pendingUpsert : [this._pendingUpsert];
       const affected: Row[] = [];
       for (const incoming of toUpsert) {
-        const existing = table.find((r) => this.filters.every((f) => f(r)));
-        if (existing) {
-          Object.assign(existing, incoming);
-          if (existing["updated_at"] === undefined) existing["updated_at"] = nowIso;
-          affected.push(existing);
+        const existingIdx = incoming["id"] != null
+          ? table.findIndex((r) => r["id"] === incoming["id"])
+          : table.findIndex((r) => this.filters.length > 0 && this.filters.every((f) => f(r)));
+        if (existingIdx >= 0) {
+          Object.assign(table[existingIdx]!, incoming);
+          table[existingIdx]!["updated_at"] = nowIso;
+          affected.push(table[existingIdx]!);
         } else {
           const row = { ...incoming };
           if (row["id"] === undefined || row["id"] === null || row["id"] === "") row["id"] = makeId();
@@ -317,9 +368,10 @@ class LocalQueryBuilder {
       result = result.slice(0, this._limit);
     }
 
+    const enriched = this._resolveJoins(result);
     if (this._countMode && this._head) return { data: null, count: totalCount, error: null };
-    if (this._countMode) return { data: result, count: totalCount, error: null };
-    return { data: result, error: null };
+    if (this._countMode) return { data: enriched, count: totalCount, error: null };
+    return { data: enriched, error: null };
   }
 }
 
