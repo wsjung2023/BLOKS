@@ -63,98 +63,35 @@
 | 항목 | 설명 |
 |---|---|
 | 인터넷 연결 | 항상 필요 |
-| Node.js 20 이상 | 아래 설치 방법 참고 |
-| Git | 아래 설치 방법 참고 |
+| Node.js 20 이상 | https://nodejs.org 에서 LTS 설치 |
+| Git | https://git-scm.com 에서 설치 |
 | AI API 키 | 설치 마법사에서 바로 입력 가능 |
 
 > AI 키 없이도 앱은 켜집니다. 캐릭터가 실제로 일하게 하려면 하나 이상 필요합니다.
 
 ---
 
-## Step 1 — Node.js 설치
+## 설치 — 한 줄로 끝
 
-### Windows
-1. https://nodejs.org 접속
-2. **LTS** 버튼 클릭 → 설치 파일 다운로드
-3. 다운로드된 `.msi` 파일 더블클릭 → "Next" → "Next" → "Install" → "Finish"
-4. 터미널을 완전히 닫았다가 다시 열기
+### Windows (PowerShell)
 
-### macOS
-1. https://nodejs.org 접속
-2. **LTS** 버튼 클릭 → `.pkg` 파일 다운로드
-3. 더블클릭 → 안내에 따라 설치
-4. 터미널을 완전히 닫았다가 다시 열기
-
-### Linux (Ubuntu/Debian)
-```bash
-curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-sudo apt-get install -y nodejs
+```powershell
+irm https://raw.githubusercontent.com/wsjung2023/BLOKS/main/install.ps1 | iex
 ```
 
-설치 확인:
-```bash
-node -v
-```
-숫자(예: `v22.0.0`)가 나오면 성공.
-
----
-
-## Step 2 — Git 설치
-
-### Windows
-1. https://git-scm.com 접속 → **Download for Windows**
-2. 다운로드된 파일 더블클릭 → "Next"만 계속 → "Install"
-
-### macOS
-```bash
-xcode-select --install
-```
-팝업이 뜨면 "설치" 클릭.
-
-### Linux
-```bash
-sudo apt-get install -y git
-```
-
----
-
-## Step 3 — BLOKS 다운로드 및 설치
-
-### 터미널 여는 방법
-- **Windows**: 시작 버튼 우클릭 → `터미널` (또는 `PowerShell`)
-- **macOS**: `Command + Space` → `Terminal` → Enter
-- **Linux**: 앱 목록에서 `Terminal`
-
-### 명령어 (한 줄씩 실행)
+### macOS / Linux
 
 ```bash
-npm install -g pnpm
+curl -fsSL https://raw.githubusercontent.com/wsjung2023/BLOKS/main/install.sh | bash
 ```
 
-```bash
-git clone https://github.com/wsjung2023/BLOKS.git
-```
-
-```bash
-cd BLOKS
-```
-
-> ⚠️ **여기서부터 터미널을 닫지 마세요.** 이후 모든 명령어는 이 BLOKS 폴더 안에서 실행합니다.
-
-```bash
-pnpm install
-```
-
----
-
-## Step 4 — 초기 설정
-
-```bash
-pnpm bloks-os init
-```
-
-실행하면 질문이 하나씩 나옵니다. **Enter만 누르면 스킵**됩니다.  
-나중에 브라우저 화면에서도 언제든 바꿀 수 있습니다.
+설치 스크립트가 자동으로:
+1. Node.js 버전 확인
+2. pnpm 설치 (없으면)
+3. BLOKS 다운로드
+4. 패키지 설치
+5. API 키 설정 마법사 실행
+6. 앱 시작
 
 ---
 
@@ -199,25 +136,29 @@ AI가 인터넷에서 최신 정보를 검색해 결과물에 반영합니다.
 
 ---
 
-## Step 5 — 실행
+## 다음 실행부터
 
-```bash
+설치 후 BLOKS를 다시 켤 때:
+
+### Windows
+```powershell
+cd ~\BLOKS
 pnpm bloks-os start
 ```
 
-브라우저가 자동으로 열립니다. 안 열리면 직접 주소 입력:
-
+### macOS / Linux
+```bash
+cd ~/BLOKS
+pnpm bloks-os start
 ```
-http://localhost:3000
-```
 
-RPG 오피스 화면이 보이면 성공입니다.
+브라우저가 자동으로 열립니다. 안 열리면 직접: `http://localhost:3000`
 
 종료: 터미널에서 `Ctrl + C`
 
 ---
 
-## Step 6 — 처음 해볼 것
+## 처음 해볼 것
 
 1. 좌측 메뉴에서 **프로젝트** 클릭
 2. 오른쪽 상단 **+ 새 프로젝트** 버튼 클릭
@@ -245,22 +186,6 @@ RPG 오피스 화면이 보이면 성공입니다.
 
 > 광고 대행 의뢰 시 배너 이미지, 광고 카피, 배포 전략이 한 번에 생성됩니다.  
 > 리서치/분석 의뢰 시 GPT와 Claude가 동시에 다른 시각으로 분석한 결과물이 생성됩니다.
-
----
-
-## 매일 켜는 방법
-
-### Windows
-```powershell
-cd ~\BLOKS
-pnpm bloks-os start
-```
-
-### macOS / Linux
-```bash
-cd ~/BLOKS
-pnpm bloks-os start
-```
 
 ---
 
