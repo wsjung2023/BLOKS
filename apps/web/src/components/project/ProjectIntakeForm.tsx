@@ -15,6 +15,32 @@ export default function ProjectIntakeForm() {
   const [deadline, setDeadline] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [attachments, setAttachments] = useState<Array<{ id: string; filename: string; uploading?: boolean }>>([]);
+
+  const uploadFile = async (file: File) => {
+    const tempId = `temp_${Date.now()}`;
+    setAttachments(prev => [...prev, { id: tempId, filename: file.name, uploading: true }]);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const token = typeof window !== "undefined"
+        ? (window.localStorage.getItem("BLOKS_AUTH_TOKEN") ?? "dev-bypass")
+        : "dev-bypass";
+      const res = await fetch("/api/v1/attachments", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      const json = await res.json() as { ok: boolean; data?: { id: string; filename: string } };
+      if (json.ok && json.data) {
+        setAttachments(prev => prev.map(a => a.id === tempId ? { id: json.data!.id, filename: json.data!.filename } : a));
+      } else {
+        setAttachments(prev => prev.filter(a => a.id !== tempId));
+      }
+    } catch {
+      setAttachments(prev => prev.filter(a => a.id !== tempId));
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,10 +48,12 @@ export default function ProjectIntakeForm() {
     setSubmitting(true);
     setError(null);
     try {
+      const readyIds = attachments.filter(a => !a.uploading).map(a => a.id);
       const res = await apiPost<ProjectResponse>("/projects", {
         title: title.trim(),
         brief: brief.trim(),
         ...(deadline ? { dueAt: deadline } : {}),
+        ...(readyIds.length > 0 ? { attachmentIds: readyIds } : {}),
       });
       if (res.ok && res.data?.id) {
         router.push("/projects");
@@ -97,6 +125,54 @@ export default function ProjectIntakeForm() {
               borderRadius: 8, padding: "0.65rem 0.8rem", fontSize: "0.87rem",
             }}
           />
+        </div>
+
+        {/* 파일 첨부 */}
+        <div>
+          <label style={{ display: "block", fontSize: "0.8rem", color: "var(--color-muted)", marginBottom: "0.4rem" }}>
+            참고 파일 첨부 <span style={{ fontWeight: 400 }}>(선택 — PDF, DOCX, XLSX, PPTX, 이미지, 영상)</span>
+          </label>
+          <div
+            onDrop={e => { e.preventDefault(); Array.from(e.dataTransfer.files).forEach(f => void uploadFile(f)); }}
+            onDragOver={e => e.preventDefault()}
+            onClick={() => (document.getElementById("project-file-input") as HTMLInputElement | null)?.click()}
+            style={{
+              border: "2px dashed var(--color-border)", borderRadius: 8,
+              padding: "1rem", textAlign: "center", cursor: "pointer",
+              color: "var(--color-muted)", fontSize: "0.82rem",
+              background: "rgba(255,255,255,0.02)",
+            }}
+          >
+            파일을 여기에 드래그하거나 클릭해서 선택
+            <input
+              id="project-file-input"
+              type="file"
+              multiple
+              style={{ display: "none" }}
+              onChange={e => Array.from(e.target.files ?? []).forEach(f => void uploadFile(f))}
+            />
+          </div>
+          {attachments.length > 0 && (
+            <div style={{ marginTop: "0.5rem", display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
+              {attachments.map(a => (
+                <span key={a.id} style={{
+                  background: a.uploading ? "rgba(255,255,255,0.05)" : "rgba(100,180,255,0.12)",
+                  border: `1px solid ${a.uploading ? "var(--color-border)" : "rgba(100,180,255,0.3)"}`,
+                  borderRadius: 6, padding: "0.2rem 0.6rem",
+                  fontSize: "0.75rem", color: a.uploading ? "var(--color-muted)" : "#7aaee8",
+                  display: "flex", alignItems: "center", gap: "0.3rem",
+                }}>
+                  {a.uploading ? "⏳" : "✓"} {a.filename}
+                  {!a.uploading && (
+                    <button type="button"
+                      onClick={ev => { ev.stopPropagation(); setAttachments(prev => prev.filter(x => x.id !== a.id)); }}
+                      style={{ background: "none", border: "none", color: "var(--color-muted)", cursor: "pointer", padding: 0, marginLeft: 2 }}
+                    >×</button>
+                  )}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {error && (
