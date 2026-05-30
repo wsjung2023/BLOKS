@@ -90,6 +90,7 @@ const SHIRT_STYLES_M = [
   { label: "긴소매 셔츠", value: "shirt"   },
   { label: "카디건",      value: "jacket"  },
   { label: "정장 재킷",   value: "jacket2" },
+  { label: "수트 재킷",   value: "suit"    },
   { label: "조끼",        value: "vest"    },
   { label: "오버롤",      value: "overalls"},
 ];
@@ -126,6 +127,9 @@ const SHIRT_COLORS = [
   { label: "와인",    value: "maroon"   },
   { label: "로즈",    value: "rose"     },
   { label: "탄",      value: "tan"      },
+  { label: "가죽",    value: "leather"  },
+  { label: "슬레이트",value: "slate"    },
+  { label: "월넛",    value: "walnut"   },
 ];
 
 const PANTS_STYLES = [
@@ -223,6 +227,7 @@ function shirtUrl(g: string, style: string, color: string): string | null {
   if (!style || !color) return null;
   if (style === "dress_bodice") return `dress/bodice/female/${color}.png`;
   if (style === "dress_slit")   return `dress/slit/female/${color}.png`;
+  if (style === "suit")         return `torso/suit/${g}/${color}.png`;
   if (style === "blouse") return `torso/blouse/${g}/${color}.png`;
   if (style === "blouse_long") return `torso/blouse_long/${g}/${color}.png`;
   return `torso/${style}/${g}/${color}.png`;
