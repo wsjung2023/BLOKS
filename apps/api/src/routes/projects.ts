@@ -28,6 +28,7 @@ const createProjectSchema = z.object({
   priority: z.enum(["Critical", "High", "Medium", "Low"]).default("Medium"),
   ownerId: z.string().min(1).optional(),
   virtualBudgetAllocated: z.number().positive().optional(),
+  attachmentIds: z.array(z.string()).max(10).optional(),
 });
 
 // ── GET /projects ─────────────────────────────────────────────────────────────
@@ -85,12 +86,27 @@ projectsRouter.post("/", async (req, res) => {
 
   try {
     const sb = getDb();
+
+    // 첨부파일 컨텍스트 병합
+    let enrichedBrief = parsed.data.brief ?? "";
+    if (parsed.data.attachmentIds?.length) {
+      const { data: atts } = await sb.from("attachments").select("filename, extracted_text").in("id", parsed.data.attachmentIds);
+      if (atts?.length) {
+        const attContext = (atts as Array<{ filename: string; extracted_text: string }>)
+          .map(a => `[첨부: ${a.filename}]\n${a.extracted_text}`)
+          .join("\n\n---\n\n");
+        enrichedBrief = enrichedBrief
+          ? `${enrichedBrief}\n\n[첨부 파일 내용]\n${attContext}`
+          : `[첨부 파일 내용]\n${attContext}`;
+      }
+    }
+
     const { data: inserted, error } = await sb
       .from("projects")
       .insert({
         company_id: DEFAULT_COMPANY_ID,
         title: parsed.data.title,
-        description: parsed.data.brief ?? null,
+        description: enrichedBrief || null,
         state: "Draft",
         priority: parsed.data.priority,
         owner_id: parsed.data.ownerId ?? null,
@@ -106,7 +122,7 @@ projectsRouter.post("/", async (req, res) => {
       return;
     }
 
-    const jobPayload = { projectId: inserted.id, title: inserted.title, brief: parsed.data.brief ?? "" };
+    const jobPayload = { projectId: inserted.id, title: inserted.title, brief: enrichedBrief };
 
     if (getRuntimeProfile() === "local") {
       void runLocalInlineJob({
